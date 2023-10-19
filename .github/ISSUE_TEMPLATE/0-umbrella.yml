@@ -1,5 +1,5 @@
-name: 우산 이슈 추가 ☂️
-description: 2~5일가량 소요되는 작업을 관리합니다.
+name: ☂️ 우산 이슈 추가
+description: 일반 이슈 여러개를 포함하는 큰 단위의 작업을 관리합니다.
 title: "☂️ "
 
 labels: ["umbrella"]
