@@ -10,19 +10,14 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('rotation')
-export class Rotation {
+@Entity('rotation_attendee')
+export class RotationAttendee {
     @PrimaryGeneratedColumn()
     id: number;
 
-    // eager: Rotation entity와 함께 User entity도 로드되도록 한다.
     @ManyToOne(() => User, (user) => user.id, { eager: true })
     @JoinColumn({ name: 'user_id' })
     user: User;
-
-    @ManyToOne(() => User, (user) => user.id, { eager: true })
-    @JoinColumn({ name: 'update_user_id' })
-    update_user: number;
 
     @Column('smallint')
     year: number;
@@ -30,13 +25,13 @@ export class Rotation {
     @Column('tinyint')
     month: number;
 
-    @Column('tinyint')
-    day: number;
+    @Column('json')
+    attend_limit: JSON;
 
     @CreateDateColumn({ type: 'datetime' })
     created_at: Date;
 
-    @CreateDateColumn({ type: 'datetime' })
+    @UpdateDateColumn({ type: 'datetime' })
     updated_at: Date;
 
     @DeleteDateColumn({ type: 'datetime' })
