@@ -5,6 +5,7 @@ import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { Rotation } from './entities/rotation.entity';
 import { RotationAttendee } from './entities/rotation_attendee.entity';
+/* for test */ import { User } from './entities/user.entity';
 
 @Injectable()
 export class RotationsService {
@@ -13,10 +14,23 @@ export class RotationsService {
     private rotationRepository: Repository<Rotation>,
     @InjectRepository(RotationAttendee)
     private attendeeRepository: Repository<RotationAttendee>,
+    /* for test */
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    /* ******** */
   ) {}
 
-  create(createRotationDto: CreateRotationDto) {
-    return 'This action adds a new rotation';
+  async create(createRotationDto: CreateRotationDto) {
+    const { user_id } = createRotationDto;
+
+    const userInfo = this.userRepository.create({
+      nickname: user_id,
+    });
+
+    await this.userRepository.save(userInfo);
+
+    return userInfo;
+  //  return 'This action adds a new rotation';
   }
 
   findAll() {
