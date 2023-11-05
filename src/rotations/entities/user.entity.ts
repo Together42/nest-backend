@@ -17,9 +17,9 @@ import { RotationAttendee } from './rotation_attendee.entity';
 @Entity('user')
 export class User {
     @PrimaryGeneratedColumn()
-    @OneToMany(() => Rotation, (rotation) => rotation.user, { eager: true })
-    @OneToMany(() => Rotation, (rotation) => rotation.update_user, { eager: true })
-    @OneToMany(() => RotationAttendee, (RotationAttendee) => RotationAttendee.user, { eager: true })
+    @OneToMany(() => Rotation, (rotation) => rotation.user, { eager: false })
+    @OneToMany(() => Rotation, (rotation) => rotation.update_user, { eager: false })
+    @OneToMany(() => RotationAttendee, (RotationAttendee) => RotationAttendee.user, { eager: false })
     id: number;
 
     @Column({ length: 255 })
