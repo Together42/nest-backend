@@ -7,28 +7,44 @@ import { UpdateRotationDto } from './dto/update-rotation.dto';
 export class RotationsController {
   constructor(private readonly rotationsService: RotationsService) {}
 
-  @Post()
-  create(@Body() createRotationDto: CreateRotationDto) {
+  @Post('/')
+  createOwnRotation(@Body() createRotationDto: CreateRotationDto) {
     return this.rotationsService.create(createRotationDto);
   }
 
-  @Get()
-  findAll() {
+  @Get('/')
+  findAllRotation() {
     return this.rotationsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rotationsService.findOne(+id);
-  }
+  // @Get('/:id')
+  // findOne(@Param('id') id: string) {
+  //   return this.rotationsService.findOne(+id);
+  // }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRotationDto: UpdateRotationDto) {
+  @Patch('/:id')
+  updateUserRotation(@Param('id') id: string, @Body() updateRotationDto: UpdateRotationDto) {
     return this.rotationsService.update(+id, updateRotationDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete('/:id')
+  removeOwnRotation(@Param('id') id: string) {
     return this.rotationsService.remove(+id);
   }
+
+  @Post('/attendee')
+  createOwnRegistration(@Body() CreateRotationDto: CreateRotationDto) {
+    return this.rotationsService.create(CreateRotationDto);
+  }
+
+  @Get('/attendee')
+  findOwnRegistration() {
+    return this.rotationsService.findAll();
+  }
+
+  @Delete('/attendee')
+  removeOwnRegistration(@Param('id') id: string) {
+    return this.rotationsService.remove(+id);
+  }
+
 }
