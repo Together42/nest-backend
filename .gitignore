@@ -1,7 +1,7 @@
 # enviroment
-.env
+*.env
 00_init.sql
-*/data
+*data
 
 # compiled output
 /dist
