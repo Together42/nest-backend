@@ -20,32 +20,43 @@ export class RotationsService {
     /* ******** */
   ) {}
 
-  async create(createRotationDto: CreateRotationDto) {
-    const { user_id } = createRotationDto;
-
-    const userInfo = this.userRepository.create({
-      nickname: user_id,
-    });
-
-    await this.userRepository.save(userInfo);
-
-    return userInfo;
-  //  return 'This action adds a new rotation';
+  async createRotation(createRotationDto: CreateRotationDto) {
+    return 'This action adds a new rotation';
   }
 
-  findAll() {
+  async findAllRotation() {
     return `This action returns all rotations`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} rotation`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} rotation`;
+  // }
 
-  update(id: number, updateRotationDto: UpdateRotationDto) {
+  async updateRotation(id: number, updateRotationDto: UpdateRotationDto) {
     return `This action updates a #${id} rotation`;
   }
 
-  remove(id: number) {
+  async removeRotation(id: number) {
+    return `This action removes a #${id} rotation`;
+  }
+
+  async createRegistration(createRotationDto: CreateRotationDto) {
+    return 'This action adds a new rotation';
+  }
+
+  async findAllRegistration() {
+    return `This action returns all rotations`;
+  }
+
+  // findOne(id: number) {
+  //   return `This action returns a #${id} rotation`;
+  // }
+
+  // updateRegistration(id: number, updateRotationDto: UpdateRotationDto) {
+  //   return `This action updates a #${id} rotation`;
+  // }
+
+  async removeRegistration(id: number) {
     return `This action removes a #${id} rotation`;
   }
 }
