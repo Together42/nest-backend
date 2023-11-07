@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Logger } from '@nestjs/common';
 import { RotationsService } from './rotations.service';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 
 @Controller('rotations')
 export class RotationsController {
+  private readonly logger = new Logger(RotationsController.name);
+
   constructor(private readonly rotationsService: RotationsService) {}
 
   /*
@@ -55,7 +57,8 @@ export class RotationsController {
    */
   @Post('/attendee')
   createOwnRegistration(@Body() CreateRotationDto: CreateRotationDto) {
-    return this.rotationsService.createRegistration(CreateRotationDto);
+    const user_id = 1; // need to parse own user_id
+    return this.rotationsService.createRegistration(CreateRotationDto, user_id);
   }
 
   /*

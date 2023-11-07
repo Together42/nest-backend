@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRotationDto } from './dto/create-rotation.dto';
@@ -9,15 +9,18 @@ import { RotationAttendee } from './entities/rotation_attendee.entity';
 
 @Injectable()
 export class RotationsService {
+  private readonly logger = new Logger(RotationsService.name);
+
   constructor(
     @InjectRepository(Rotation)
     private rotationRepository: Repository<Rotation>,
     @InjectRepository(RotationAttendee)
     private attendeeRepository: Repository<RotationAttendee>,
-    /* for test */
+    
+    /****  for test  ****/
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    /* ******** */
+    /********************/
   ) {}
 
   async createRotation(createRotationDto: CreateRotationDto) {
@@ -40,8 +43,59 @@ export class RotationsService {
     return `This action removes a #${id} rotation`;
   }
 
-  async createRegistration(createRotationDto: CreateRotationDto) {
-    return 'This action adds a new rotation';
+
+  /*
+   * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
+   * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
+   */
+  async createRegistration(createRotationDto: CreateRotationDto, user_id: number) {
+    const { attend_limit } = createRotationDto;
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          id: user_id
+        }
+      });
+      this.logger.log("user: " + user)
+
+      if (!user) {
+        this.logger.warn("Can't find user by user_id.");
+        throw new NotFoundException();
+      }
+
+      const userExist = await this.attendeeRepository.findOne({
+        where: {
+          user_id: user.id, // need to remake docker
+          year: year,
+          month: month
+        }
+      });
+      this.logger.log("user exist: " + userExist)
+
+      if (!userExist) {
+        const newRotation = new RotationAttendee();
+        newRotation.user = user;
+        newRotation.year = year;
+        newRotation.month = month;
+        newRotation.attend_limit = attend_limit;
+
+        await this.attendeeRepository.save(newRotation);
+        return newRotation;
+      }
+
+      userExist.attend_limit = attend_limit;
+        
+      await this.attendeeRepository.save(userExist);
+      return userExist;
+    }
+    catch (error) {
+      this.logger.warn("Error occoured: " + error);
+      throw error;
+    }
   }
 
   async findAllRegistration() {

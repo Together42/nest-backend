@@ -1,3 +1,3 @@
 export class CreateRotationDto {
-    user_id: string;
+    attend_limit: JSON;
 }

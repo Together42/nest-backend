@@ -19,6 +19,9 @@ export class RotationAttendee {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
+    @Column('int')
+    user_id: number;
+
     @Column('smallint')
     year: number;
 
