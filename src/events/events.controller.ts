@@ -4,6 +4,7 @@ import {
   ApiBody,
   ApiExtraModels,
   ApiOkResponse,
+  ApiOperation,
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
@@ -22,6 +23,7 @@ export class EventsController {
   constructor(private eventsService: EventsService) {}
 
   @Post()
+  @ApiOperation({ summary: '이벤트 생성' })
   @ApiBearerAuth()
   async create(@Body() createEventDto: CreateEventDto) {
     console.log(createEventDto);
@@ -29,18 +31,21 @@ export class EventsController {
   }
 
   @Get()
+  @ApiOperation({ summary: '전체 이벤트 전체 조회' })
   @ApiOkResponse({ type: FindEventsDto })
   async findAll() {
     return await this.eventsService.findAll();
   }
 
   @Get('ranking')
+  @ApiOperation({ summary: '친해지길 바라 점수 및 랭킹 조회' })
   @ApiOkResponse({ type: [EventRankingDto] })
   async findRanking() {
     return await this.eventsService.findRanking();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: '특정 이벤트 조회' })
   @ApiParam({ name: 'id', type: 'number' })
   @ApiOkResponse({ type: FindEventDto })
   async findOne(@Param() id: number) {
@@ -49,6 +54,7 @@ export class EventsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: '특정 이벤트 삭제' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
   async remove(@Param() id: number) {
@@ -57,6 +63,7 @@ export class EventsController {
   }
 
   @Post(':id/attendance')
+  @ApiOperation({ summary: '특정 이벤트에 참석' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
   async createAttendance(@Param() id: number) {
@@ -65,6 +72,7 @@ export class EventsController {
   }
 
   @Delete(':id/attendance')
+  @ApiOperation({ summary: '특정 이벤트 참석 취소' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
   async deleteAttendance(@Param() id: number) {
@@ -73,6 +81,7 @@ export class EventsController {
   }
 
   @Post(':id/matching')
+  @ApiOperation({ summary: '특정 이벤트 매칭' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
   @ApiBody({ required: false, type: MatchEventDto })
