@@ -35,7 +35,7 @@ export class EventsController {
   }
 
   @Get('ranking')
-  @ApiOkResponse({ type: EventRankingDto })
+  @ApiOkResponse({ type: [EventRankingDto] })
   async findRanking() {
     return await this.eventsService.findRanking();
   }
