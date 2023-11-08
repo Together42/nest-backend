@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEntity } from './entities/event.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { EventAttendeeEntity } from './entities/event-attendee.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { MatchEventDto } from './dto/match-event.dto';
@@ -10,7 +10,6 @@ import { EventUserIdsDto } from './dto/event-user-ids.dto';
 @Injectable()
 export class EventsService {
   constructor(
-    private dataSource: DataSource,
     @InjectRepository(EventEntity)
     private eventRepository: Repository<EventEntity>,
     @InjectRepository(EventAttendeeEntity)
@@ -28,8 +27,7 @@ export class EventsService {
   }
 
   async findRanking() {
-    const eventPoints = await this.dataSource
-      .getRepository(EventAttendeeEntity)
+    const eventPoints = await this.eventAttendeeRepository
       .createQueryBuilder()
       .select('user_id')
       .addSelect('COUNT(event_id)', 'event_points')
