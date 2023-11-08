@@ -1,6 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class MatchEventDto {
+  eventId?: number;
+
+  userId?: number;
+
   @ApiPropertyOptional({
     description: '참석자를 몇 개의 팀으로 나눌 건지',
     minimum: 1,

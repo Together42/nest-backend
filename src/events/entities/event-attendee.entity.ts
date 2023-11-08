@@ -5,19 +5,22 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 import { EventEntity } from './event.entity';
 
 @Entity('event_attendee')
 export class EventAttendeeEntity {
-  @PrimaryColumn({ name: 'user_id' })
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ name: 'user_id' })
   userId: number;
 
-  @PrimaryColumn({ name: 'event_id' })
+  @Column({ name: 'event_id' })
   eventId: number;
 
-  @Column({ name: 'team_id' })
+  @Column({ name: 'team_id', default: null })
   teamId: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })

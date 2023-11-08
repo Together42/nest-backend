@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateEventDto {
+  createUserId?: number;
+
   @ApiProperty({ description: '이벤트 제목 (최대 50자)' })
   title: string;
 

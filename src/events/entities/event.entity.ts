@@ -1,10 +1,10 @@
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from 'typeorm';
 import { EventAttendeeEntity } from './event-attendee.entity';
 
@@ -22,14 +22,14 @@ export class EventEntity {
   @Column({ length: 255 })
   description: string;
 
-  @Column({ name: 'matched_at', type: 'timestamp' })
+  @Column({ name: 'matched_at', type: 'timestamp', default: null })
   matchedAt: Date;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt: Date;
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
+  deletedAt: Date;
 
   @OneToMany(() => EventAttendeeEntity, (eventAttendee) => eventAttendee.event)
   eventAttendees: EventAttendeeEntity[];
