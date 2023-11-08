@@ -26,8 +26,9 @@ export class EventsController {
   @ApiOperation({ summary: '이벤트 생성' })
   @ApiBearerAuth()
   async create(@Body() createEventDto: CreateEventDto) {
-    console.log(createEventDto);
-    return await this.eventsService.create();
+    const user = { id: 42 };
+    createEventDto.createUserId = user.id;
+    return await this.eventsService.create(createEventDto);
   }
 
   @Get()
@@ -48,36 +49,41 @@ export class EventsController {
   @ApiOperation({ summary: '특정 이벤트 조회' })
   @ApiParam({ name: 'id', type: 'number' })
   @ApiOkResponse({ type: FindEventDto })
-  async findOne(@Param() id: number) {
-    id;
-    return await this.eventsService.findOne();
+  async findOne(@Param('id') id: number) {
+    return await this.eventsService.findOne(id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '특정 이벤트 삭제' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
-  async remove(@Param() id: number) {
-    id;
-    return await this.eventsService.remove();
+  async remove(@Param('id') id: number) {
+    const user = { id: 42 };
+    return await this.eventsService.remove({ eventId: id, userId: user.id });
   }
 
   @Post(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트에 참석' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
-  async createAttendance(@Param() id: number) {
-    id;
-    return await this.eventsService.createAttendance();
+  async createAttendance(@Param('id') id: number) {
+    const user = { id: 42 };
+    return await this.eventsService.createAttendance({
+      eventId: id,
+      userId: user.id,
+    });
   }
 
   @Delete(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트 참석 취소' })
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: 'number' })
-  async deleteAttendance(@Param() id: number) {
-    id;
-    return await this.eventsService.deleteAttendance();
+  async deleteAttendance(@Param('id') id: number) {
+    const user = { id: 42 };
+    return await this.eventsService.deleteAttendance({
+      eventId: id,
+      userId: user.id,
+    });
   }
 
   @Post(':id/matching')
@@ -86,10 +92,12 @@ export class EventsController {
   @ApiParam({ name: 'id', type: 'number' })
   @ApiBody({ required: false, type: MatchEventDto })
   async createMatching(
-    @Param() id: number,
+    @Param('id') id: number,
     @Body() matchEventDto: MatchEventDto,
   ) {
-    console.log(id, matchEventDto);
-    return await this.eventsService.createMatching();
+    const user = { id: 42 };
+    matchEventDto.eventId = id;
+    matchEventDto.userId = user.id;
+    return await this.eventsService.createMatching(matchEventDto);
   }
 }
