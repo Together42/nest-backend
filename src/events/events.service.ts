@@ -5,9 +5,12 @@ import { IsNull, Repository } from 'typeorm';
 import { EventAttendeeEntity } from './entities/event-attendee.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { MatchEventDto } from './dto/match-event.dto';
-import { EventUserIdsDto } from './dto/event-user-ids.dto';
 import { EventRankingDto } from './dto/event-ranking.dto';
-import { FindOneParam } from './dto/find-one-param.dto';
+import { FindEventDto } from './dto/find-event.dto';
+import { RemoveEventDto } from './dto/remove-event.dto';
+import { RegisterEventDto } from './dto/register-event.dto';
+import { UnregisterEventDto } from './dto/unregister-event.dto';
+import { FindEventAttendeesDto } from './dto/find-event-attendees.dto';
 
 @Injectable()
 export class EventsService {
@@ -28,10 +31,12 @@ export class EventsService {
     const event = this.eventRepository.create(createEventDto);
     const { id, createUserId } = await this.eventRepository.save(event);
     if (createUserId) {
-      const firstAttendee = this.eventAttendeeRepository.create({
+      const registerEventDto: RegisterEventDto = {
         eventId: id,
         userId: createUserId,
-      });
+      };
+      const firstAttendee =
+        this.eventAttendeeRepository.create(registerEventDto);
       await this.eventAttendeeRepository.save(firstAttendee);
     }
   }
@@ -51,13 +56,14 @@ export class EventsService {
     return eventPoints;
   }
 
-  async findOne(findOneParam: FindOneParam) {
-    const { id } = findOneParam;
-    const event = await this.eventRepository.findOneBy({ id });
+  async findOne(findEventDto: FindEventDto) {
+    const { id } = findEventDto;
+    const event = await this.eventRepository.findOneBy(findEventDto);
     if (!event) return;
-    const attendees = await this.eventAttendeeRepository.find({
-      where: { eventId: id },
-    });
+    const findEventAttendeesDto: FindEventAttendeesDto = { eventId: id };
+    const attendees = await this.eventAttendeeRepository.findBy(
+      findEventAttendeesDto,
+    );
     return { event, attendees };
   }
 
@@ -78,17 +84,6 @@ export class EventsService {
   }
 
   /**
-   * 유저의 이벤트 참석 여부
-   */
-  private async getUserEventAttendance(eventId: number, userId: number) {
-    const eventAttend = await this.eventAttendeeRepository.findOneBy({
-      eventId,
-      userId,
-    });
-    return eventAttend;
-  }
-
-  /**
    * Fisher-Yates shuffle
    * 배열의 요소들을 랜덤으로 섞어줍니다.
    * @param array 모든 타입의 배열을 받습니다.
@@ -105,31 +100,29 @@ export class EventsService {
    * [이벤트 삭제]
    * 이벤트를 생성한 유저와 관리자만 이벤트 삭제가 가능힙니다.
    */
-  async remove(eventUserIdsDto: EventUserIdsDto) {
-    const { userId, eventId } = eventUserIdsDto;
-    const event = await this.eventRepository.findOneBy({ id: eventId });
+  async remove(removeEventDto: RemoveEventDto) {
+    const { userId, eventId } = removeEventDto;
+    const findEventDto: FindEventDto = { id: eventId };
+    const event = await this.eventRepository.findOneBy(findEventDto);
     if (!event) return; // TODO: 예외 던지기
     if (!(this.isEventOwner(event, userId) || this.isAdminUser(userId))) return; // TODO: 예외 던지기
-    await this.eventRepository.softDelete(event.id);
+    await this.eventRepository.softDelete(eventId);
   }
 
   /**
    * [이벤트 참가 신청]
    * 매칭이 안된 이벤트만 참가 가능하며, 중복 참가를 방지합니다.
    */
-  async createAttendance(eventUserIdsDto: EventUserIdsDto) {
-    const { userId, eventId } = eventUserIdsDto;
+  async registerEvent(registerEventDto: RegisterEventDto) {
     const event = await this.eventRepository.findOneBy({
-      id: eventId,
+      id: registerEventDto.eventId,
       matchedAt: IsNull(),
     });
     if (!event) return; // TODO: 예외 던지기
-    if (await this.getUserEventAttendance(eventId, userId)) return; // TODO: 예외 던지기
-    const attendance = this.eventAttendeeRepository.create({
-      userId,
-      eventId,
-      event,
-    });
+    const eventAttend =
+      await this.eventAttendeeRepository.findOneBy(registerEventDto);
+    if (eventAttend) return; // TODO: 예외 던지기
+    const attendance = this.eventAttendeeRepository.create(registerEventDto);
     await this.eventAttendeeRepository.save(attendance);
   }
 
@@ -137,9 +130,9 @@ export class EventsService {
    * [이벤트 참가 취소]
    * 신청 내역이 있어야 취소 가능합니다.
    */
-  async deleteAttendance(eventUserIdsDto: EventUserIdsDto) {
-    const { userId, eventId } = eventUserIdsDto;
-    const eventAttendee = await this.getUserEventAttendance(eventId, userId);
+  async unregisterEvent(unregisterEventDto: UnregisterEventDto) {
+    const eventAttendee =
+      await this.eventAttendeeRepository.findOneBy(unregisterEventDto);
     if (!eventAttendee) return; // TODO: 예외 던지기
     await this.eventAttendeeRepository.softDelete(eventAttendee.id);
   }
@@ -157,25 +150,28 @@ export class EventsService {
       matchedAt: IsNull(),
     });
     if (!event) return; // TODO: 예외 던지기
+    const eventAttend = await this.eventAttendeeRepository.findOneBy({
+      eventId,
+      userId,
+    });
     if (
       !(
-        this.isEventOwner(event, userId!) ||
-        this.isAdminUser(userId!) ||
-        (await this.getUserEventAttendance(eventId!, userId!))
+        this.isEventOwner(event, userId) ||
+        this.isAdminUser(userId) ||
+        eventAttend
       )
     ) {
       return; // TODO: 예외 던지기
     }
-
-    const eventAttendees = await this.eventAttendeeRepository.find({
-      where: { eventId },
+    const eventAttendees = await this.eventAttendeeRepository.findBy({
+      eventId,
     });
     // 참석자 배열 랜덤으로 섞고, 팀 배정
     this.shuffleArray(eventAttendees);
     eventAttendees.forEach((attendee, index) => {
       attendee.teamId = (index % teamNum) + 1;
     });
-    await this.eventRepository.update(event.id, {
+    await this.eventRepository.update(eventId, {
       matchedAt: new Date(),
       matchUserId: userId,
     });

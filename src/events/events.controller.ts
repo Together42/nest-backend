@@ -7,12 +7,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { EventsService } from './events.service';
-import { CreateEventDto } from './dto/create-event.dto';
-import { MatchEventDto } from './dto/match-event.dto';
-import { FindEventDto } from './dto/find-event.dto';
+import { CreateEventBody, CreateEventDto } from './dto/create-event.dto';
+import { MatchEventBody, MatchEventDto } from './dto/match-event.dto';
 import { EventRankingDto } from './dto/event-ranking.dto';
 import { EventDto } from './dto/event.dto';
-import { FindOneParam } from './dto/find-one-param.dto';
+import { EventDetailDto } from './dto/event-detail.dto';
+import { FindEventParam } from './dto/find-event.dto';
+import { RemoveEventDto } from './dto/remove-event.dto';
+import { RegisterEventDto } from './dto/register-event.dto';
+import { UnregisterEventDto } from './dto/unregister-event.dto';
 
 @Controller('events')
 @ApiTags('events')
@@ -22,9 +25,12 @@ export class EventsController {
   @Post()
   @ApiOperation({ summary: '이벤트 생성' })
   @ApiBearerAuth()
-  async create(@Body() createEventDto: CreateEventDto) {
+  async create(@Body() createEventBody: CreateEventBody) {
     const user = { id: 42 };
-    createEventDto.createUserId = user.id;
+    const createEventDto: CreateEventDto = {
+      ...createEventBody,
+      createUserId: user.id,
+    };
     return await this.eventsService.create(createEventDto);
   }
 
@@ -44,55 +50,62 @@ export class EventsController {
 
   @Get(':id')
   @ApiOperation({ summary: '특정 이벤트 조회' })
-  @ApiOkResponse({ type: FindEventDto })
-  async findOne(@Param() findOneParam: FindOneParam) {
-    return await this.eventsService.findOne(findOneParam);
+  @ApiOkResponse({ type: EventDetailDto })
+  async findOne(@Param() findEventParam: FindEventParam) {
+    return await this.eventsService.findOne(findEventParam);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '특정 이벤트 삭제' })
   @ApiBearerAuth()
-  async remove(@Param() findOneParam: FindOneParam) {
+  async remove(@Param() findEventParam: FindEventParam) {
     const user = { id: 42 };
-    return await this.eventsService.remove({
-      eventId: findOneParam.id,
+    const removeEventDto: RemoveEventDto = {
+      eventId: findEventParam.id,
       userId: user.id,
-    });
+    };
+    return await this.eventsService.remove(removeEventDto);
   }
 
   @Post(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트에 참석' })
   @ApiBearerAuth()
-  async createAttendance(@Param() findOneParam: FindOneParam) {
+  async registerEvent(@Param() findEventParam: FindEventParam) {
     const user = { id: 42 };
-    return await this.eventsService.createAttendance({
-      eventId: findOneParam.id,
+    const registerEventDto: RegisterEventDto = {
+      eventId: findEventParam.id,
       userId: user.id,
-    });
+    };
+    return await this.eventsService.registerEvent(registerEventDto);
   }
 
   @Delete(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트 참석 취소' })
   @ApiBearerAuth()
-  async deleteAttendance(@Param() findOneParam: FindOneParam) {
+  async unregisterEvent(@Param() findEventParam: FindEventParam) {
     const user = { id: 42 };
-    return await this.eventsService.deleteAttendance({
-      eventId: findOneParam.id,
+    const unregisterEventDto: UnregisterEventDto = {
+      eventId: findEventParam.id,
       userId: user.id,
-    });
+    };
+    return await this.eventsService.unregisterEvent(unregisterEventDto);
   }
 
   @Post(':id/matching')
   @ApiOperation({ summary: '특정 이벤트 매칭' })
   @ApiBearerAuth()
-  @ApiBody({ required: false, type: MatchEventDto })
+  @ApiBody({ required: false, type: MatchEventBody })
   async createMatching(
-    @Param() findOneParam: FindOneParam,
-    @Body() matchEventDto: MatchEventDto,
+    @Param() findEventParam: FindEventParam,
+    @Body() matchEventBody: MatchEventBody,
   ) {
     const user = { id: 42 };
-    matchEventDto.eventId = findOneParam.id;
-    matchEventDto.userId = user.id;
+    const { teamNum = 1 } = matchEventBody;
+    const matchEventDto: MatchEventDto = {
+      teamNum,
+      eventId: findEventParam.id,
+      userId: user.id,
+    };
     return await this.eventsService.createMatching(matchEventDto);
   }
 }
