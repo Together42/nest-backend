@@ -13,8 +13,11 @@ export class EventEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'create_user_id' })
+  @Column({ name: 'create_user_id', default: null })
   createUserId: number;
+
+  @Column({ name: 'match_user_id', default: null })
+  matchUserId: number;
 
   @Column({ length: 50 })
   title: string;
