@@ -2,7 +2,6 @@ import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
-  ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -11,14 +10,12 @@ import {
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { MatchEventDto } from './dto/match-event.dto';
-import { FindEventsDto } from './dto/find-events.dto';
 import { FindEventDto } from './dto/find-event.dto';
-import { EventAttendeeDto } from './dto/event-attendee.dto';
 import { EventRankingDto } from './dto/event-ranking.dto';
+import { EventDto } from './dto/event.dto';
 
 @Controller('events')
 @ApiTags('events')
-@ApiExtraModels(EventAttendeeDto)
 export class EventsController {
   constructor(private eventsService: EventsService) {}
 
@@ -33,7 +30,7 @@ export class EventsController {
 
   @Get()
   @ApiOperation({ summary: '전체 이벤트 전체 조회' })
-  @ApiOkResponse({ type: FindEventsDto })
+  @ApiOkResponse({ type: [EventDto] })
   async findAll() {
     return await this.eventsService.findAll();
   }
