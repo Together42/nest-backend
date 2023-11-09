@@ -7,6 +7,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { MatchEventDto } from './dto/match-event.dto';
 import { EventUserIdsDto } from './dto/event-user-ids.dto';
 import { EventRankingDto } from './dto/event-ranking.dto';
+import { FindOneParam } from './dto/find-one-param.dto';
 
 @Injectable()
 export class EventsService {
@@ -50,7 +51,8 @@ export class EventsService {
     return eventPoints;
   }
 
-  async findOne(id: number) {
+  async findOne(findOneParam: FindOneParam) {
+    const { id } = findOneParam;
     const event = await this.eventRepository.findOneBy({ id });
     if (!event) return;
     const attendees = await this.eventAttendeeRepository.find({
@@ -77,9 +79,6 @@ export class EventsService {
 
   /**
    * 유저의 이벤트 참석 여부
-   * @param eventId 이벤트의 고유 아이디
-   * @param userId 유저의 고유 아이디
-   * @returns 유저의 이벤트 참석 정보, 없으면 null
    */
   private async getUserEventAttendance(eventId: number, userId: number) {
     const eventAttend = await this.eventAttendeeRepository.findOneBy({

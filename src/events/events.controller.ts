@@ -4,7 +4,6 @@ import {
   ApiBody,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { EventsService } from './events.service';
@@ -13,6 +12,7 @@ import { MatchEventDto } from './dto/match-event.dto';
 import { FindEventDto } from './dto/find-event.dto';
 import { EventRankingDto } from './dto/event-ranking.dto';
 import { EventDto } from './dto/event.dto';
+import { FindOneParam } from './dto/find-one-param.dto';
 
 @Controller('events')
 @ApiTags('events')
@@ -44,29 +44,29 @@ export class EventsController {
 
   @Get(':id')
   @ApiOperation({ summary: '특정 이벤트 조회' })
-  @ApiParam({ name: 'id', type: 'number' })
   @ApiOkResponse({ type: FindEventDto })
-  async findOne(@Param('id') id: number) {
-    return await this.eventsService.findOne(id);
+  async findOne(@Param() findOneParam: FindOneParam) {
+    return await this.eventsService.findOne(findOneParam);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '특정 이벤트 삭제' })
   @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: 'number' })
-  async remove(@Param('id') id: number) {
+  async remove(@Param() findOneParam: FindOneParam) {
     const user = { id: 42 };
-    return await this.eventsService.remove({ eventId: id, userId: user.id });
+    return await this.eventsService.remove({
+      eventId: findOneParam.id,
+      userId: user.id,
+    });
   }
 
   @Post(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트에 참석' })
   @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: 'number' })
-  async createAttendance(@Param('id') id: number) {
+  async createAttendance(@Param() findOneParam: FindOneParam) {
     const user = { id: 42 };
     return await this.eventsService.createAttendance({
-      eventId: id,
+      eventId: findOneParam.id,
       userId: user.id,
     });
   }
@@ -74,11 +74,10 @@ export class EventsController {
   @Delete(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트 참석 취소' })
   @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: 'number' })
-  async deleteAttendance(@Param('id') id: number) {
+  async deleteAttendance(@Param() findOneParam: FindOneParam) {
     const user = { id: 42 };
     return await this.eventsService.deleteAttendance({
-      eventId: id,
+      eventId: findOneParam.id,
       userId: user.id,
     });
   }
@@ -86,14 +85,13 @@ export class EventsController {
   @Post(':id/matching')
   @ApiOperation({ summary: '특정 이벤트 매칭' })
   @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: 'number' })
   @ApiBody({ required: false, type: MatchEventDto })
   async createMatching(
-    @Param('id') id: number,
+    @Param() findOneParam: FindOneParam,
     @Body() matchEventDto: MatchEventDto,
   ) {
     const user = { id: 42 };
-    matchEventDto.eventId = id;
+    matchEventDto.eventId = findOneParam.id;
     matchEventDto.userId = user.id;
     return await this.eventsService.createMatching(matchEventDto);
   }
