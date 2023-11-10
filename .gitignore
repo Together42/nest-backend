@@ -1,5 +1,7 @@
 # enviroment
 .env
+.env.dev
+.env.prod
 00_init.sql
 */data
 
