@@ -82,8 +82,18 @@ export class EventsService {
   /**
    * 유저가 해당 이벤트를 생성한 유저인지 판별
    */
-  private isEventOwner(event: EventEntity, userId: number) {
-    return event.createUserId === userId;
+  private isEventOwner(event: EventEntity, targetUserId: number) {
+    return event.createUserId === targetUserId;
+  }
+
+  /**
+   * 유저가 이벤트 참여자 중 하나인지 판별
+   */
+  private isEventAttendee(
+    eventAttendees: EventAttendeeEntity[],
+    targetUserId: number,
+  ) {
+    return eventAttendees.some((attendee) => attendee.userId === targetUserId);
   }
 
   /**
@@ -116,15 +126,13 @@ export class EventsService {
    * 매칭이 안된 이벤트만 참가 가능하며, 중복 참가를 방지합니다.
    */
   async registerEvent(registerEventDto: RegisterEventDto) {
-    const { eventId } = registerEventDto;
-    const event = await this.eventRepository.findOneBy({
-      id: eventId,
-      matchedAt: IsNull(),
+    const { eventId, userId } = registerEventDto;
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId, matchedAt: IsNull() },
+      relations: ['eventAttendees'],
     });
     if (!event) return; // TODO: 예외 던지기
-    const eventAttend =
-      await this.eventAttendeeRepository.findOneBy(registerEventDto);
-    if (eventAttend) return; // TODO: 예외 던지기
+    if (this.isEventAttendee(event.eventAttendees, userId)) return; // TODO: 예외 던지기
     const attendance = this.eventAttendeeRepository.create(registerEventDto);
     await this.eventAttendeeRepository.save(attendance);
   }
@@ -148,27 +156,21 @@ export class EventsService {
   async createMatching(matchEventDto: MatchEventDto) {
     // TODO: 트랜잭션 처리
     const { eventId, userId, teamNum = 1 } = matchEventDto;
-    const event = await this.eventRepository.findOneBy({
-      id: eventId,
-      matchedAt: IsNull(),
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId, matchedAt: IsNull() },
+      relations: ['eventAttendees'],
     });
     if (!event) return; // TODO: 예외 던지기
-    const eventAttend = await this.eventAttendeeRepository.findOneBy({
-      eventId,
-      userId,
-    });
     if (
       !(
         this.isEventOwner(event, userId) ||
         this.isAdminUser(userId) ||
-        eventAttend
+        this.isEventAttendee(event.eventAttendees, userId)
       )
     ) {
       return; // TODO: 예외 던지기
     }
-    const eventAttendees = await this.eventAttendeeRepository.findBy({
-      eventId,
-    });
+    const { eventAttendees } = event;
     // 참석자 배열 랜덤으로 섞고, 팀 배정
     this.shuffleArray(eventAttendees);
     eventAttendees.forEach((attendee, index) => {
