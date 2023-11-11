@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEntity } from './entities/event.entity';
 import { IsNull, Repository } from 'typeorm';
@@ -10,7 +10,8 @@ import { FindEventDto } from './dto/find-event.dto';
 import { RemoveEventDto } from './dto/remove-event.dto';
 import { RegisterEventDto } from './dto/register-event.dto';
 import { UnregisterEventDto } from './dto/unregister-event.dto';
-import { FindEventAttendeesDto } from './dto/find-event-attendees.dto';
+import { EventDetailDto } from './dto/event-detail.dto';
+import { EventDto } from './dto/event.dto';
 
 @Injectable()
 export class EventsService {
@@ -31,22 +32,22 @@ export class EventsService {
     const event = this.eventRepository.create(createEventDto);
     const { id, createUserId } = await this.eventRepository.save(event);
     if (createUserId) {
-      const registerEventDto: RegisterEventDto = {
+      const firstAttendee = this.eventAttendeeRepository.create({
         eventId: id,
         userId: createUserId,
-      };
-      const firstAttendee =
-        this.eventAttendeeRepository.create(registerEventDto);
+      });
       await this.eventAttendeeRepository.save(firstAttendee);
     }
   }
 
   async findAll() {
     const events = await this.eventRepository.find();
-    return events;
+    const eventDtos = events.map((event) => EventDto.from(event));
+    return eventDtos;
   }
 
   async findRanking() {
+    // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
     const eventPoints: EventRankingDto[] = await this.eventAttendeeRepository
       .createQueryBuilder()
       .select('user_id')
@@ -58,13 +59,15 @@ export class EventsService {
 
   async findOne(findEventDto: FindEventDto) {
     const { id } = findEventDto;
-    const event = await this.eventRepository.findOneBy(findEventDto);
-    if (!event) return;
-    const findEventAttendeesDto: FindEventAttendeesDto = { eventId: id };
-    const attendees = await this.eventAttendeeRepository.findBy(
-      findEventAttendeesDto,
-    );
-    return { event, attendees };
+    const event = await this.eventRepository.findOne({
+      where: { id },
+      relations: ['eventAttendees'],
+    });
+    if (!event) {
+      throw new BadRequestException();
+    }
+    const eventDetailDto = EventDetailDto.from(event);
+    return eventDetailDto;
   }
 
   /**
@@ -102,11 +105,10 @@ export class EventsService {
    */
   async remove(removeEventDto: RemoveEventDto) {
     const { userId, eventId } = removeEventDto;
-    const findEventDto: FindEventDto = { id: eventId };
-    const event = await this.eventRepository.findOneBy(findEventDto);
+    const event = await this.eventRepository.findOneBy({ id: eventId });
     if (!event) return; // TODO: 예외 던지기
     if (!(this.isEventOwner(event, userId) || this.isAdminUser(userId))) return; // TODO: 예외 던지기
-    await this.eventRepository.softDelete(eventId);
+    await this.eventRepository.softDelete(event.id);
   }
 
   /**
@@ -114,8 +116,9 @@ export class EventsService {
    * 매칭이 안된 이벤트만 참가 가능하며, 중복 참가를 방지합니다.
    */
   async registerEvent(registerEventDto: RegisterEventDto) {
+    const { eventId } = registerEventDto;
     const event = await this.eventRepository.findOneBy({
-      id: registerEventDto.eventId,
+      id: eventId,
       matchedAt: IsNull(),
     });
     if (!event) return; // TODO: 예외 던지기

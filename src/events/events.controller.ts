@@ -25,7 +25,7 @@ export class EventsController {
   @Post()
   @ApiOperation({ summary: '이벤트 생성' })
   @ApiBearerAuth()
-  async create(@Body() createEventBody: CreateEventBody) {
+  async create(@Body() createEventBody: CreateEventBody): Promise<void> {
     const user = { id: 42 };
     const createEventDto: CreateEventDto = {
       ...createEventBody,
@@ -37,28 +37,30 @@ export class EventsController {
   @Get()
   @ApiOperation({ summary: '전체 이벤트 전체 조회' })
   @ApiOkResponse({ type: [EventDto] })
-  async findAll() {
+  async findAll(): Promise<EventDto[]> {
     return await this.eventsService.findAll();
   }
 
   @Get('ranking')
   @ApiOperation({ summary: '친해지길 바라 점수 및 랭킹 조회' })
   @ApiOkResponse({ type: [EventRankingDto] })
-  async findRanking() {
+  async findRanking(): Promise<EventRankingDto[]> {
     return await this.eventsService.findRanking();
   }
 
   @Get(':id')
   @ApiOperation({ summary: '특정 이벤트 조회' })
   @ApiOkResponse({ type: EventDetailDto })
-  async findOne(@Param() findEventParam: FindEventParam) {
+  async findOne(
+    @Param() findEventParam: FindEventParam,
+  ): Promise<EventDetailDto> {
     return await this.eventsService.findOne(findEventParam);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '특정 이벤트 삭제' })
   @ApiBearerAuth()
-  async remove(@Param() findEventParam: FindEventParam) {
+  async remove(@Param() findEventParam: FindEventParam): Promise<void> {
     const user = { id: 42 };
     const removeEventDto: RemoveEventDto = {
       eventId: findEventParam.id,
@@ -82,7 +84,9 @@ export class EventsController {
   @Delete(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트 참석 취소' })
   @ApiBearerAuth()
-  async unregisterEvent(@Param() findEventParam: FindEventParam) {
+  async unregisterEvent(
+    @Param() findEventParam: FindEventParam,
+  ): Promise<void> {
     const user = { id: 42 };
     const unregisterEventDto: UnregisterEventDto = {
       eventId: findEventParam.id,
@@ -98,7 +102,7 @@ export class EventsController {
   async createMatching(
     @Param() findEventParam: FindEventParam,
     @Body() matchEventBody: MatchEventBody,
-  ) {
+  ): Promise<void> {
     const user = { id: 42 };
     const { teamNum = 1 } = matchEventBody;
     const matchEventDto: MatchEventDto = {
