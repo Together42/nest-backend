@@ -48,13 +48,13 @@ export class EventsService {
 
   async findRanking() {
     // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
-    const eventPoints: EventRankingDto[] = await this.eventAttendeeRepository
+    const eventRanking: EventRankingDto[] = await this.eventAttendeeRepository
       .createQueryBuilder()
       .select('user_id')
       .addSelect('COUNT(event_id)', 'event_points')
       .groupBy('user_id')
       .getRawMany();
-    return eventPoints;
+    return eventRanking;
   }
 
   async findOne(findEventDto: FindEventDto) {
@@ -142,8 +142,10 @@ export class EventsService {
    * 신청 내역이 있어야 취소 가능합니다.
    */
   async unregisterEvent(unregisterEventDto: UnregisterEventDto) {
-    const eventAttendee =
-      await this.eventAttendeeRepository.findOneBy(unregisterEventDto);
+    const { eventId, userId } = unregisterEventDto;
+    const eventAttendee = await this.eventAttendeeRepository.findOne({
+      where: { eventId, userId, teamId: IsNull() },
+    });
     if (!eventAttendee) return; // TODO: 예외 던지기
     await this.eventAttendeeRepository.softDelete(eventAttendee.id);
   }
@@ -170,8 +172,8 @@ export class EventsService {
     ) {
       return; // TODO: 예외 던지기
     }
-    const { attendees } = event;
     // 참석자 배열 랜덤으로 섞고, 팀 배정
+    const { attendees } = event;
     this.shuffleArray(attendees);
     attendees.forEach((attendee, index) => {
       attendee.teamId = (index % teamNum) + 1;
