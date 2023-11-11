@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EventEntity } from '../entities/event.entity';
 
 export class EventDto {
   @ApiProperty({ description: '이벤트 고유 id' })
@@ -8,7 +9,7 @@ export class EventDto {
   title: string;
 
   @ApiProperty({ description: '이벤트 상세' })
-  desciption: string;
+  description: string;
 
   @ApiProperty({ description: '이벤트를 생성한 유저의 id' })
   createdId: number;
@@ -21,4 +22,15 @@ export class EventDto {
 
   @ApiProperty({ description: '이벤트의 카테고리 id' })
   categoryId: number;
+
+  static from(eventEntity: EventEntity) {
+    const eventDto = new EventDto();
+    eventDto.id = eventEntity.id;
+    eventDto.title = eventEntity.title;
+    eventDto.description = eventEntity.description;
+    eventDto.createdId = eventEntity.createUserId;
+    eventDto.intraId = 'any';
+    eventDto.categoryId = 0;
+    return eventDto;
+  }
 }
