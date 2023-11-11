@@ -42,12 +42,12 @@ export class EventDetailDto {
   teamList: { [x: string]: EventAttendeeDto[] };
 
   static from(eventEntity: EventEntity) {
-    const { eventAttendees } = eventEntity;
+    const { attendees } = eventEntity;
     const eventDetailDto = new EventDetailDto();
     eventDetailDto.event = EventDto.from(eventEntity);
 
     const teams: { [x: string]: EventAttendeeDto[] } = {};
-    eventDetailDto.teamList = eventAttendees.reduce((accumulate, attendee) => {
+    eventDetailDto.teamList = attendees.reduce((accumulate, attendee) => {
       const key = attendee.teamId ? `${attendee.teamId}` : 'null';
       if (!accumulate[key]) {
         accumulate[key] = [];

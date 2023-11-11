@@ -61,7 +61,7 @@ export class EventsService {
     const { id } = findEventDto;
     const event = await this.eventRepository.findOne({
       where: { id },
-      relations: ['eventAttendees'],
+      relations: ['attendees'],
     });
     if (!event) {
       throw new BadRequestException();
@@ -129,10 +129,10 @@ export class EventsService {
     const { eventId, userId } = registerEventDto;
     const event = await this.eventRepository.findOne({
       where: { id: eventId, matchedAt: IsNull() },
-      relations: ['eventAttendees'],
+      relations: ['attendees'],
     });
     if (!event) return; // TODO: 예외 던지기
-    if (this.isEventAttendee(event.eventAttendees, userId)) return; // TODO: 예외 던지기
+    if (this.isEventAttendee(event.attendees, userId)) return; // TODO: 예외 던지기
     const attendance = this.eventAttendeeRepository.create(registerEventDto);
     await this.eventAttendeeRepository.save(attendance);
   }
@@ -158,28 +158,28 @@ export class EventsService {
     const { eventId, userId, teamNum = 1 } = matchEventDto;
     const event = await this.eventRepository.findOne({
       where: { id: eventId, matchedAt: IsNull() },
-      relations: ['eventAttendees'],
+      relations: ['attendees'],
     });
     if (!event) return; // TODO: 예외 던지기
     if (
       !(
         this.isEventOwner(event, userId) ||
         this.isAdminUser(userId) ||
-        this.isEventAttendee(event.eventAttendees, userId)
+        this.isEventAttendee(event.attendees, userId)
       )
     ) {
       return; // TODO: 예외 던지기
     }
-    const { eventAttendees } = event;
+    const { attendees } = event;
     // 참석자 배열 랜덤으로 섞고, 팀 배정
-    this.shuffleArray(eventAttendees);
-    eventAttendees.forEach((attendee, index) => {
+    this.shuffleArray(attendees);
+    attendees.forEach((attendee, index) => {
       attendee.teamId = (index % teamNum) + 1;
     });
     await this.eventRepository.update(eventId, {
       matchedAt: new Date(),
       matchUserId: userId,
     });
-    await this.eventAttendeeRepository.save(eventAttendees);
+    await this.eventAttendeeRepository.save(attendees);
   }
 }

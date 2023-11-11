@@ -35,5 +35,5 @@ export class EventEntity {
   deletedAt: Date;
 
   @OneToMany(() => EventAttendeeEntity, (eventAttendee) => eventAttendee.event)
-  eventAttendees: EventAttendeeEntity[];
+  attendees: EventAttendeeEntity[];
 }

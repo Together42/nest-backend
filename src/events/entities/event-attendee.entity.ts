@@ -29,7 +29,7 @@ export class EventAttendeeEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
   deletedAt: Date;
 
-  @ManyToOne(() => EventEntity, (event) => event.eventAttendees)
+  @ManyToOne(() => EventEntity, (event) => event.attendees)
   @JoinColumn({ name: 'event_id' })
   event: EventEntity;
 }
