@@ -1,7 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -16,6 +21,12 @@ import { FindEventParam } from './dto/find-event.dto';
 import { RemoveEventDto } from './dto/remove-event.dto';
 import { RegisterEventDto } from './dto/register-event.dto';
 import { UnregisterEventDto } from './dto/unregister-event.dto';
+import {
+  BadRequestExceptionBody,
+  ForbiddenExceptionBody,
+  InternalServerExceptionBody,
+  NotFoundExceptionBody,
+} from '../utils/dto/error-response.dto';
 
 @Controller('events')
 @ApiTags('events')
@@ -25,6 +36,9 @@ export class EventsController {
   @Post()
   @ApiOperation({ summary: '이벤트 생성' })
   @ApiBearerAuth()
+  @ApiBadRequestResponse({ type: BadRequestExceptionBody })
+  @ApiCreatedResponse({ description: '이벤트 생성 성공' })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async create(@Body() createEventBody: CreateEventBody): Promise<void> {
     const user = { id: 42 };
     const createEventDto: CreateEventDto = {
@@ -37,6 +51,7 @@ export class EventsController {
   @Get()
   @ApiOperation({ summary: '전체 이벤트 전체 조회' })
   @ApiOkResponse({ type: [EventDto] })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findAll(): Promise<EventDto[]> {
     return await this.eventsService.findAll();
   }
@@ -44,6 +59,7 @@ export class EventsController {
   @Get('ranking')
   @ApiOperation({ summary: '친해지길 바라 점수 및 랭킹 조회' })
   @ApiOkResponse({ type: [EventRankingDto] })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findRanking(): Promise<EventRankingDto[]> {
     return await this.eventsService.findRanking();
   }
@@ -51,6 +67,9 @@ export class EventsController {
   @Get(':id')
   @ApiOperation({ summary: '특정 이벤트 조회' })
   @ApiOkResponse({ type: EventDetailDto })
+  @ApiBadRequestResponse({ type: BadRequestExceptionBody })
+  @ApiNotFoundResponse({ type: NotFoundExceptionBody })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findOne(
     @Param() findEventParam: FindEventParam,
   ): Promise<EventDetailDto> {
@@ -60,6 +79,11 @@ export class EventsController {
   @Delete(':id')
   @ApiOperation({ summary: '특정 이벤트 삭제' })
   @ApiBearerAuth()
+  @ApiOkResponse({ description: '이벤트 삭제 성공' })
+  @ApiBadRequestResponse({ type: BadRequestExceptionBody })
+  @ApiNotFoundResponse({ type: NotFoundExceptionBody })
+  @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async remove(@Param() findEventParam: FindEventParam): Promise<void> {
     const user = { id: 42 };
     const removeEventDto: RemoveEventDto = {
@@ -72,6 +96,10 @@ export class EventsController {
   @Post(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트에 참석' })
   @ApiBearerAuth()
+  @ApiCreatedResponse({ description: '이벤트 신청 성공' })
+  @ApiBadRequestResponse({ type: BadRequestExceptionBody })
+  @ApiNotFoundResponse({ type: NotFoundExceptionBody })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async registerEvent(@Param() findEventParam: FindEventParam) {
     const user = { id: 42 };
     const registerEventDto: RegisterEventDto = {
@@ -84,6 +112,10 @@ export class EventsController {
   @Delete(':id/attendance')
   @ApiOperation({ summary: '특정 이벤트 참석 취소' })
   @ApiBearerAuth()
+  @ApiOkResponse({ description: '이벤트 신청 취소 성공' })
+  @ApiBadRequestResponse({ type: BadRequestExceptionBody })
+  @ApiNotFoundResponse({ type: NotFoundExceptionBody })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async unregisterEvent(
     @Param() findEventParam: FindEventParam,
   ): Promise<void> {
@@ -99,6 +131,11 @@ export class EventsController {
   @ApiOperation({ summary: '특정 이벤트 매칭' })
   @ApiBearerAuth()
   @ApiBody({ required: false, type: MatchEventBody })
+  @ApiCreatedResponse({ description: '이벤트 매칭 성공' })
+  @ApiBadRequestResponse({ type: BadRequestExceptionBody })
+  @ApiNotFoundResponse({ type: NotFoundExceptionBody })
+  @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
+  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async createMatching(
     @Param() findEventParam: FindEventParam,
     @Body() matchEventBody: MatchEventBody,
