@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEntity } from './entities/event.entity';
-import { IsNull, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { EventAttendeeEntity } from './entities/event-attendee.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { MatchEventDto } from './dto/match-event.dto';
@@ -18,11 +18,12 @@ import { UnregisterEventDto } from './dto/unregister-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
 import { ErrorMessage } from 'src/common/error-message';
-import { shuffleArray } from 'src/common/utils';
+import { exceptionHandling, shuffleArray } from 'src/common/utils';
 
 @Injectable()
 export class EventsService {
   constructor(
+    private dataSource: DataSource,
     @InjectRepository(EventEntity)
     private eventRepository: Repository<EventEntity>,
     @InjectRepository(EventAttendeeEntity)
@@ -30,15 +31,28 @@ export class EventsService {
   ) {}
 
   async create(createEventDto: CreateEventDto) {
-    // TODO: 트랜잭션 처리
-    const event = this.eventRepository.create(createEventDto);
-    const { id, createUserId } = await this.eventRepository.save(event);
-    if (createUserId) {
-      const firstAttendee = this.eventAttendeeRepository.create({
-        eventId: id,
-        userId: createUserId,
-      });
-      await this.eventAttendeeRepository.save(firstAttendee);
+    const queryRunner = this.dataSource.createQueryRunner();
+    let error: any;
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const event = this.eventRepository.create(createEventDto);
+      const { id, createUserId } = await queryRunner.manager.save(event);
+      if (createUserId) {
+        const firstAttendee = this.eventAttendeeRepository.create({
+          eventId: id,
+          userId: createUserId,
+        });
+        await queryRunner.manager.save(firstAttendee);
+      }
+      await queryRunner.commitTransaction();
+    } catch (e) {
+      error = e;
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+      if (error) exceptionHandling(error);
     }
   }
 
@@ -107,25 +121,41 @@ export class EventsService {
     if (!(this.isEventOwner(event, userId) || this.isAdminUser(userId))) {
       throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
     }
-    await this.eventRepository.softDelete(event.id);
+    await this.eventRepository.update(event.id, {
+      deletedAt: new Date(),
+      deleteUserId: userId,
+    });
   }
 
   async registerEvent(registerEventDto: RegisterEventDto) {
-    const { eventId, userId } = registerEventDto;
-    const event = await this.eventRepository.findOne({
-      where: { id: eventId, matchedAt: IsNull() },
-      relations: ['attendees'],
-    });
-    if (!event) {
-      throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+    const queryRunner = this.dataSource.createQueryRunner();
+    let error: any;
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const { eventId, userId } = registerEventDto;
+      const event = await queryRunner.manager.findOne(EventEntity, {
+        where: { id: eventId, matchedAt: IsNull() },
+        relations: ['attendees'],
+      });
+      if (!event) {
+        throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+      }
+      if (this.isEventAttendee(event.attendees, userId)) {
+        throw new BadRequestException(
+          ErrorMessage.EVENT_REGISTRATION_ALREADY_EXIST,
+        );
+      }
+      const attendance = this.eventAttendeeRepository.create(registerEventDto);
+      await queryRunner.manager.save(attendance);
+    } catch (e) {
+      error = e;
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+      if (error) exceptionHandling(error);
     }
-    if (this.isEventAttendee(event.attendees, userId)) {
-      throw new BadRequestException(
-        ErrorMessage.EVENT_REGISTRATION_ALREADY_EXIST,
-      );
-    }
-    const attendance = this.eventAttendeeRepository.create(registerEventDto);
-    await this.eventAttendeeRepository.save(attendance);
   }
 
   async unregisterEvent(unregisterEventDto: UnregisterEventDto) {
@@ -140,34 +170,47 @@ export class EventsService {
   }
 
   async createMatching(matchEventDto: MatchEventDto) {
-    // TODO: 트랜잭션 처리
-    const { eventId, userId, teamNum = 1 } = matchEventDto;
-    const event = await this.eventRepository.findOne({
-      where: { id: eventId, matchedAt: IsNull() },
-      relations: ['attendees'],
-    });
-    if (!event) {
-      throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+    const queryRunner = this.dataSource.createQueryRunner();
+    let error: any;
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const { eventId, userId, teamNum = 1 } = matchEventDto;
+      const event = await queryRunner.manager.findOne(EventEntity, {
+        where: { id: eventId, matchedAt: IsNull() },
+        relations: ['attendees'],
+      });
+      if (!event) {
+        throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+      }
+      if (
+        !(
+          this.isEventOwner(event, userId) ||
+          this.isAdminUser(userId) ||
+          this.isEventAttendee(event.attendees, userId)
+        )
+      ) {
+        throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
+      }
+      // 참석자 배열 랜덤으로 섞고, 팀 배정
+      const { attendees } = event;
+      shuffleArray(attendees);
+      attendees.forEach((attendee, index) => {
+        attendee.teamId = (index % teamNum) + 1;
+      });
+      await queryRunner.manager.save(EventEntity, {
+        id: eventId,
+        matchedAt: new Date(),
+        matchUserId: userId,
+      });
+      await queryRunner.manager.save(EventAttendeeEntity, attendees);
+    } catch (e) {
+      error = e;
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+      if (error) exceptionHandling(error);
     }
-    if (
-      !(
-        this.isEventOwner(event, userId) ||
-        this.isAdminUser(userId) ||
-        this.isEventAttendee(event.attendees, userId)
-      )
-    ) {
-      throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
-    }
-    // 참석자 배열 랜덤으로 섞고, 팀 배정
-    const { attendees } = event;
-    shuffleArray(attendees);
-    attendees.forEach((attendee, index) => {
-      attendee.teamId = (index % teamNum) + 1;
-    });
-    await this.eventRepository.update(eventId, {
-      matchedAt: new Date(),
-      matchUserId: userId,
-    });
-    await this.eventAttendeeRepository.save(attendees);
   }
 }
