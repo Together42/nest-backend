@@ -18,6 +18,7 @@ import { UnregisterEventDto } from './dto/unregister-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
 import { ErrorMessage } from 'src/common/error-message';
+import { shuffleArray } from 'src/common/utils';
 
 @Injectable()
 export class EventsService {
@@ -75,7 +76,7 @@ export class EventsService {
    * 유저가 서비스의 관리자인지 판별
    */
   private isAdminUser(userId: number) {
-    // TODO: 유저 엔티티를 조회하여 유저가 관리자인지 확인해야함, 공통 함수로 빼기
+    // TODO: 유저 엔티티를 조회하여 유저가 관리자인지 확인해야함, 유저 모듈로 빼기
     userId;
     return true;
   }
@@ -95,19 +96,6 @@ export class EventsService {
     targetUserId: number,
   ) {
     return eventAttendees.some((attendee) => attendee.userId === targetUserId);
-  }
-
-  /**
-   * Fisher-Yates shuffle
-   * 배열의 요소들을 랜덤으로 섞어줍니다.
-   * @param array 모든 타입의 배열을 받습니다.
-   */
-  // TODO: 공통 함수로 빼기
-  private shuffleArray(array: any[]) {
-    for (let idx = 0; idx < array.length; idx++) {
-      const randomIdx = Math.floor(Math.random() * (idx + 1));
-      [array[idx], array[randomIdx]] = [array[randomIdx], array[idx]];
-    }
   }
 
   async remove(removeEventDto: RemoveEventDto) {
@@ -172,7 +160,7 @@ export class EventsService {
     }
     // 참석자 배열 랜덤으로 섞고, 팀 배정
     const { attendees } = event;
-    this.shuffleArray(attendees);
+    shuffleArray(attendees);
     attendees.forEach((attendee, index) => {
       attendee.teamId = (index % teamNum) + 1;
     });
