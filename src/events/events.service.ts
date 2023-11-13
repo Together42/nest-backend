@@ -181,6 +181,7 @@ export class EventsService {
         where: { id: eventId, matchedAt: IsNull() },
         relations: ['attendees'],
       });
+
       if (!event) {
         throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
       }
@@ -193,12 +194,17 @@ export class EventsService {
       ) {
         throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
       }
+      if (teamNum > event.attendees.length) {
+        throw new BadRequestException(ErrorMessage.TOO_MANY_EVENT_TEAM_NUMBER);
+      }
+
       // 참석자 배열 랜덤으로 섞고, 팀 배정
       const { attendees } = event;
       shuffleArray(attendees);
       attendees.forEach((attendee, index) => {
         attendee.teamId = (index % teamNum) + 1;
       });
+
       await queryRunner.manager.save(EventEntity, {
         id: eventId,
         matchedAt: new Date(),
