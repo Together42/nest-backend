@@ -149,6 +149,7 @@ export class EventsService {
       }
       const attendance = this.eventAttendeeRepository.create(registerEventDto);
       await queryRunner.manager.save(attendance);
+      await queryRunner.commitTransaction();
     } catch (e) {
       error = e;
       await queryRunner.rollbackTransaction();
@@ -211,6 +212,7 @@ export class EventsService {
         matchUserId: userId,
       });
       await queryRunner.manager.save(EventAttendeeEntity, attendees);
+      await queryRunner.commitTransaction();
     } catch (e) {
       error = e;
       await queryRunner.rollbackTransaction();
