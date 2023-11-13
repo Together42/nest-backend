@@ -104,7 +104,7 @@ export class EventsController {
     @Body() matchEventBody: MatchEventBody,
   ): Promise<void> {
     const user = { id: 42 };
-    const { teamNum = 1 } = matchEventBody;
+    const { teamNum } = matchEventBody;
     const matchEventDto: MatchEventDto = {
       teamNum,
       eventId: findEventParam.id,

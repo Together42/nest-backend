@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNumber, IsOptional, Min } from 'class-validator';
 
 export class MatchEventBody {
   @ApiPropertyOptional({
@@ -6,7 +7,10 @@ export class MatchEventBody {
     minimum: 1,
     default: 1,
   })
-  teamNum: number;
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  teamNum: number = 1;
 }
 
 export class MatchEventDto extends MatchEventBody {
