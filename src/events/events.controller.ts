@@ -26,7 +26,7 @@ import {
   ForbiddenExceptionBody,
   InternalServerExceptionBody,
   NotFoundExceptionBody,
-} from '../utils/dto/error-response.dto';
+} from '../common/dto/error-response.dto';
 
 @Controller('events')
 @ApiTags('events')

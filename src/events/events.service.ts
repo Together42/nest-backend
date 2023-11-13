@@ -17,7 +17,7 @@ import { RegisterEventDto } from './dto/register-event.dto';
 import { UnregisterEventDto } from './dto/unregister-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
-import { ErrorMessage } from 'src/utils/error-message';
+import { ErrorMessage } from 'src/common/error-message';
 
 @Injectable()
 export class EventsService {
