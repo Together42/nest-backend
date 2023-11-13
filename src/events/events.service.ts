@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEntity } from './entities/event.entity';
 import { IsNull, Repository } from 'typeorm';
@@ -12,6 +17,7 @@ import { RegisterEventDto } from './dto/register-event.dto';
 import { UnregisterEventDto } from './dto/unregister-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
+import { ErrorMessage } from 'src/utils/error-message';
 
 @Injectable()
 export class EventsService {
@@ -64,7 +70,7 @@ export class EventsService {
       relations: ['attendees'],
     });
     if (!event) {
-      throw new BadRequestException();
+      throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND);
     }
     const eventDetailDto = EventDetailDto.from(event);
     return eventDetailDto;
@@ -116,8 +122,12 @@ export class EventsService {
   async remove(removeEventDto: RemoveEventDto) {
     const { userId, eventId } = removeEventDto;
     const event = await this.eventRepository.findOneBy({ id: eventId });
-    if (!event) return; // TODO: 예외 던지기
-    if (!(this.isEventOwner(event, userId) || this.isAdminUser(userId))) return; // TODO: 예외 던지기
+    if (!event) {
+      throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND);
+    }
+    if (!(this.isEventOwner(event, userId) || this.isAdminUser(userId))) {
+      throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
+    }
     await this.eventRepository.softDelete(event.id);
   }
 
@@ -131,8 +141,14 @@ export class EventsService {
       where: { id: eventId, matchedAt: IsNull() },
       relations: ['attendees'],
     });
-    if (!event) return; // TODO: 예외 던지기
-    if (this.isEventAttendee(event.attendees, userId)) return; // TODO: 예외 던지기
+    if (!event) {
+      throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+    }
+    if (this.isEventAttendee(event.attendees, userId)) {
+      throw new BadRequestException(
+        ErrorMessage.EVENT_REGISTRATION_ALREADY_EXIST,
+      );
+    }
     const attendance = this.eventAttendeeRepository.create(registerEventDto);
     await this.eventAttendeeRepository.save(attendance);
   }
@@ -146,7 +162,9 @@ export class EventsService {
     const eventAttendee = await this.eventAttendeeRepository.findOne({
       where: { eventId, userId, teamId: IsNull() },
     });
-    if (!eventAttendee) return; // TODO: 예외 던지기
+    if (!eventAttendee) {
+      throw new NotFoundException(ErrorMessage.EVENT_REGISTRATION_NOT_FOUND);
+    }
     await this.eventAttendeeRepository.softDelete(eventAttendee.id);
   }
 
@@ -162,7 +180,9 @@ export class EventsService {
       where: { id: eventId, matchedAt: IsNull() },
       relations: ['attendees'],
     });
-    if (!event) return; // TODO: 예외 던지기
+    if (!event) {
+      throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+    }
     if (
       !(
         this.isEventOwner(event, userId) ||
@@ -170,7 +190,7 @@ export class EventsService {
         this.isEventAttendee(event.attendees, userId)
       )
     ) {
-      return; // TODO: 예외 던지기
+      throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
     }
     // 참석자 배열 랜덤으로 섞고, 팀 배정
     const { attendees } = event;
