@@ -19,17 +19,20 @@ export class EventEntity {
   @Column({ name: 'match_user_id', default: null })
   matchUserId: number;
 
+  @Column({ name: 'delete_user_id', default: null })
+  deleteUserId: number;
+
   @Column({ length: 50 })
   title: string;
 
   @Column({ length: 255 })
   description: string;
 
-  @Column({ name: 'matched_at', type: 'timestamp', default: null })
-  matchedAt: Date;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
+
+  @Column({ name: 'matched_at', type: 'timestamp', default: null })
+  matchedAt: Date;
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
   deletedAt: Date;
