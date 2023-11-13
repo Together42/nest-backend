@@ -28,11 +28,6 @@ export class EventsService {
     private eventAttendeeRepository: Repository<EventAttendeeEntity>,
   ) {}
 
-  /**
-   * [이벤트 생성]
-   * 자동 생성 이벤트의 경우, createUserId는 null 입니다.
-   * 그 외에는 이벤트를 생성한 유저가 자동으로 해당 이벤트의 첫번째 신청자가 됩니다.
-   */
   async create(createEventDto: CreateEventDto) {
     // TODO: 트랜잭션 처리
     const event = this.eventRepository.create(createEventDto);
@@ -115,10 +110,6 @@ export class EventsService {
     }
   }
 
-  /**
-   * [이벤트 삭제]
-   * 이벤트를 생성한 유저와 관리자만 이벤트 삭제가 가능힙니다.
-   */
   async remove(removeEventDto: RemoveEventDto) {
     const { userId, eventId } = removeEventDto;
     const event = await this.eventRepository.findOneBy({ id: eventId });
@@ -131,10 +122,6 @@ export class EventsService {
     await this.eventRepository.softDelete(event.id);
   }
 
-  /**
-   * [이벤트 참가 신청]
-   * 매칭이 안된 이벤트만 참가 가능하며, 중복 참가를 방지합니다.
-   */
   async registerEvent(registerEventDto: RegisterEventDto) {
     const { eventId, userId } = registerEventDto;
     const event = await this.eventRepository.findOne({
@@ -153,10 +140,6 @@ export class EventsService {
     await this.eventAttendeeRepository.save(attendance);
   }
 
-  /**
-   * [이벤트 참가 취소]
-   * 신청 내역이 있어야 취소 가능합니다.
-   */
   async unregisterEvent(unregisterEventDto: UnregisterEventDto) {
     const { eventId, userId } = unregisterEventDto;
     const eventAttendee = await this.eventAttendeeRepository.findOne({
@@ -168,11 +151,6 @@ export class EventsService {
     await this.eventAttendeeRepository.softDelete(eventAttendee.id);
   }
 
-  /**
-   * [이벤트 매칭하기]
-   * 이벤트를 생성한 유저와 관리자, 그리고 이벤트 신청자만 이벤트 매칭이 가능힙니다.
-   * 이미 매칭한 이벤트를 또 매칭할 수는 없습니다.
-   */
   async createMatching(matchEventDto: MatchEventDto) {
     // TODO: 트랜잭션 처리
     const { eventId, userId, teamNum = 1 } = matchEventDto;

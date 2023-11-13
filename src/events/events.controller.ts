@@ -34,7 +34,12 @@ export class EventsController {
   constructor(private eventsService: EventsService) {}
 
   @Post()
-  @ApiOperation({ summary: '이벤트 생성' })
+  @ApiOperation({
+    summary: '이벤트 생성',
+    description:
+      '이벤트를 생성한 유저가 자동으로 해당 이벤트의 첫번째 신청자가 됩니다. \
+       자동 생성 이벤트인 경우 해당사항 없으며, createUserId도 null입니다.',
+  })
   @ApiBearerAuth()
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiCreatedResponse({ description: '이벤트 생성 성공' })
@@ -77,7 +82,10 @@ export class EventsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: '특정 이벤트 삭제' })
+  @ApiOperation({
+    summary: '특정 이벤트 삭제',
+    description: '이벤트를 생성한 유저와 관리자만 이벤트 삭제가 가능힙니다.',
+  })
   @ApiBearerAuth()
   @ApiOkResponse({ description: '이벤트 삭제 성공' })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
@@ -94,7 +102,11 @@ export class EventsController {
   }
 
   @Post(':id/attendance')
-  @ApiOperation({ summary: '특정 이벤트에 참석' })
+  @ApiOperation({
+    summary: '특정 이벤트에 참석',
+    description:
+      '매칭이 안된 이벤트만 참가 가능하며, 같은 이벤트에 중복 신청이 불가합니다.',
+  })
   @ApiBearerAuth()
   @ApiCreatedResponse({ description: '이벤트 신청 성공' })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
@@ -110,7 +122,11 @@ export class EventsController {
   }
 
   @Delete(':id/attendance')
-  @ApiOperation({ summary: '특정 이벤트 참석 취소' })
+  @ApiOperation({
+    summary: '특정 이벤트 참석 취소',
+    description:
+      '취소를 요청한 유저가 해당 이벤트에 신청한 내역이 있어야 취소할 수 있습니다.',
+  })
   @ApiBearerAuth()
   @ApiOkResponse({ description: '이벤트 신청 취소 성공' })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
@@ -128,7 +144,12 @@ export class EventsController {
   }
 
   @Post(':id/matching')
-  @ApiOperation({ summary: '특정 이벤트 매칭' })
+  @ApiOperation({
+    summary: '특정 이벤트 매칭',
+    description:
+      '이벤트를 생성한 유저와 관리자, 그리고 이벤트 신청자만 이벤트 매칭이 가능힙니다. \
+       이미 매칭한 이벤트를 한번 더 매칭할 수는 없습니다.',
+  })
   @ApiBearerAuth()
   @ApiBody({ required: false, type: MatchEventBody })
   @ApiCreatedResponse({ description: '이벤트 매칭 성공' })

@@ -29,5 +29,5 @@ export class CreateEventBody {
 }
 
 export class CreateEventDto extends CreateEventBody {
-  createUserId: number;
+  createUserId?: number;
 }
