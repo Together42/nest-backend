@@ -60,25 +60,23 @@ export class RotationsService {
           id: user_id
         }
       });
-      Logger.log("user: " + user)
 
       if (!user) {
-        this.logger.warn("Can't find user by user_id.");
-        throw new NotFoundException();
+        // this.logger.warn(`User with ID ${user_id} not found`);
+        throw new NotFoundException(`User with ID ${user_id} not found`);
       }
 
       const userExist = await this.attendeeRepository.findOne({
         where: {
-          userId: user.id, // need to remake docker
+          userId: user.id,
           year: year,
           month: month
         }
       });
-      this.logger.log("user exist: " + userExist)
 
       if (!userExist) {
         const newRotation = new RotationAttendee();
-        newRotation.user = user;
+        newRotation.userId = user_id;
         newRotation.year = year;
         newRotation.month = month;
         newRotation.attend_limit = attend_limit;
@@ -88,14 +86,22 @@ export class RotationsService {
       }
 
       userExist.attend_limit = attend_limit;
-        
       await this.attendeeRepository.save(userExist);
       return userExist;
     }
     catch (error) {
-      this.logger.error("Error occoured: " + error);
-      throw error;
+      // this.logger.error("Error occoured: " + error);
+      throw new Error(`Error occurred: ${error}`);
     }
+  }
+
+  async createTestUser(nickname: string): Promise<User>
+  {
+    const newUser = this.userRepository.create({
+      nickname,
+    });
+
+    return this.userRepository.save(newUser);
   }
 
   async findAllRegistration() {

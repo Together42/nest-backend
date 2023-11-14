@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Logger, UsePipes, ValidationPipe } from '@nestjs/common';
 import { RotationsService } from './rotations.service';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
@@ -56,11 +56,23 @@ export class RotationsController {
    * Auth : own
    * annotation getuser 찾아보기
    * 도커 다시 설치 후 yarn start로 올리기
+   * class-validator class-transformer 설치하자고 말하기
    */
   @Post('/attendee')
-  createOwnRegistration(@Body() CreateRotationDto: CreateRotationDto) {
+  // @UsePipes(new ValidationPipe({ transform: true }))
+  createOwnRegistration(@Body() createRotationDto: CreateRotationDto) {
     const user_id = 1; // need to parse own user_id
-    return this.rotationsService.createRegistration(CreateRotationDto, user_id);
+    return this.rotationsService.createRegistration(createRotationDto, user_id);
+  }
+
+  /*
+   * User Test
+   * Need to delete!
+   */
+  @Post('/test')
+  createTestUser(@Body() body: any) {
+    const { nickname } = body;
+    return this.rotationsService.createTestUser(nickname)
   }
 
   /*
