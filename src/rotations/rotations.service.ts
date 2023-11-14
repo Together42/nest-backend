@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MongoChangeStreamError, Repository } from 'typeorm';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { Rotation } from './entities/rotation.entity';
@@ -23,6 +23,135 @@ export class RotationsService {
     private userRepository: Repository<User>,
     /********************/
   ) {}
+  /*
+   * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
+   * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
+   * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
+   * 올바르게 처리되었다면 요청이 처리된 attendee를 반환한다.
+   */
+  async createRegistration(createRotationDto: CreateRotationDto, userId: number): Promise<RotationAttendee> {
+    const { attend_limit } = createRotationDto;
+    const { year, month } = getNextYearAndMonth();
+
+    if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
+      throw new BadRequestException("Invalid date: Today is not a fourth weekday of the month.");
+    }
+
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          id: userId
+        }
+      });
+
+      if (!user) {
+        this.logger.error(`User with ID ${userId} not found`);
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      const attendeeExist = await this.attendeeRepository.findOne({
+        where: {
+          userId: user.id,
+          year: year,
+          month: month
+        }
+      });
+
+      if (!attendeeExist) {
+        const newRotation = new RotationAttendee();
+        newRotation.userId = userId;
+        newRotation.year = year;
+        newRotation.month = month;
+        newRotation.attend_limit = attend_limit;
+
+        await this.attendeeRepository.save(newRotation);
+        return newRotation;
+      }
+
+      attendeeExist.attend_limit = attend_limit; // update this month's attendee info
+      await this.attendeeRepository.save(attendeeExist);
+      return attendeeExist;
+    }
+    catch (error) {
+      this.logger.error("Error occoured: " + error);
+      throw new Error(error);
+    }
+  }
+
+  /*
+   * 테스팅용 서비스
+   * 나중에 유저 소스 머지 후 지울 것!
+   */
+  async createTestUser(nickname: string): Promise<User>
+  {
+    const newUser = this.userRepository.create({
+      nickname,
+    });
+
+    return this.userRepository.save(newUser);
+  }
+
+  /*
+   * 본인의 다음 달 로테이션 기록을 반환한다.
+   * 본인의 로테이션 기록이 담긴 배열을 반환.
+   */
+  async findRegistration(userId: number): Promise<Partial<RotationAttendee>> {
+    const { year, month } = getNextYearAndMonth();
+
+    try {
+      const records = await this.attendeeRepository.find({
+        where: {
+          userId: userId,
+          year: year,
+          month: month,
+        },
+        select: ['userId', 'year', 'month', 'attend_limit'],
+      });
+
+      if (records.length > 1) {
+        this.logger.warn(`Duplicated records found on ${userId}`);
+      }
+
+      if (!records || records.length === 0) {
+        return {}
+      }
+      return records[0];
+    } catch (error) {
+      this.logger.error("Error occoured: " + error);
+      throw new Error(error);
+    }
+  }
+
+  // findOne(id: number) {
+  //   return `This action returns a #${id} rotation`;
+  // }
+
+  // updateRegistration(id: number, updateRotationDto: UpdateRotationDto) {
+  //   return `This action updates a #${id} rotation`;
+  // }
+
+  async removeRegistration(userId: number): Promise<void> {
+    const { year, month } = getNextYearAndMonth();
+
+    try {
+      const records = await this.attendeeRepository.find({
+        where: {
+          userId: userId,
+          year: year,
+          month: month,
+        },
+      });
+
+      if (!records || records.length === 0) {
+        return;
+      }
+
+      await this.attendeeRepository.delete(records.map(record => record.id));
+    } catch (error) {
+      this.logger.error("Error occoured: " + error);
+      throw new Error(error);
+    }
+  }
 
   async createRotation(createRotationDto: CreateRotationDto) {
     return 'This action adds a new rotation';
@@ -41,85 +170,6 @@ export class RotationsService {
   }
 
   async removeRotation(id: number) {
-    return `This action removes a #${id} rotation`;
-  }
-
-
-  /*
-   * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
-   * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
-   */
-  async createRegistration(createRotationDto: CreateRotationDto, user_id: number) {
-    const { attend_limit } = createRotationDto;
-    const { year, month } = getNextYearAndMonth();
-
-    if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
-      throw new BadRequestException("Invalid date: Today is not a fourth weekday of the month.");
-    }
-
-    try {
-      const user = await this.userRepository.findOne({
-        where: {
-          id: user_id
-        }
-      });
-
-      if (!user) {
-        // this.logger.warn(`User with ID ${user_id} not found`);
-        throw new NotFoundException(`User with ID ${user_id} not found`);
-      }
-
-      const attendeeAlreadyExist = await this.attendeeRepository.findOne({
-        where: {
-          userId: user.id,
-          year: year,
-          month: month
-        }
-      });
-
-      if (!attendeeAlreadyExist) {
-        const newRotation = new RotationAttendee();
-        newRotation.userId = user_id;
-        newRotation.year = year;
-        newRotation.month = month;
-        newRotation.attend_limit = attend_limit;
-
-        await this.attendeeRepository.save(newRotation);
-        return newRotation;
-      }
-
-      attendeeAlreadyExist.attend_limit = attend_limit; // update this month's attendee info
-      await this.attendeeRepository.save(attendeeAlreadyExist);
-      return attendeeAlreadyExist;
-    }
-    catch (error) {
-      // this.logger.error("Error occoured: " + error);
-      throw new Error(`Error occurred: ${error}`);
-    }
-  }
-
-  async createTestUser(nickname: string): Promise<User>
-  {
-    const newUser = this.userRepository.create({
-      nickname,
-    });
-
-    return this.userRepository.save(newUser);
-  }
-
-  async findAllRegistration() {
-    return `This action returns all rotations`;
-  }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} rotation`;
-  // }
-
-  // updateRegistration(id: number, updateRotationDto: UpdateRotationDto) {
-  //   return `This action updates a #${id} rotation`;
-  // }
-
-  async removeRegistration(id: number) {
     return `This action removes a #${id} rotation`;
   }
 }
