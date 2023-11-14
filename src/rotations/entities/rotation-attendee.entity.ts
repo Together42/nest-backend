@@ -12,11 +12,13 @@ import { User } from './user.entity';
 
 @Entity('rotation_attendee')
 export class RotationAttendee {
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
     id: number;
 
-    @ManyToOne(() => User, (user) => user.id, { eager: true })
-    @JoinColumn({ name: 'user_id' })
+    @ManyToOne(() => User, (user) => user.rotationAttendees, {
+        onUpdate: 'CASCADE',
+    })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: User;
 
     @Column('int')

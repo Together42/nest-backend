@@ -12,19 +12,23 @@ import { User } from './user.entity';
 
 @Entity('rotation')
 export class Rotation {
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
     id: number;
 
     // eager: Rotation entity와 함께 User entity도 로드되도록 한다.
-    @ManyToOne(() => User, (user) => user.id, { eager: true })
-    @JoinColumn({ name: 'user_id' })
+    @ManyToOne(() => User, (user) => user.rotations, {
+        onUpdate: 'CASCADE',
+    })
+    @JoinColumn({ name: 'userId', referencedColumnName: 'id' })
     user: User;
 
     @Column('int')
     userId: number;
 
-    @ManyToOne(() => User, (user) => user.id, { eager: true })
-    @JoinColumn({ name: 'update_user_id' })
+    @ManyToOne(() => User, (user) => user.id, {
+        onUpdate: 'CASCADE',
+    })
+    @JoinColumn({ name: 'updateUserId', referencedColumnName: 'id' })
     updateUser: number;
 
     @Column('int')
@@ -42,7 +46,7 @@ export class Rotation {
     @CreateDateColumn({ type: 'datetime' })
     created_at: Date;
 
-    @CreateDateColumn({ type: 'datetime' })
+    @UpdateDateColumn({ type: 'datetime' })
     updated_at: Date;
 
     @DeleteDateColumn({ type: 'datetime' })

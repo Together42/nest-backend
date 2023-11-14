@@ -17,10 +17,16 @@ import { RotationAttendee } from './rotation-attendee.entity';
 @Entity('user')
 export class User {
     @PrimaryGeneratedColumn()
-    @OneToMany(() => Rotation, (rotation) => rotation.user, { eager: false })
-    @OneToMany(() => Rotation, (rotation) => rotation.updateUser, { eager: false })
-    @OneToMany(() => RotationAttendee, (RotationAttendee) => RotationAttendee.user, { eager: false })
     id: number;
+
+    @OneToMany(() => Rotation, rotation => rotation.user)
+    rotations: Rotation[];
+
+    @OneToMany(() => Rotation, rotation => rotation.updateUser)
+    updateRotations: Rotation[];
+
+    @OneToMany(() => RotationAttendee, rotationAttendee => rotationAttendee.user)
+    rotationAttendees: RotationAttendee[];
 
     @Column({ length: 255 })
     nickname: string;
