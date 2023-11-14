@@ -93,7 +93,10 @@ export class RotationsService {
 
   /*
    * 본인의 다음 달 로테이션 기록을 반환한다.
-   * 본인의 로테이션 기록이 담긴 배열을 반환.
+   * 본인의 로테이션 기록을 반환.
+   * 만약 기록이 없다면 빈 객체를 반환한다.
+   * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
+   * 로그로 남기고 하나만 가져온다.
    */
   async findRegistration(userId: number): Promise<Partial<RotationAttendee>> {
     const { year, month } = getNextYearAndMonth();
@@ -130,6 +133,10 @@ export class RotationsService {
   //   return `This action updates a #${id} rotation`;
   // }
 
+  /*
+   * 본인의 다음 달 로테이션 기록 삭제.
+   * 반환값은 없다.
+   */
   async removeRegistration(userId: number): Promise<void> {
     const { year, month } = getNextYearAndMonth();
 
