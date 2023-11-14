@@ -12,13 +12,13 @@ import {
     OneToMany,
 } from 'typeorm';
 import { Rotation } from './rotation.entity';
-import { RotationAttendee } from './rotation_attendee.entity';
+import { RotationAttendee } from './rotation-attendee.entity';
 
 @Entity('user')
 export class User {
     @PrimaryGeneratedColumn()
     @OneToMany(() => Rotation, (rotation) => rotation.user, { eager: false })
-    @OneToMany(() => Rotation, (rotation) => rotation.update_user, { eager: false })
+    @OneToMany(() => Rotation, (rotation) => rotation.updateUser, { eager: false })
     @OneToMany(() => RotationAttendee, (RotationAttendee) => RotationAttendee.user, { eager: false })
     id: number;
 

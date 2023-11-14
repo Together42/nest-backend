@@ -20,7 +20,7 @@ export class RotationAttendee {
     user: User;
 
     @Column('int')
-    user_id: number;
+    userId: number;
 
     @Column('smallint')
     year: number;

@@ -20,9 +20,15 @@ export class Rotation {
     @JoinColumn({ name: 'user_id' })
     user: User;
 
+    @Column('int')
+    userId: number;
+
     @ManyToOne(() => User, (user) => user.id, { eager: true })
     @JoinColumn({ name: 'update_user_id' })
-    update_user: number;
+    updateUser: number;
+
+    @Column('int')
+    updateUserId: number;
 
     @Column('smallint')
     year: number;

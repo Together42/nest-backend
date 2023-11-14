@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { Rotation } from './entities/rotation.entity';
-import { RotationAttendee } from './entities/rotation_attendee.entity';
+import { RotationAttendee } from './entities/rotation-attendee.entity';
 /* for test */ import { User } from './entities/user.entity';
 
 @Injectable()
@@ -60,7 +60,7 @@ export class RotationsService {
           id: user_id
         }
       });
-      this.logger.log("user: " + user)
+      Logger.log("user: " + user)
 
       if (!user) {
         this.logger.warn("Can't find user by user_id.");
@@ -69,7 +69,7 @@ export class RotationsService {
 
       const userExist = await this.attendeeRepository.findOne({
         where: {
-          user_id: user.id, // need to remake docker
+          userId: user.id, // need to remake docker
           year: year,
           month: month
         }
@@ -93,7 +93,7 @@ export class RotationsService {
       return userExist;
     }
     catch (error) {
-      this.logger.warn("Error occoured: " + error);
+      this.logger.error("Error occoured: " + error);
       throw error;
     }
   }

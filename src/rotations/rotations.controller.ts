@@ -54,6 +54,8 @@ export class RotationsController {
   /*
    * 본인 로테이션 신청
    * Auth : own
+   * annotation getuser 찾아보기
+   * 도커 다시 설치 후 yarn start로 올리기
    */
   @Post('/attendee')
   createOwnRegistration(@Body() CreateRotationDto: CreateRotationDto) {
