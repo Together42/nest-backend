@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRotationDto } from './dto/create-rotation.dto';
@@ -6,6 +6,7 @@ import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { Rotation } from './entities/rotation.entity';
 import { RotationAttendee } from './entities/rotation-attendee.entity';
 /* for test */ import { User } from './entities/user.entity';
+import { getFourthWeekdaysOfMonth, getNextYearAndMonth, getTodayDate } from './utils/date.helper';
 
 @Injectable()
 export class RotationsService {
@@ -50,9 +51,11 @@ export class RotationsService {
    */
   async createRegistration(createRotationDto: CreateRotationDto, user_id: number) {
     const { attend_limit } = createRotationDto;
-    const currentDate = new Date();
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1;
+    const { year, month } = getNextYearAndMonth();
+
+    if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
+      throw new BadRequestException("Invalid date: Today is not a fourth weekday of the month.");
+    }
 
     try {
       const user = await this.userRepository.findOne({
@@ -66,7 +69,7 @@ export class RotationsService {
         throw new NotFoundException(`User with ID ${user_id} not found`);
       }
 
-      const userExist = await this.attendeeRepository.findOne({
+      const attendeeAlreadyExist = await this.attendeeRepository.findOne({
         where: {
           userId: user.id,
           year: year,
@@ -74,7 +77,7 @@ export class RotationsService {
         }
       });
 
-      if (!userExist) {
+      if (!attendeeAlreadyExist) {
         const newRotation = new RotationAttendee();
         newRotation.userId = user_id;
         newRotation.year = year;
@@ -85,9 +88,9 @@ export class RotationsService {
         return newRotation;
       }
 
-      userExist.attend_limit = attend_limit;
-      await this.attendeeRepository.save(userExist);
-      return userExist;
+      attendeeAlreadyExist.attend_limit = attend_limit; // update this month's attendee info
+      await this.attendeeRepository.save(attendeeAlreadyExist);
+      return attendeeAlreadyExist;
     }
     catch (error) {
       // this.logger.error("Error occoured: " + error);
