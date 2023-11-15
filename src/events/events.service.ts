@@ -89,7 +89,7 @@ export class EventsService {
   /**
    * 유저가 서비스의 관리자인지 판별
    */
-  private isAdminUser(userId: number) {
+  private isAdminUser(userId: number): boolean {
     // TODO: 유저 엔티티를 조회하여 유저가 관리자인지 확인해야함, 유저 모듈로 빼기
     userId;
     return true;
@@ -98,7 +98,7 @@ export class EventsService {
   /**
    * 유저가 해당 이벤트를 생성한 유저인지 판별
    */
-  private isEventOwner(event: EventEntity, targetUserId: number) {
+  private isEventOwner(event: EventEntity, targetUserId: number): boolean {
     return event.createUserId === targetUserId;
   }
 
@@ -108,7 +108,7 @@ export class EventsService {
   private isEventAttendee(
     eventAttendees: EventAttendeeEntity[],
     targetUserId: number,
-  ) {
+  ): boolean {
     return eventAttendees.some((attendee) => attendee.userId === targetUserId);
   }
 
@@ -170,6 +170,19 @@ export class EventsService {
     await this.eventAttendeeRepository.softDelete(eventAttendee.id);
   }
 
+  /**
+   * 이벤트 매칭시 신청자 팀 배정
+   */
+  private assignAttendeesTeam(
+    attendees: EventAttendeeEntity[],
+    teamNum: number,
+  ) {
+    shuffleArray(attendees);
+    attendees.forEach((attendee, index) => {
+      attendee.teamId = (index % teamNum) + 1;
+    });
+  }
+
   async createMatching(matchEventDto: MatchEventDto) {
     const queryRunner = this.dataSource.createQueryRunner();
     let error: any;
@@ -200,18 +213,13 @@ export class EventsService {
       }
 
       // 참석자 배열 랜덤으로 섞고, 팀 배정
-      const { attendees } = event;
-      shuffleArray(attendees);
-      attendees.forEach((attendee, index) => {
-        attendee.teamId = (index % teamNum) + 1;
-      });
-
+      this.assignAttendeesTeam(event.attendees, teamNum);
       await queryRunner.manager.save(EventEntity, {
         id: eventId,
         matchedAt: new Date(),
         matchUserId: userId,
       });
-      await queryRunner.manager.save(EventAttendeeEntity, attendees);
+      await queryRunner.manager.save(EventAttendeeEntity, event.attendees);
       await queryRunner.commitTransaction();
     } catch (e) {
       error = e;
