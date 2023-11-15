@@ -30,7 +30,7 @@ export class EventEntity {
   description: string;
 
   @Column({ name: 'category_id', default: EventCategory.ETC })
-  categoryId: number;
+  categoryId: EventCategory;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;

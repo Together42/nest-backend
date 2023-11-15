@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { EventEntity } from '../entities/event.entity';
 import { EventCategory } from '../enum/event-category.enum';
+import { EventStatus } from '../enum/event-status.enum';
 
 export class EventDto {
   @ApiProperty({ description: '이벤트 고유 id' })
@@ -18,10 +19,13 @@ export class EventDto {
   @ApiProperty({ description: '이벤트를 생성한 유저의 닉네임' })
   intraId: string;
 
-  @ApiProperty({ type: 'number', description: '이벤트가 매칭 되었는지 여부' })
-  isMatching: 0 | 1;
+  @ApiProperty({
+    enum: EventStatus,
+    description: '이벤트가 매칭 되었는지 여부',
+  })
+  isMatching: EventStatus;
 
-  @ApiProperty({ description: '이벤트의 카테고리 id' })
+  @ApiProperty({ enum: EventCategory, description: '이벤트의 카테고리 id' })
   categoryId: EventCategory;
 
   static from(eventEntity: EventEntity) {
@@ -31,7 +35,9 @@ export class EventDto {
     eventDto.description = eventEntity.description;
     eventDto.createdId = eventEntity.createUserId;
     eventDto.intraId = 'any';
-    eventDto.isMatching = eventEntity.matchedAt ? 1 : 0;
+    eventDto.isMatching = eventEntity.matchedAt
+      ? EventStatus.MATCH
+      : EventStatus.UNMATCH;
     eventDto.categoryId = eventEntity.categoryId;
     return eventDto;
   }
