@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './events/events.module';
+import { BatchModule } from './batch/batch.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { EventsModule } from './events/events.module';
       synchronize: true,
     }),
     EventsModule,
+    BatchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
