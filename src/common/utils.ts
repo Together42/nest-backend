@@ -11,16 +11,9 @@ export const shuffleArray = (array: any[]) => {
   }
 };
 
-const isHttpException = (error: any): error is HttpException => {
+export const isHttpException = (error: any): error is HttpException => {
   if ('response' in error && 'status' in error) {
     return true;
   }
   return false;
-};
-
-export const exceptionHandling = (error: any) => {
-  if (isHttpException(error)) {
-    throw new HttpException(error.getResponse(), error.getStatus());
-  }
-  throw new Error();
 };

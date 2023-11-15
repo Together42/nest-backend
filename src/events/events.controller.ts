@@ -27,6 +27,7 @@ import {
   InternalServerExceptionBody,
   NotFoundExceptionBody,
 } from '../common/dto/error-response.dto';
+import { EventIdDto } from './dto/event-id.dto';
 
 @Controller('events')
 @ApiTags('events')
@@ -41,10 +42,10 @@ export class EventsController {
        자동 생성 이벤트인 경우 해당사항 없으며, createUserId도 null입니다.',
   })
   @ApiBearerAuth()
+  @ApiCreatedResponse({ description: '이벤트 생성 성공', type: EventIdDto })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
-  @ApiCreatedResponse({ description: '이벤트 생성 성공' })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async create(@Body() createEventBody: CreateEventBody): Promise<void> {
+  async create(@Body() createEventBody: CreateEventBody): Promise<EventIdDto> {
     const user = { id: 42 };
     const createEventDto: CreateEventDto = {
       ...createEventBody,
@@ -152,7 +153,7 @@ export class EventsController {
   })
   @ApiBearerAuth()
   @ApiBody({ required: false, type: MatchEventBody })
-  @ApiCreatedResponse({ description: '이벤트 매칭 성공' })
+  @ApiCreatedResponse({ type: EventDetailDto, description: '이벤트 매칭 성공' })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
@@ -160,7 +161,7 @@ export class EventsController {
   async createMatching(
     @Param() findEventParam: FindEventParam,
     @Body() matchEventBody: MatchEventBody,
-  ): Promise<void> {
+  ): Promise<EventDetailDto> {
     const user = { id: 42 };
     const { teamNum } = matchEventBody;
     const matchEventDto: MatchEventDto = {

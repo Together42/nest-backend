@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -18,7 +19,7 @@ import { UnregisterEventDto } from './dto/unregister-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
 import { ErrorMessage } from 'src/common/error-message';
-import { exceptionHandling, shuffleArray } from 'src/common/utils';
+import { isHttpException, shuffleArray } from 'src/common/utils';
 
 @Injectable()
 export class EventsService {
@@ -32,7 +33,6 @@ export class EventsService {
 
   async create(createEventDto: CreateEventDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-    let error: any;
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -47,12 +47,14 @@ export class EventsService {
         await queryRunner.manager.save(firstAttendee);
       }
       await queryRunner.commitTransaction();
+      return { eventId: id };
     } catch (e) {
-      error = e;
       await queryRunner.rollbackTransaction();
+      if (isHttpException(e))
+        throw new HttpException(e.getResponse(), e.getStatus());
+      else throw new Error();
     } finally {
       await queryRunner.release();
-      if (error) exceptionHandling(error);
     }
   }
 
@@ -129,7 +131,6 @@ export class EventsService {
 
   async registerEvent(registerEventDto: RegisterEventDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-    let error: any;
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -151,11 +152,13 @@ export class EventsService {
       await queryRunner.manager.save(attendance);
       await queryRunner.commitTransaction();
     } catch (e) {
-      error = e;
       await queryRunner.rollbackTransaction();
+      if (isHttpException(e)) {
+        throw new HttpException(e.getResponse(), e.getStatus());
+      }
+      throw new Error();
     } finally {
       await queryRunner.release();
-      if (error) exceptionHandling(error);
     }
   }
 
@@ -185,12 +188,11 @@ export class EventsService {
 
   async createMatching(matchEventDto: MatchEventDto) {
     const queryRunner = this.dataSource.createQueryRunner();
-    let error: any;
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const { eventId, userId, teamNum = 1 } = matchEventDto;
+      const { eventId, userId, teamNum } = matchEventDto;
       const event = await queryRunner.manager.findOne(EventEntity, {
         where: { id: eventId, matchedAt: IsNull() },
         relations: ['attendees'],
@@ -200,6 +202,7 @@ export class EventsService {
         throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
       }
       if (
+        userId &&
         !(
           this.isEventOwner(event, userId) ||
           this.isAdminUser(userId) ||
@@ -208,7 +211,7 @@ export class EventsService {
       ) {
         throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
       }
-      if (teamNum > event.attendees.length) {
+      if (event.attendees.length > 0 && teamNum > event.attendees.length) {
         throw new BadRequestException(ErrorMessage.TOO_MANY_EVENT_TEAM_NUMBER);
       }
 
@@ -221,12 +224,15 @@ export class EventsService {
       });
       await queryRunner.manager.save(EventAttendeeEntity, event.attendees);
       await queryRunner.commitTransaction();
+      return EventDetailDto.from(event);
     } catch (e) {
-      error = e;
       await queryRunner.rollbackTransaction();
+      if (isHttpException(e)) {
+        throw new HttpException(e.getResponse(), e.getStatus());
+      }
+      throw new Error();
     } finally {
       await queryRunner.release();
-      if (error) exceptionHandling(error);
     }
   }
 }

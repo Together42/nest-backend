@@ -15,5 +15,5 @@ export class MatchEventBody {
 
 export class MatchEventDto extends MatchEventBody {
   eventId: number;
-  userId: number;
+  userId?: number;
 }
