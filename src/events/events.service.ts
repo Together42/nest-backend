@@ -223,6 +223,9 @@ export class EventsService {
         matchUserId: userId,
       });
       await queryRunner.manager.save(EventAttendeeEntity, event.attendees);
+      if (event.attendees.length === 0) {
+        await queryRunner.manager.softDelete(EventEntity, event.id);
+      }
       await queryRunner.commitTransaction();
       return EventDetailDto.from(event);
     } catch (e) {
