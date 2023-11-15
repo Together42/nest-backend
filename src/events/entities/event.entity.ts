@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { EventAttendeeEntity } from './event-attendee.entity';
+import { EventCategory } from '../enum/event-category.enum';
 
 @Entity('event')
 export class EventEntity {
@@ -27,6 +28,9 @@ export class EventEntity {
 
   @Column({ length: 255 })
   description: string;
+
+  @Column({ name: 'category_id', default: EventCategory.ETC })
+  categoryId: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;

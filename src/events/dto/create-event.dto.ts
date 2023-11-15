@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { EventCategory } from '../enum/event-category.enum';
 
 export class CreateEventBody {
   @ApiProperty({
@@ -30,4 +31,5 @@ export class CreateEventBody {
 
 export class CreateEventDto extends CreateEventBody {
   createUserId?: number;
+  categoryId?: EventCategory;
 }
