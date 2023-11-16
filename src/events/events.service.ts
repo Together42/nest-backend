@@ -13,13 +13,11 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { MatchEventDto } from './dto/match-event.dto';
 import { EventRankingDto } from './dto/event-ranking.dto';
 import { FindEventDto } from './dto/find-event.dto';
-import { RemoveEventDto } from './dto/remove-event.dto';
-import { RegisterEventDto } from './dto/register-event.dto';
-import { UnregisterEventDto } from './dto/unregister-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
 import { ErrorMessage } from 'src/common/error-message';
 import { isHttpException, shuffleArray } from 'src/common/utils';
+import { EventUserIdsDto } from './dto/event-user-ids.dto';
 
 @Injectable()
 export class EventsService {
@@ -114,7 +112,7 @@ export class EventsService {
     return eventAttendees.some((attendee) => attendee.userId === targetUserId);
   }
 
-  async remove(removeEventDto: RemoveEventDto) {
+  async remove(removeEventDto: EventUserIdsDto) {
     const { userId, eventId } = removeEventDto;
     const event = await this.eventRepository.findOneBy({ id: eventId });
     if (!event) {
@@ -129,7 +127,7 @@ export class EventsService {
     });
   }
 
-  async registerEvent(registerEventDto: RegisterEventDto) {
+  async registerEvent(registerEventDto: EventUserIdsDto) {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -162,7 +160,7 @@ export class EventsService {
     }
   }
 
-  async unregisterEvent(unregisterEventDto: UnregisterEventDto) {
+  async unregisterEvent(unregisterEventDto: EventUserIdsDto) {
     const { eventId, userId } = unregisterEventDto;
     const eventAttendee = await this.eventAttendeeRepository.findOne({
       where: { eventId, userId, teamId: IsNull() },

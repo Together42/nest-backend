@@ -18,9 +18,6 @@ import { EventRankingDto } from './dto/event-ranking.dto';
 import { EventDto } from './dto/event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { FindEventParam } from './dto/find-event.dto';
-import { RemoveEventDto } from './dto/remove-event.dto';
-import { RegisterEventDto } from './dto/register-event.dto';
-import { UnregisterEventDto } from './dto/unregister-event.dto';
 import {
   BadRequestExceptionBody,
   ForbiddenExceptionBody,
@@ -28,6 +25,7 @@ import {
   NotFoundExceptionBody,
 } from '../common/dto/error-response.dto';
 import { EventIdDto } from './dto/event-id.dto';
+import { EventUserIdsDto } from './dto/event-user-ids.dto';
 
 @Controller('events')
 @ApiTags('events')
@@ -95,7 +93,7 @@ export class EventsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async remove(@Param() findEventParam: FindEventParam): Promise<void> {
     const user = { id: 42 };
-    const removeEventDto: RemoveEventDto = {
+    const removeEventDto: EventUserIdsDto = {
       eventId: findEventParam.id,
       userId: user.id,
     };
@@ -115,7 +113,7 @@ export class EventsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async registerEvent(@Param() findEventParam: FindEventParam) {
     const user = { id: 42 };
-    const registerEventDto: RegisterEventDto = {
+    const registerEventDto: EventUserIdsDto = {
       eventId: findEventParam.id,
       userId: user.id,
     };
@@ -137,7 +135,7 @@ export class EventsController {
     @Param() findEventParam: FindEventParam,
   ): Promise<void> {
     const user = { id: 42 };
-    const unregisterEventDto: UnregisterEventDto = {
+    const unregisterEventDto: EventUserIdsDto = {
       eventId: findEventParam.id,
       userId: user.id,
     };
