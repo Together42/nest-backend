@@ -2,11 +2,11 @@ import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../entity/user.entity';
 
-export class UserRepository extends Repository<User>{
+export class UserRepository extends Repository<User> {
   constructor(
     @InjectRepository(User)
-    private readonly dataSource: DataSource
-  ){
+    private readonly dataSource: DataSource,
+  ) {
     super(User, dataSource.manager);
   }
 
@@ -19,11 +19,13 @@ export class UserRepository extends Repository<User>{
     return newUser;
   }
 
-  async findOneByEmail(email: string): Promise<User | undefined | Partial<User>> {
+  async findOneByEmail(
+    email: string,
+  ): Promise<User | undefined | Partial<User>> {
     return await this.findOne({
       where: {
         googleEmail: email,
-      }
+      },
     });
   }
 }

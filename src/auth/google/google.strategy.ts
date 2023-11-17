@@ -1,31 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { 
-  Strategy,
-  VerifyCallback,
-  Profile,
-} from 'passport-google-oauth20';
+import { Strategy, VerifyCallback, Profile } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class GoogleStrategy extends PassportStrategy(Strategy, 'google'){
+export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private readonly logger = new Logger(GoogleStrategy.name);
-  constructor(
-    private readonly configService: ConfigService,
-  ) {
-    super ({
+  constructor(private readonly configService: ConfigService) {
+    super({
       clientID: configService.get<string>('google.clientId'),
       clientSecret: configService.get<string>('google.clientSecret'),
       callbackURL: configService.get<string>('google.callbackUrl'),
-      scope: ['email', 'profile',],
-    })
+      scope: ['email', 'profile'],
+    });
   }
 
-  authorizationParams(): {[key: string]: string; }{
+  authorizationParams(): { [key: string]: string } {
     return {
       access_type: 'offline',
       prompt: this.configService.get<string>('google.prompt'),
-    }
+    };
   }
 
   async validate(
@@ -45,5 +39,5 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google'){
       refreshToken,
     };
     done(null, user);
-    }
+  }
 }

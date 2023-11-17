@@ -1,12 +1,9 @@
 import {
   Controller,
-  Post,
-  Body,
   Get,
   UseGuards,
   Request,
   Response,
-  HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -20,27 +17,22 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  async googleAuth(
-    @Request() req,
-  ){
+  async googleAuth(@Request() req) {
     this.logger.debug(`googleAuth [req: ${JSON.stringify(req)}]`);
   }
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleAuthRedirect(
-    @Request() req,
-  ){
+  async googleAuthRedirect(@Request() req, @Response() res) {
     const user = req.user;
     this.logger.debug(`googleAuthRedirect [user: ${JSON.stringify(user)}]`);
-    return this.authService.googleLogin(user);
+    const token = await this.authService.googleLogin(user);
+    res.redirect(`http://localhost:3000/auth/login?token=${token.accessToken}`);
   }
 
   @Get('test')
   @UseGuards(JwtGuard)
-  async jwtAuthTest(
-    @Request() req,
-  ){
+  async jwtAuthTest() {
     return 'jwtAuthTest';
   }
 }

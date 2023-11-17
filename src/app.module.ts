@@ -11,15 +11,14 @@ import configuration from './config/configuration';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath:
-        process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
+      envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
       isGlobal: true,
       load: [configuration],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService)=>({
+      useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get('database.DB_HOST'),
         port: configService.get('database.DB_PORT'),

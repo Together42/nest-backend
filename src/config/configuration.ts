@@ -1,6 +1,5 @@
 import 'dotenv/config';
 
-
 export default () => ({
   database: {
     DB_HOST: process.env.MYSQL_HOST || 'localhost',
