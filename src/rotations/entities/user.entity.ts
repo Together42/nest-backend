@@ -11,8 +11,8 @@ import {
     DeleteDateColumn,
     OneToMany,
 } from 'typeorm';
-import { Rotation } from './rotation.entity';
-import { RotationAttendee } from './rotation-attendee.entity';
+import { Rotation } from './rotation/rotation.entity';
+import { RotationAttendee } from './rotation/rotation-attendee.entity';
 
 @Entity('user')
 export class User {

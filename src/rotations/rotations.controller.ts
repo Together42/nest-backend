@@ -1,8 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Logger, UsePipes, ValidationPipe, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Logger,
+} from '@nestjs/common';
 import { RotationsService } from './rotations.service';
 import { CreateRotationDto } from './dto/create-rotation.dto';
-import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { RotationAttendee } from './entities/rotation-attendee.entity';
+// import { UpdateRotationDto } from './dto/rotation/update-rotation.dto';
+import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 
 @Controller('rotations')
 export class RotationsController {
@@ -15,14 +23,21 @@ export class RotationsController {
    * Auth : own
    * annotation getuser 찾아보기
    * 도커 다시 설치 후 yarn start로 올리기 - OK
-   * class-validator class-transformer 설치하자고 말하기
+   * class-validator class-transformer 설치하자고 말하기 + request
    * Auth 스코프는 어떻게 정해야 할까?
+   * - useGuard : JWT guard : seowokim님 머지 후 다시 보기
+   * holiday table 만들고 도커 다시 올리기
    */
   @Post('/attendee')
   // @UsePipes(new ValidationPipe({ transform: true }))
-  async createOwnRegistration(@Body() createRotationDto: CreateRotationDto): Promise<RotationAttendee> {
+  async createOwnRegistration(
+    @Body() createRotationDto: CreateRotationDto,
+  ): Promise<RotationAttendee> {
     const user_id = 3; // need to parse user's own user_id
-    return await this.rotationsService.createRegistration(createRotationDto, user_id);
+    return await this.rotationsService.createRegistration(
+      createRotationDto,
+      user_id,
+    );
   }
 
   /*
@@ -32,7 +47,7 @@ export class RotationsController {
   @Post('/test')
   async createTestUser(@Body() body: any) {
     const { nickname } = body;
-    return await this.rotationsService.createTestUser(nickname)
+    return await this.rotationsService.createTestUser(nickname);
   }
 
   /*
@@ -59,10 +74,10 @@ export class RotationsController {
    * 본인 로테이션 생성 (달력)
    * Auth : own
    */
-  @Post('/')
-  createOwnRotation(@Body() createRotationDto: CreateRotationDto) {
-    return this.rotationsService.createRotation(createRotationDto);
-  }
+  // @Post('/')
+  // createOwnRotation(@Body() createRotationDto: CreateRotationDto) {
+  //   return this.rotationsService.createRotation(createRotationDto);
+  // }
 
   /*
    * 사서 로테이션 조회 (달력)
@@ -83,10 +98,13 @@ export class RotationsController {
    * 사서 로테이션 수정 (달력)
    * Auth : user
    */
-  @Patch('/:id')
-  updateUserRotation(@Param('id') id: string, @Body() updateRotationDto: UpdateRotationDto) {
-    return this.rotationsService.updateRotation(+id, updateRotationDto);
-  }
+  // @Patch('/:id')
+  // updateUserRotation(
+  //   @Param('id') id: string,
+  //   @Body() updateRotationDto: UpdateRotationDto,
+  // ) {
+  //   return this.rotationsService.updateRotation(+id, updateRotationDto);
+  // }
 
   /*
    * 사서 로테이션 삭제 (달력)

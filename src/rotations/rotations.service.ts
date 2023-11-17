@@ -1,12 +1,21 @@
-import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MongoChangeStreamError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateRotationDto } from './dto/create-rotation.dto';
-import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { Rotation } from './entities/rotation.entity';
-import { RotationAttendee } from './entities/rotation-attendee.entity';
+// import { UpdateRotationDto } from './dto/rotation/update-rotation.dto';
+import { Rotation } from './entities/rotation/rotation.entity';
+import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 /* for test */ import { User } from './entities/user.entity';
-import { getFourthWeekdaysOfMonth, getNextYearAndMonth, getTodayDate } from './utils/date.helper';
+import {
+  getFourthWeekdaysOfMonth,
+  getNextYearAndMonth,
+  getTodayDate,
+} from './utils/date';
 
 @Injectable()
 export class RotationsService {
@@ -17,11 +26,10 @@ export class RotationsService {
     private rotationRepository: Repository<Rotation>,
     @InjectRepository(RotationAttendee)
     private attendeeRepository: Repository<RotationAttendee>,
-    
+
     /****  for test  ****/
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    /********************/
   ) {}
   /*
    * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
@@ -29,19 +37,25 @@ export class RotationsService {
    * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
    * 올바르게 처리되었다면 요청이 처리된 attendee를 반환한다.
    */
-  async createRegistration(createRotationDto: CreateRotationDto, userId: number): Promise<RotationAttendee> {
+  async createRegistration(
+    createRotationDto: CreateRotationDto,
+    userId: number,
+  ): Promise<RotationAttendee> {
     const { attend_limit } = createRotationDto;
     const { year, month } = getNextYearAndMonth();
 
     if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
-      throw new BadRequestException("Invalid date: Today is not a fourth weekday of the month.");
+      throw new BadRequestException(
+        'Invalid date: Today is not a fourth weekday of the month.',
+      );
     }
 
     try {
       const user = await this.userRepository.findOne({
         where: {
-          id: userId
-        }
+          id: userId,
+        },
+        // relation ... 찾아보기
       });
 
       if (!user) {
@@ -53,8 +67,8 @@ export class RotationsService {
         where: {
           userId: user.id,
           year: year,
-          month: month
-        }
+          month: month,
+        },
       });
 
       if (!attendeeExist) {
@@ -71,9 +85,8 @@ export class RotationsService {
       attendeeExist.attend_limit = attend_limit; // update this month's attendee info
       await this.attendeeRepository.save(attendeeExist);
       return attendeeExist;
-    }
-    catch (error) {
-      this.logger.error("Error occoured: " + error);
+    } catch (error) {
+      this.logger.error('Error occoured: ' + error);
       throw new Error(error);
     }
   }
@@ -82,8 +95,7 @@ export class RotationsService {
    * 테스팅용 서비스
    * 나중에 유저 소스 머지 후 지울 것!
    */
-  async createTestUser(nickname: string): Promise<User>
-  {
+  async createTestUser(nickname: string): Promise<User> {
     const newUser = this.userRepository.create({
       nickname,
     });
@@ -116,11 +128,11 @@ export class RotationsService {
       }
 
       if (!records || records.length === 0) {
-        return {}
+        return {};
       }
       return records[0];
     } catch (error) {
-      this.logger.error("Error occoured: " + error);
+      this.logger.error('Error occoured: ' + error);
       throw new Error(error);
     }
   }
@@ -153,16 +165,16 @@ export class RotationsService {
         return;
       }
 
-      await this.attendeeRepository.delete(records.map(record => record.id));
+      await this.attendeeRepository.delete(records.map((record) => record.id));
     } catch (error) {
-      this.logger.error("Error occoured: " + error);
+      this.logger.error('Error occoured: ' + error);
       throw new Error(error);
     }
   }
 
-  async createRotation(createRotationDto: CreateRotationDto) {
-    return 'This action adds a new rotation';
-  }
+  // async createRotation(createRotationDto: CreateRotationDto) {
+  //   return 'This action adds a new rotation';
+  // }
 
   async findAllRotation() {
     return `This action returns all rotations`;
@@ -172,9 +184,9 @@ export class RotationsService {
   //   return `This action returns a #${id} rotation`;
   // }
 
-  async updateRotation(id: number, updateRotationDto: UpdateRotationDto) {
-    return `This action updates a #${id} rotation`;
-  }
+  // async updateRotation(id: number, updateRotationDto: UpdateRotationDto) {
+  //   return `This action updates a #${id} rotation`;
+  // }
 
   async removeRotation(id: number) {
     return `This action removes a #${id} rotation`;
