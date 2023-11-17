@@ -15,7 +15,7 @@ export class RotationAttendee {
   @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
   id: number;
 
-  @ManyToOne(() => User, (user) => user.rotationAttendees, {
+  @ManyToOne(() => User, (user) => user.id, {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' }) // 설정 안하면 PK로 자동 매핑됨

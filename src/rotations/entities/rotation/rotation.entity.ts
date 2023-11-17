@@ -16,7 +16,7 @@ export class Rotation {
   id: number;
 
   // eager: Rotation entity와 함께 User entity도 로드되도록 한다.
-  @ManyToOne(() => User, (user) => user.rotations, {
+  @ManyToOne(() => User, (user) => user.id, {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })

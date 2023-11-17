@@ -3,40 +3,28 @@
  * *****************/
 
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    CreateDateColumn,
-    UpdateDateColumn,
-    DeleteDateColumn,
-    OneToMany,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { Rotation } from './rotation/rotation.entity';
-import { RotationAttendee } from './rotation/rotation-attendee.entity';
 
 @Entity('user')
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @OneToMany(() => Rotation, rotation => rotation.user)
-    rotations: Rotation[];
+  @Column({ length: 255 })
+  nickname: string;
 
-    @OneToMany(() => Rotation, rotation => rotation.updateUser)
-    updateRotations: Rotation[];
+  @CreateDateColumn({ type: 'datetime' })
+  created_at: Date;
 
-    @OneToMany(() => RotationAttendee, rotationAttendee => rotationAttendee.user)
-    rotationAttendees: RotationAttendee[];
+  @UpdateDateColumn({ type: 'datetime' })
+  updated_at: Date;
 
-    @Column({ length: 255 })
-    nickname: string;
-
-    @CreateDateColumn({ type: 'datetime' })
-    created_at: Date;
-
-    @UpdateDateColumn({ type: 'datetime' })
-    updated_at: Date;
-
-    @DeleteDateColumn({ type: 'datetime' })
-    deleted_at: Date;
+  @DeleteDateColumn({ type: 'datetime' })
+  deleted_at: Date;
 }
