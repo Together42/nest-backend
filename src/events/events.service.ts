@@ -15,7 +15,7 @@ import { EventRankingDto } from './dto/event-ranking.dto';
 import { FindEventDto } from './dto/find-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
-import { ErrorMessage } from 'src/common/error-message';
+import { ErrorMessage } from 'src/common/enum/error-message.enum';
 import { isHttpException, shuffleArray } from 'src/common/utils';
 import { EventUserIdsDto } from './dto/event-user-ids.dto';
 
