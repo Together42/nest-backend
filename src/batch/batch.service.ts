@@ -45,8 +45,8 @@ export class BatchService {
   @Cron('0 14 * * 3', { name: 'createWeeklyDinner', timeZone: 'Asia/Seoul' })
   async createWeeklyDinner() {
     const createEventDto: CreateEventDto = {
-      title: '[주간 식사] 오늘 주간 회의 끝나고 같이 저녁 드실 분~',
-      description: '같이 회의도 하고 식사도 하면서 친해집시다!',
+      title: '[주간 식사] 회의 끝나고 같이 저녁 드실 분~',
+      description: '금일 오후 6시에 자동 마감됩니다.',
       categoryId: EventCategory.WEEKLY_EVENT,
     };
     const { eventId } = await this.eventsService.create(createEventDto);

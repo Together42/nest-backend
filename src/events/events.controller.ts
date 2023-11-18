@@ -159,7 +159,7 @@ export class EventsController {
   async createMatching(
     @Param() findEventParam: FindEventParam,
     @Body() matchEventBody: MatchEventBody,
-  ): Promise<EventDetailDto> {
+  ): Promise<void> {
     const user = { id: 42 };
     const { teamNum } = matchEventBody;
     const matchEventDto: MatchEventDto = {

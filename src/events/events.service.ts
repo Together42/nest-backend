@@ -16,13 +16,22 @@ import { FindEventDto } from './dto/find-event.dto';
 import { EventDetailDto } from './dto/event-detail.dto';
 import { EventDto } from './dto/event.dto';
 import { ErrorMessage } from 'src/common/enum/error-message.enum';
-import { isHttpException, shuffleArray } from 'src/common/utils';
+import {
+  isHttpException,
+  createEventMessage,
+  shuffleArray,
+  matchEventMessage,
+  registerEventMessage,
+  unregisterEventMessage,
+} from 'src/common/utils';
 import { EventUserIdsDto } from './dto/event-user-ids.dto';
+import { SlackService } from 'nestjs-slack';
 
 @Injectable()
 export class EventsService {
   constructor(
     private dataSource: DataSource,
+    private slackService: SlackService,
     @InjectRepository(EventEntity)
     private eventRepository: Repository<EventEntity>,
     @InjectRepository(EventAttendeeEntity)
@@ -36,7 +45,8 @@ export class EventsService {
     await queryRunner.startTransaction();
     try {
       const event = this.eventRepository.create(createEventDto);
-      const { id, createUserId } = await queryRunner.manager.save(event);
+      const { id, title, description, createUserId } =
+        await queryRunner.manager.save(event);
       if (createUserId) {
         const firstAttendee = this.eventAttendeeRepository.create({
           eventId: id,
@@ -44,6 +54,14 @@ export class EventsService {
         });
         await queryRunner.manager.save(firstAttendee);
       }
+
+      // 이벤트 생성시 슬랙봇으로 이벤트 정보 전송
+      const message = createEventMessage({
+        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        eventTitle: title,
+        eventDescription: description,
+      });
+      await this.slackService.postMessage(message);
       await queryRunner.commitTransaction();
       return { eventId: id };
     } catch (e) {
@@ -112,8 +130,18 @@ export class EventsService {
     return eventAttendees.some((attendee) => attendee.userId === targetUserId);
   }
 
-  async remove(removeEventDto: EventUserIdsDto) {
-    const { userId, eventId } = removeEventDto;
+  /**
+   * 유저가 이벤트 참여자 중 하나인지 판별하고 정보 가져오기
+   */
+  private findEventAttendee(
+    eventAttendees: EventAttendeeEntity[],
+    targetUserId: number,
+  ) {
+    return eventAttendees.find((attendee) => attendee.userId === targetUserId);
+  }
+
+  async remove(eventUserIdsDto: EventUserIdsDto) {
+    const { userId, eventId } = eventUserIdsDto;
     const event = await this.eventRepository.findOneBy({ id: eventId });
     if (!event) {
       throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND);
@@ -127,13 +155,13 @@ export class EventsService {
     });
   }
 
-  async registerEvent(registerEventDto: EventUserIdsDto) {
+  async registerEvent(eventUserIdsDto: EventUserIdsDto) {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const { eventId, userId } = registerEventDto;
+      const { eventId, userId } = eventUserIdsDto;
       const event = await queryRunner.manager.findOne(EventEntity, {
         where: { id: eventId, matchedAt: IsNull() },
         relations: ['attendees'],
@@ -146,8 +174,14 @@ export class EventsService {
           ErrorMessage.EVENT_REGISTRATION_ALREADY_EXIST,
         );
       }
-      const attendance = this.eventAttendeeRepository.create(registerEventDto);
+      const attendance = this.eventAttendeeRepository.create(eventUserIdsDto);
       await queryRunner.manager.save(attendance);
+
+      const message = registerEventMessage({
+        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        eventTitle: event.title,
+      });
+      await this.slackService.postMessage(message);
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
@@ -160,15 +194,40 @@ export class EventsService {
     }
   }
 
-  async unregisterEvent(unregisterEventDto: EventUserIdsDto) {
-    const { eventId, userId } = unregisterEventDto;
-    const eventAttendee = await this.eventAttendeeRepository.findOne({
-      where: { eventId, userId, teamId: IsNull() },
-    });
-    if (!eventAttendee) {
-      throw new NotFoundException(ErrorMessage.EVENT_REGISTRATION_NOT_FOUND);
+  async unregisterEvent(eventUserIdsDto: EventUserIdsDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const { eventId, userId } = eventUserIdsDto;
+      const event = await queryRunner.manager.findOne(EventEntity, {
+        where: { id: eventId, matchedAt: IsNull() },
+        relations: ['attendees'],
+      });
+      if (!event) {
+        throw new NotFoundException(ErrorMessage.EVENT_NOT_FOUND_OR_CLOSED);
+      }
+      const eventAttendee = this.findEventAttendee(event.attendees, userId);
+      if (!eventAttendee) {
+        throw new NotFoundException(ErrorMessage.EVENT_REGISTRATION_NOT_FOUND);
+      }
+      await this.eventAttendeeRepository.softDelete(eventAttendee.id);
+      const message = unregisterEventMessage({
+        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        eventTitle: `${event.title}`,
+      });
+      await this.slackService.postMessage(message);
+      await queryRunner.commitTransaction();
+    } catch (e) {
+      await queryRunner.rollbackTransaction();
+      if (isHttpException(e)) {
+        throw new HttpException(e.getResponse(), e.getStatus());
+      }
+      throw new Error();
+    } finally {
+      await queryRunner.release();
     }
-    await this.eventAttendeeRepository.softDelete(eventAttendee.id);
   }
 
   /**
@@ -224,8 +283,14 @@ export class EventsService {
       if (event.attendees.length === 0) {
         await queryRunner.manager.softDelete(EventEntity, event.id);
       }
+
+      // 이벤트 생성시 슬랙봇으로 이벤트 정보 전송
+      const message = matchEventMessage({
+        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        eventDetail: EventDetailDto.from(event),
+      });
+      await this.slackService.postMessage(message);
       await queryRunner.commitTransaction();
-      return EventDetailDto.from(event);
     } catch (e) {
       await queryRunner.rollbackTransaction();
       if (isHttpException(e)) {
