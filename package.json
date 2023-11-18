@@ -32,8 +32,10 @@
     "class-validator": "^0.14.0",
     "cron": "3.0.0",
     "mysql2": "^3.6.3",
+    "nestjs-slack": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "slack-block-builder": "^2.7.2",
     "typeorm": "^0.3.17"
   },
   "devDependencies": {
