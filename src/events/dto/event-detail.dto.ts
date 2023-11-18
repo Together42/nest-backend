@@ -7,7 +7,7 @@ class EventAttendeeDto {
   @ApiProperty({ description: '이벤트에 신청한 유저의 닉네임' })
   intraId: string;
 
-  @ApiProperty({ description: '이벤트에 신청한 유저의 닉네임' })
+  @ApiProperty({ description: '이벤트에 신청한 유저의 프로필 사진' })
   url: string;
 
   @ApiProperty({
