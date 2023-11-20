@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { RotationsModule } from './rotations/rotations.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { HolidayModule } from './rotations/holiday.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ConfigModule } from '@nestjs/config';
       synchronize: true,
     }),
     RotationsModule,
+    HolidayModule,
   ],
   controllers: [AppController],
   providers: [AppService],
