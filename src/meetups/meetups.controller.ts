@@ -46,7 +46,7 @@ export class MeetupsController {
   async create(
     @Body() createMeetupBody: CreateMeetupBody,
   ): Promise<MeetupIdDto> {
-    const user = { id: 42 };
+    const user = { id: 1 };
     const createMeetupDto: CreateMeetupDto = {
       ...createMeetupBody,
       createUserId: user.id,
@@ -94,7 +94,7 @@ export class MeetupsController {
   @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async remove(@Param() findMeetupParam: FindMeetupParam): Promise<void> {
-    const user = { id: 42 };
+    const user = { id: 1 };
     const removeMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
       userId: user.id,
@@ -114,7 +114,7 @@ export class MeetupsController {
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async registerMeetup(@Param() findMeetupParam: FindMeetupParam) {
-    const user = { id: 42 };
+    const user = { id: 1 };
     const registerMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
       userId: user.id,
@@ -136,7 +136,7 @@ export class MeetupsController {
   async unregisterMeetup(
     @Param() findMeetupParam: FindMeetupParam,
   ): Promise<void> {
-    const user = { id: 42 };
+    const user = { id: 1 };
     const unregisterMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
       userId: user.id,
@@ -153,10 +153,7 @@ export class MeetupsController {
   })
   @ApiBearerAuth()
   @ApiBody({ required: false, type: MatchMeetupBody })
-  @ApiCreatedResponse({
-    type: MeetupDetailDto,
-    description: '이벤트 매칭 성공',
-  })
+  @ApiCreatedResponse({ description: '이벤트 매칭 성공' })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
@@ -165,7 +162,7 @@ export class MeetupsController {
     @Param() findMeetupParam: FindMeetupParam,
     @Body() matchMeetupBody: MatchMeetupBody,
   ): Promise<void> {
-    const user = { id: 42 };
+    const user = { id: 1 };
     const { teamNum } = matchMeetupBody;
     const matchMeetupDto: MatchMeetupDto = {
       teamNum,

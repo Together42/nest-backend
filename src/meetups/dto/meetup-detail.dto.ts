@@ -3,7 +3,7 @@ import { MeetupDto } from './meetup.dto';
 import { MeetupEntity } from '../entity/meetup.entity';
 import { MeetupAttendeeEntity } from '../entity/meetup-attendee.entity';
 
-class MeetupAttendeeDto {
+export class MeetupAttendeeDto {
   @ApiProperty({ description: '이벤트에 신청한 유저의 닉네임' })
   intraId: string;
 
@@ -19,8 +19,8 @@ class MeetupAttendeeDto {
 
   static from(meetupAttendeeEntity: MeetupAttendeeEntity) {
     const meetupAttendeeDto = new MeetupAttendeeDto();
-    meetupAttendeeDto.intraId = `${meetupAttendeeEntity.userId}`;
-    meetupAttendeeDto.url = `${meetupAttendeeEntity.userId}`;
+    meetupAttendeeDto.intraId = meetupAttendeeEntity.user?.nickname;
+    meetupAttendeeDto.url = meetupAttendeeEntity.user?.profileImageUrl;
     meetupAttendeeDto.teamId = meetupAttendeeEntity.teamId;
     return meetupAttendeeDto;
   }

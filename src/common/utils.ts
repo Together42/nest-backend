@@ -29,7 +29,7 @@ export const meetupCreatedMessage = ({
   meetup,
 }: {
   channel: string;
-  meetup: MeetupDto;
+  meetup: Pick<MeetupDto, 'title' | 'description'>;
 }) => {
   const { title, description } = meetup;
   return Message({ text: `[친해지길 바라] ${title}`, channel })
@@ -92,7 +92,7 @@ export const meetupRegisteredMessage = ({
   meetup,
 }: {
   channel: string;
-  meetup: MeetupDto;
+  meetup: Pick<MeetupDto, 'title' | 'description'>;
 }) => {
   const { title } = meetup;
   return Message({ channel, text: '[친해지길 바라] 이벤트 신청 완료' })
@@ -120,7 +120,7 @@ export const meetupUnregisteredMessage = ({
   meetup,
 }: {
   channel: string;
-  meetup: MeetupDto;
+  meetup: Pick<MeetupDto, 'title' | 'description'>;
 }) => {
   const { title } = meetup;
   return Message({ channel, text: '[친해지길 바라] 이벤트 신청 취소' })

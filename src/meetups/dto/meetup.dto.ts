@@ -34,11 +34,13 @@ export class MeetupDto {
     meetupDto.title = meetupEntity.title;
     meetupDto.description = meetupEntity.description;
     meetupDto.createdId = meetupEntity.createUserId;
-    meetupDto.intraId = 'any';
     meetupDto.isMatching = meetupEntity.matchedAt
       ? MeetupStatus.MATCH
       : MeetupStatus.UNMATCH;
     meetupDto.categoryId = meetupEntity.categoryId;
+    if (meetupEntity.createUser) {
+      meetupDto.intraId = meetupEntity.createUser.nickname;
+    }
     return meetupDto;
   }
 }

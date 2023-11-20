@@ -42,7 +42,8 @@ export class MeetupsService {
     await queryRunner.startTransaction();
     try {
       const meetup = this.meetupRepository.create(createMeetupDto);
-      const { id, createUserId } = await queryRunner.manager.save(meetup);
+      const { id, createUserId, title, description } =
+        await queryRunner.manager.save(meetup);
       if (createUserId) {
         const firstAttendee = this.meetupAttendeeRepository.create({
           meetupId: id,
@@ -52,7 +53,7 @@ export class MeetupsService {
       }
 
       // 이벤트 생성시 슬랙봇으로 이벤트 정보 전송
-      this.eventBus.publish(new MeetupCreatedEvent(MeetupDto.from(meetup)));
+      this.eventBus.publish(new MeetupCreatedEvent({ title, description }));
 
       await queryRunner.commitTransaction();
       return { meetupId: id };
@@ -67,11 +68,14 @@ export class MeetupsService {
   }
 
   async findAll() {
-    const meetups = await this.meetupRepository.find();
+    const meetups = await this.meetupRepository.find({
+      relations: ['createUser'],
+    });
     const meetupDtos = meetups.map((meetup) => MeetupDto.from(meetup));
     return meetupDtos;
   }
 
+  // TODO: 유저 데이터 타입 맞추기
   async findUserRanking() {
     // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
     const userRanking: UserRankingDto[] = await this.meetupAttendeeRepository
@@ -87,7 +91,7 @@ export class MeetupsService {
     const { id } = findMeetupDto;
     const meetup = await this.meetupRepository.findOne({
       where: { id },
-      relations: ['attendees'],
+      relations: ['attendees', 'createUser', 'attendees.user'],
     });
     if (!meetup) {
       throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND);
@@ -170,7 +174,12 @@ export class MeetupsService {
       await queryRunner.manager.save(attendance);
 
       // 이벤트 신청시 슬랙봇 메세지 전송
-      this.eventBus.publish(new MeetupRegisteredEvent(MeetupDto.from(meetup)));
+      this.eventBus.publish(
+        new MeetupRegisteredEvent({
+          title: meetup.title,
+          description: meetup.description,
+        }),
+      );
 
       await queryRunner.commitTransaction();
     } catch (e) {
@@ -206,7 +215,10 @@ export class MeetupsService {
 
       // 이벤트 신청 취소시 슬랙봇 메세지 전송
       this.eventBus.publish(
-        new MeetupUnregisteredEvent(MeetupDto.from(meetup)),
+        new MeetupUnregisteredEvent({
+          title: meetup.title,
+          description: meetup.description,
+        }),
       );
 
       await queryRunner.commitTransaction();
@@ -243,7 +255,7 @@ export class MeetupsService {
       const { meetupId, userId, teamNum } = matchMeetupDto;
       const meetup = await queryRunner.manager.findOne(MeetupEntity, {
         where: { id: meetupId, matchedAt: IsNull() },
-        relations: ['attendees'],
+        relations: ['attendees', 'attendees.user'],
       });
 
       if (!meetup) {
