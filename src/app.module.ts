@@ -6,10 +6,12 @@ import { ConfigModule } from '@nestjs/config';
 import { MeetupsModule } from './meetups/meetups.module';
 import { BatchModule } from './batch/batch.module';
 import { SlackModule } from 'nestjs-slack';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    CqrsModule.forRoot(),
     SlackModule.forRoot({
       type: 'api',
       token: process.env.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN,

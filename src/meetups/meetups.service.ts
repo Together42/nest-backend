@@ -16,22 +16,19 @@ import { FindMeetupDto } from './dto/find-meetup.dto';
 import { MeetupDetailDto } from './dto/meetup-detail.dto';
 import { MeetupDto } from './dto/meetup.dto';
 import { ErrorMessage } from 'src/common/enum/error-message.enum';
-import {
-  isHttpException,
-  createMeetupMessage,
-  shuffleArray,
-  matchMeetupMessage,
-  registerMeetupMessage,
-  unregisterMeetupMessage,
-} from 'src/common/utils';
+import { isHttpException, shuffleArray } from 'src/common/utils';
 import { MeetupUserIdsDto } from './dto/meetup-user-ids.dto';
-import { SlackService } from 'nestjs-slack';
+import { EventBus } from '@nestjs/cqrs';
+import { MeetupCreatedEvent } from './event/meetup-created.event';
+import { MeetupMatchedEvent } from './event/meetup-matched.event';
+import { MeetupUnregisteredEvent } from './event/meetup-unregistered.event';
+import { MeetupRegisteredEvent } from './event/meetup-registered.event';
 
 @Injectable()
 export class MeetupsService {
   constructor(
     private dataSource: DataSource,
-    private slackService: SlackService,
+    private eventBus: EventBus,
     @InjectRepository(MeetupEntity)
     private meetupRepository: Repository<MeetupEntity>,
     @InjectRepository(MeetupAttendeeEntity)
@@ -45,8 +42,7 @@ export class MeetupsService {
     await queryRunner.startTransaction();
     try {
       const meetup = this.meetupRepository.create(createMeetupDto);
-      const { id, title, description, createUserId } =
-        await queryRunner.manager.save(meetup);
+      const { id, createUserId } = await queryRunner.manager.save(meetup);
       if (createUserId) {
         const firstAttendee = this.meetupAttendeeRepository.create({
           meetupId: id,
@@ -56,12 +52,8 @@ export class MeetupsService {
       }
 
       // 이벤트 생성시 슬랙봇으로 이벤트 정보 전송
-      const message = createMeetupMessage({
-        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
-        meetupTitle: title,
-        meetupDescription: description,
-      });
-      await this.slackService.postMessage(message);
+      this.eventBus.publish(new MeetupCreatedEvent(MeetupDto.from(meetup)));
+
       await queryRunner.commitTransaction();
       return { meetupId: id };
     } catch (e) {
@@ -177,11 +169,9 @@ export class MeetupsService {
       const attendance = this.meetupAttendeeRepository.create(meetupUserIdsDto);
       await queryRunner.manager.save(attendance);
 
-      const message = registerMeetupMessage({
-        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
-        meetupTitle: meetup.title,
-      });
-      await this.slackService.postMessage(message);
+      // 이벤트 신청시 슬랙봇 메세지 전송
+      this.eventBus.publish(new MeetupRegisteredEvent(MeetupDto.from(meetup)));
+
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
@@ -213,11 +203,12 @@ export class MeetupsService {
         throw new NotFoundException(ErrorMessage.MEETUP_REGISTRATION_NOT_FOUND);
       }
       await this.meetupAttendeeRepository.softDelete(meetupAttendee.id);
-      const message = unregisterMeetupMessage({
-        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
-        meetupTitle: `${meetup.title}`,
-      });
-      await this.slackService.postMessage(message);
+
+      // 이벤트 신청 취소시 슬랙봇 메세지 전송
+      this.eventBus.publish(
+        new MeetupUnregisteredEvent(MeetupDto.from(meetup)),
+      );
+
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();
@@ -279,16 +270,16 @@ export class MeetupsService {
         matchUserId: userId,
       });
       await queryRunner.manager.save(MeetupAttendeeEntity, meetup.attendees);
+      // 만약 참여자가 없을 경우, 이벤트 삭제
       if (meetup.attendees.length === 0) {
         await queryRunner.manager.softDelete(MeetupEntity, meetup.id);
       }
 
-      // 이벤트 생성시 슬랙봇으로 이벤트 정보 전송
-      const message = matchMeetupMessage({
-        channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
-        meetupDetail: MeetupDetailDto.from(meetup),
-      });
-      await this.slackService.postMessage(message);
+      // 이벤트 매칭시 슬랙봇으로 이벤트 정보 전송
+      this.eventBus.publish(
+        new MeetupMatchedEvent(MeetupDetailDto.from(meetup)),
+      );
+
       await queryRunner.commitTransaction();
     } catch (e) {
       await queryRunner.rollbackTransaction();

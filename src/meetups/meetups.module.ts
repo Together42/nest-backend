@@ -4,11 +4,12 @@ import { MeetupsService } from './meetups.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MeetupEntity } from './entity/meetup.entity';
 import { MeetupAttendeeEntity } from './entity/meetup-attendee.entity';
+import { MeetupEventsHandler } from './meetup.events-handler';
 
 @Module({
   imports: [TypeOrmModule.forFeature([MeetupEntity, MeetupAttendeeEntity])],
   controllers: [MeetupsController],
-  providers: [MeetupsService],
+  providers: [MeetupsService, MeetupEventsHandler],
   exports: [MeetupsService],
 })
 export class MeetupsModule {}
