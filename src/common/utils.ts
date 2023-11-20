@@ -1,6 +1,6 @@
 import { HttpException } from '@nestjs/common';
 import { Message, Blocks, bold, Attachment } from 'slack-block-builder';
-import { EventDetailDto } from '../events/dto/event-detail.dto';
+import { MeetupDetailDto } from '../meetups/dto/meetup-detail.dto';
 
 /**
  * Fisher-Yates shuffle 방식으로 배열의 요소들을 랜덤으로 섞어줍니다.
@@ -23,16 +23,16 @@ export const isHttpException = (error: any): error is HttpException => {
 /**
  * 이벤트 생성시 보내지는 슬랙봇 메시지
  */
-export const createEventMessage = ({
+export const createMeetupMessage = ({
   channel,
-  eventTitle,
-  eventDescription,
+  meetupTitle,
+  meetupDescription,
 }: {
   channel: string;
-  eventTitle: string;
-  eventDescription: string;
+  meetupTitle: string;
+  meetupDescription: string;
 }) => {
-  const text = `[친해지길 바라] ${eventTitle}`;
+  const text = `[친해지길 바라] ${meetupTitle}`;
   return Message({ text, channel })
     .blocks(
       Blocks.Header({
@@ -41,8 +41,8 @@ export const createEventMessage = ({
       Blocks.Divider(),
       Blocks.Section({
         text: `${bold(
-          eventTitle,
-        )}\n${eventDescription}\n이벤트가 생성되었습니다. 서둘러 참석해주세요!`,
+          meetupTitle,
+        )}\n${meetupDescription}\n이벤트가 생성되었습니다. 서둘러 참석해주세요!`,
       }),
       Blocks.Section({
         text: process.env.TOGETHER_HOME_URL,
@@ -54,14 +54,14 @@ export const createEventMessage = ({
 /**
  * 이벤트 매칭시 보내지는 슬랙봇 메시지
  */
-export const matchEventMessage = ({
+export const matchMeetupMessage = ({
   channel,
-  eventDetail,
+  meetupDetail,
 }: {
   channel: string;
-  eventDetail: EventDetailDto;
+  meetupDetail: MeetupDetailDto;
 }) => {
-  const { event, teamList } = eventDetail;
+  const { event, teamList } = meetupDetail;
   const teams = Object.entries(teamList).map(([teamNum, teamMembers]) => {
     const teamMembersNickname = teamMembers.map((member) => member.intraId);
     return `${teamNum}팀 : ${teamMembersNickname.join(', ')}`;
@@ -86,12 +86,12 @@ export const matchEventMessage = ({
     .buildToObject();
 };
 
-export const registerEventMessage = ({
+export const registerMeetupMessage = ({
   channel,
-  eventTitle,
+  meetupTitle,
 }: {
   channel: string;
-  eventTitle: string;
+  meetupTitle: string;
 }) => {
   const text = `[친해지길 바라] 이벤트 신청 완료`;
   return Message({ channel, text })
@@ -101,7 +101,7 @@ export const registerEventMessage = ({
         .color('#36a64f')
         .blocks(
           Blocks.Section({
-            text: `${bold(eventTitle)}`,
+            text: `${bold(meetupTitle)}`,
           }),
           Blocks.Section({
             text: `이벤트 신청이 완료 되었습니다.\n참여 감사합니다 :laughing:`,
@@ -111,12 +111,12 @@ export const registerEventMessage = ({
     .buildToObject();
 };
 
-export const unregisterEventMessage = ({
+export const unregisterMeetupMessage = ({
   channel,
-  eventTitle,
+  meetupTitle,
 }: {
   channel: string;
-  eventTitle: string;
+  meetupTitle: string;
 }) => {
   const text = `[친해지길 바라] 이벤트 신청 취소`;
   return Message({ channel, text })
@@ -126,7 +126,7 @@ export const unregisterEventMessage = ({
         .color('#f2c744')
         .blocks(
           Blocks.Section({
-            text: `${bold(eventTitle)}`,
+            text: `${bold(meetupTitle)}`,
           }),
           Blocks.Section({
             text: `이벤트 신청이 취소 되었습니다.\n아쉽네요.. 다음에 다시 만나요! :face_holding_back_tears:`,

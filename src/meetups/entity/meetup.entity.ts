@@ -6,11 +6,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { EventAttendeeEntity } from './event-attendee.entity';
-import { EventCategory } from '../enum/event-category.enum';
+import { MeetupAttendeeEntity } from './meetup-attendee.entity';
+import { MeetupCategory } from '../enum/meetup-category.enum';
 
-@Entity('event')
-export class EventEntity {
+@Entity('meetup')
+export class MeetupEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -29,8 +29,8 @@ export class EventEntity {
   @Column({ length: 255 })
   description: string;
 
-  @Column({ name: 'category_id', default: EventCategory.ETC })
-  categoryId: EventCategory;
+  @Column({ name: 'category_id', default: MeetupCategory.ETC })
+  categoryId: MeetupCategory;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
@@ -41,6 +41,9 @@ export class EventEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
   deletedAt: Date;
 
-  @OneToMany(() => EventAttendeeEntity, (eventAttendee) => eventAttendee.event)
-  attendees: EventAttendeeEntity[];
+  @OneToMany(
+    () => MeetupAttendeeEntity,
+    (meetupAttendee) => meetupAttendee.meetup,
+  )
+  attendees: MeetupAttendeeEntity[];
 }

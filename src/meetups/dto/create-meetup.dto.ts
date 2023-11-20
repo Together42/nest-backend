@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { EventCategory } from '../enum/event-category.enum';
+import { MeetupCategory } from '../enum/meetup-category.enum';
 
-export class CreateEventBody {
+export class CreateMeetupBody {
   @ApiProperty({
     description: '이벤트 제목 (최대 50자)',
     minLength: 1,
@@ -29,7 +29,7 @@ export class CreateEventBody {
   description: string;
 }
 
-export class CreateEventDto extends CreateEventBody {
+export class CreateMeetupDto extends CreateMeetupBody {
   createUserId?: number;
-  categoryId?: EventCategory;
+  categoryId?: MeetupCategory;
 }

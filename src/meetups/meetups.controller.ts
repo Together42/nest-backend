@@ -11,26 +11,26 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { EventsService } from './events.service';
-import { CreateEventBody, CreateEventDto } from './dto/create-event.dto';
-import { MatchEventBody, MatchEventDto } from './dto/match-event.dto';
-import { EventRankingDto } from './dto/event-ranking.dto';
-import { EventDto } from './dto/event.dto';
-import { EventDetailDto } from './dto/event-detail.dto';
-import { FindEventParam } from './dto/find-event.dto';
+import { MeetupsService } from './meetups.service';
+import { CreateMeetupBody, CreateMeetupDto } from './dto/create-meetup.dto';
+import { MatchMeetupBody, MatchMeetupDto } from './dto/match-meetup.dto';
+import { UserRankingDto } from './dto/user-ranking.dto';
+import { MeetupDto } from './dto/meetup.dto';
+import { MeetupDetailDto } from './dto/meetup-detail.dto';
+import { FindMeetupParam } from './dto/find-meetup.dto';
 import {
   BadRequestExceptionBody,
   ForbiddenExceptionBody,
   InternalServerExceptionBody,
   NotFoundExceptionBody,
 } from '../common/dto/error-response.dto';
-import { EventIdDto } from './dto/event-id.dto';
-import { EventUserIdsDto } from './dto/event-user-ids.dto';
+import { MeetupIdDto } from './dto/meetup-id.dto';
+import { MeetupUserIdsDto } from './dto/meetup-user-ids.dto';
 
-@Controller('events')
-@ApiTags('events')
-export class EventsController {
-  constructor(private eventsService: EventsService) {}
+@Controller('meetups')
+@ApiTags('meetups')
+export class MeetupsController {
+  constructor(private meetupsService: MeetupsService) {}
 
   @Post()
   @ApiOperation({
@@ -40,44 +40,46 @@ export class EventsController {
        자동 생성 이벤트인 경우 해당사항 없으며, createUserId도 null입니다.',
   })
   @ApiBearerAuth()
-  @ApiCreatedResponse({ description: '이벤트 생성 성공', type: EventIdDto })
+  @ApiCreatedResponse({ description: '이벤트 생성 성공', type: MeetupIdDto })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async create(@Body() createEventBody: CreateEventBody): Promise<EventIdDto> {
+  async create(
+    @Body() createMeetupBody: CreateMeetupBody,
+  ): Promise<MeetupIdDto> {
     const user = { id: 42 };
-    const createEventDto: CreateEventDto = {
-      ...createEventBody,
+    const createMeetupDto: CreateMeetupDto = {
+      ...createMeetupBody,
       createUserId: user.id,
     };
-    return await this.eventsService.create(createEventDto);
+    return await this.meetupsService.create(createMeetupDto);
   }
 
   @Get()
   @ApiOperation({ summary: '전체 이벤트 전체 조회' })
-  @ApiOkResponse({ type: [EventDto] })
+  @ApiOkResponse({ type: [MeetupDto] })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async findAll(): Promise<EventDto[]> {
-    return await this.eventsService.findAll();
+  async findAll(): Promise<MeetupDto[]> {
+    return await this.meetupsService.findAll();
   }
 
   @Get('ranking')
   @ApiOperation({ summary: '친해지길 바라 점수 및 랭킹 조회' })
-  @ApiOkResponse({ type: [EventRankingDto] })
+  @ApiOkResponse({ type: [UserRankingDto] })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async findRanking(): Promise<EventRankingDto[]> {
-    return await this.eventsService.findRanking();
+  async findUserRanking(): Promise<UserRankingDto[]> {
+    return await this.meetupsService.findUserRanking();
   }
 
   @Get(':id')
   @ApiOperation({ summary: '특정 이벤트 조회' })
-  @ApiOkResponse({ type: EventDetailDto })
+  @ApiOkResponse({ type: MeetupDetailDto })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findOne(
-    @Param() findEventParam: FindEventParam,
-  ): Promise<EventDetailDto> {
-    return await this.eventsService.findOne(findEventParam);
+    @Param() findMeetupParam: FindMeetupParam,
+  ): Promise<MeetupDetailDto> {
+    return await this.meetupsService.findOne(findMeetupParam);
   }
 
   @Delete(':id')
@@ -91,13 +93,13 @@ export class EventsController {
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async remove(@Param() findEventParam: FindEventParam): Promise<void> {
+  async remove(@Param() findMeetupParam: FindMeetupParam): Promise<void> {
     const user = { id: 42 };
-    const removeEventDto: EventUserIdsDto = {
-      eventId: findEventParam.id,
+    const removeMeetupDto: MeetupUserIdsDto = {
+      meetupId: findMeetupParam.id,
       userId: user.id,
     };
-    return await this.eventsService.remove(removeEventDto);
+    return await this.meetupsService.remove(removeMeetupDto);
   }
 
   @Post(':id/attendance')
@@ -111,13 +113,13 @@ export class EventsController {
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async registerEvent(@Param() findEventParam: FindEventParam) {
+  async registerMeetup(@Param() findMeetupParam: FindMeetupParam) {
     const user = { id: 42 };
-    const registerEventDto: EventUserIdsDto = {
-      eventId: findEventParam.id,
+    const registerMeetupDto: MeetupUserIdsDto = {
+      meetupId: findMeetupParam.id,
       userId: user.id,
     };
-    return await this.eventsService.registerEvent(registerEventDto);
+    return await this.meetupsService.registerMeetup(registerMeetupDto);
   }
 
   @Delete(':id/attendance')
@@ -131,15 +133,15 @@ export class EventsController {
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async unregisterEvent(
-    @Param() findEventParam: FindEventParam,
+  async unregisterMeetup(
+    @Param() findMeetupParam: FindMeetupParam,
   ): Promise<void> {
     const user = { id: 42 };
-    const unregisterEventDto: EventUserIdsDto = {
-      eventId: findEventParam.id,
+    const unregisterMeetupDto: MeetupUserIdsDto = {
+      meetupId: findMeetupParam.id,
       userId: user.id,
     };
-    return await this.eventsService.unregisterEvent(unregisterEventDto);
+    return await this.meetupsService.unregisterMeetup(unregisterMeetupDto);
   }
 
   @Post(':id/matching')
@@ -150,23 +152,26 @@ export class EventsController {
        이미 매칭한 이벤트를 한번 더 매칭할 수는 없습니다.',
   })
   @ApiBearerAuth()
-  @ApiBody({ required: false, type: MatchEventBody })
-  @ApiCreatedResponse({ type: EventDetailDto, description: '이벤트 매칭 성공' })
+  @ApiBody({ required: false, type: MatchMeetupBody })
+  @ApiCreatedResponse({
+    type: MeetupDetailDto,
+    description: '이벤트 매칭 성공',
+  })
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async createMatching(
-    @Param() findEventParam: FindEventParam,
-    @Body() matchEventBody: MatchEventBody,
+    @Param() findMeetupParam: FindMeetupParam,
+    @Body() matchMeetupBody: MatchMeetupBody,
   ): Promise<void> {
     const user = { id: 42 };
-    const { teamNum } = matchEventBody;
-    const matchEventDto: MatchEventDto = {
+    const { teamNum } = matchMeetupBody;
+    const matchMeetupDto: MatchMeetupDto = {
       teamNum,
-      eventId: findEventParam.id,
+      meetupId: findMeetupParam.id,
       userId: user.id,
     };
-    return await this.eventsService.createMatching(matchEventDto);
+    return await this.meetupsService.createMatching(matchMeetupDto);
   }
 }

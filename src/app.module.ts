@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { EventsModule } from './events/events.module';
+import { MeetupsModule } from './meetups/meetups.module';
 import { BatchModule } from './batch/batch.module';
 import { SlackModule } from 'nestjs-slack';
 
@@ -25,7 +25,7 @@ import { SlackModule } from 'nestjs-slack';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    EventsModule,
+    MeetupsModule,
     BatchModule,
   ],
   controllers: [AppController],
