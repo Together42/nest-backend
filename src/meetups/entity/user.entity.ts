@@ -21,7 +21,7 @@ export class UserEntity {
   @Column({ nullable: true })
   slackMemberId: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'profile_image_url', nullable: true })
   profileImageUrl: string;
 
   @Column({ nullable: false })

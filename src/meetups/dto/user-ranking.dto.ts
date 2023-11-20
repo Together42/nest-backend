@@ -14,8 +14,8 @@ export class UserRankingDto {
   totalPoint: number;
 
   @ApiProperty({ description: '유저의 로테이션 참여 횟수' })
-  rotationPoint: number;
+  eventPoint: number;
 
   @ApiProperty({ description: '유저의 이벤트 참여 횟수' })
-  meetupPoint: number;
+  meetingPoint: number;
 }

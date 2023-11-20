@@ -83,11 +83,32 @@ export class MeetupsService {
     // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
     const userRanking: UserRankingDto[] = await this.meetupAttendeeRepository
       .createQueryBuilder()
-      .select('user_id')
-      .addSelect('COUNT(meetup_id)', 'meetup_points')
+      .leftJoinAndSelect('user', 'user', 'user.id = user_id')
+      .leftJoinAndSelect('meetup', 'meetup', 'meetup.id = meetup_id')
+      .select('user_id', 'userId')
+      .addSelect('ANY_VALUE(user.nickname)', 'intraId')
+      .addSelect('ANY_VALUE(user.profile_image_url)', 'profile')
+      .addSelect(
+        'CAST(COUNT(case when meetup.category_id = 1 then 1 end) AS SIGNED)',
+        'meetingPoint',
+      )
+      .addSelect(
+        'CONVERT(COUNT(case when meetup.category_id = 2 then 1 end), SIGNED)',
+        'eventPoint',
+      )
+      .addSelect('COUNT(meetup_id)', 'totalPoint')
       .groupBy('user_id')
+      .orderBy('totalPoint')
       .getRawMany();
-    return userRanking;
+    const userRankingDto: UserRankingDto[] = userRanking.map((ranking) => {
+      return {
+        ...ranking,
+        meetingPoint: +ranking.meetingPoint,
+        eventPoint: +ranking.eventPoint,
+        totalPoint: +ranking.totalPoint,
+      };
+    });
+    return userRankingDto;
   }
 
   async findOne(findMeetupDto: FindMeetupDto) {
