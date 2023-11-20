@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { RotationHoliday } from './entities/holiday/holiday.entity';
 import { getHolidayArray } from './utils/holiday';
+import { HolidayRepository } from './holiday.repository';
 
 /* 인터페이스 파일을 따로 만들어야 하나? */
 interface HolidayInfo {
@@ -20,6 +21,7 @@ export class HolidayService {
   constructor(
     @InjectRepository(RotationHoliday)
     private holidayRepository: Repository<RotationHoliday>,
+    private myHolidayRepository: HolidayRepository,
   ) {}
 
   /* 12월 25일 4시 42분에 실행 */
@@ -58,7 +60,21 @@ export class HolidayService {
       }
       this.logger.log('Successfully stored holiday info!');
     } catch (error: any) {
-      this.logger.error(`Error occourred: ${error}`);
+      this.logger.error(`Error occurred: ${error}`);
+    }
+  }
+
+  async getHolidayByYearAndMonth(
+    year: number,
+    month: number,
+  ): Promise<number[]> {
+    try {
+      return await this.myHolidayRepository.findHolidayByYearAndMonth(
+        year,
+        month,
+      );
+    } catch (error: any) {
+      this.logger.error(`Error occurred: ${error}`);
     }
   }
 }
