@@ -26,6 +26,7 @@ import { CqrsModule } from '@nestjs/cqrs';
       database: process.env.MYSQL_DATABASE,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      logging: true,
     }),
     MeetupsModule,
     BatchModule,

@@ -12,10 +12,12 @@ import { MeetupMatchedEvent } from './event/meetup-matched.event';
 import { MeetupEvent } from 'src/meetups/event/meetup.event';
 import { MeetupRegisteredEvent } from './event/meetup-registered.event';
 import { MeetupUnregisteredEvent } from './event/meetup-unregistered.event';
+import { Logger } from '@nestjs/common';
 
 @EventsHandler(MeetupEvent)
 export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
   constructor(private slackService: SlackService) {}
+  private readonly logger = new Logger(MeetupEventsHandler.name);
 
   async handle(meetupEvent: MeetupEvent) {
     try {
@@ -56,7 +58,7 @@ export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
 
       await this.slackService.postMessage(message!);
     } catch (e) {
-      console.error(e);
+      this.logger.error('[handle]', e);
     }
   }
 }

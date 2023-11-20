@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   HttpException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -34,6 +35,7 @@ export class MeetupsService {
     @InjectRepository(MeetupAttendeeEntity)
     private meetupAttendeeRepository: Repository<MeetupAttendeeEntity>,
   ) {}
+  private readonly logger = new Logger(MeetupsService.name);
 
   async create(createMeetupDto: CreateMeetupDto) {
     const queryRunner = this.dataSource.createQueryRunner();
@@ -58,6 +60,7 @@ export class MeetupsService {
       await queryRunner.commitTransaction();
       return { meetupId: id };
     } catch (e) {
+      this.logger.error('[create]', e);
       await queryRunner.rollbackTransaction();
       if (isHttpException(e))
         throw new HttpException(e.getResponse(), e.getStatus());
@@ -183,6 +186,7 @@ export class MeetupsService {
 
       await queryRunner.commitTransaction();
     } catch (e) {
+      this.logger.error('[registerMeetup]', e);
       await queryRunner.rollbackTransaction();
       if (isHttpException(e)) {
         throw new HttpException(e.getResponse(), e.getStatus());
@@ -223,6 +227,7 @@ export class MeetupsService {
 
       await queryRunner.commitTransaction();
     } catch (e) {
+      this.logger.error('[unregisterMeetup]', e);
       await queryRunner.rollbackTransaction();
       if (isHttpException(e)) {
         throw new HttpException(e.getResponse(), e.getStatus());
@@ -294,6 +299,7 @@ export class MeetupsService {
 
       await queryRunner.commitTransaction();
     } catch (e) {
+      this.logger.error('[createMatching]', e);
       await queryRunner.rollbackTransaction();
       if (isHttpException(e)) {
         throw new HttpException(e.getResponse(), e.getStatus());

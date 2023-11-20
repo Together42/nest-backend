@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, SchedulerRegistry } from '@nestjs/schedule';
 import { CreateMeetupDto } from 'src/meetups/dto/create-meetup.dto';
 import { MeetupsService } from 'src/meetups/meetups.service';
@@ -11,6 +11,7 @@ export class BatchService {
     private schedulerReistry: SchedulerRegistry,
     private meetupsService: MeetupsService,
   ) {}
+  private readonly logger = new Logger(BatchService.name);
 
   @Cron('0 14 * * 1', { name: 'createWeeklyMeeting', timeZone: 'Asia/Seoul' })
   async createWeeklyMeeting() {
@@ -34,7 +35,7 @@ export class BatchService {
         try {
           await this.meetupsService.createMatching({ meetupId, teamNum: 1 });
         } catch (e) {
-          console.log(e);
+          this.logger.error('[createWeeklyMeeting]', e);
         }
       },
     });
@@ -59,7 +60,7 @@ export class BatchService {
         try {
           await this.meetupsService.createMatching({ meetupId, teamNum: 1 });
         } catch (e) {
-          console.log(e);
+          this.logger.error('[createWeeklyDinner]', e);
         }
       },
     });
