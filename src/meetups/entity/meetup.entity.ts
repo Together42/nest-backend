@@ -35,7 +35,12 @@ export class MeetupEntity {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
   createdAt: Date;
 
-  @Column({ name: 'matched_at', type: 'timestamp', default: null })
+  @Column({
+    name: 'matched_at',
+    type: 'timestamp',
+    default: null,
+    precision: 6,
+  })
   matchedAt: Date;
 
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })

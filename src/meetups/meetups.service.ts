@@ -150,7 +150,7 @@ export class MeetupsService {
       throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
     }
     await this.meetupRepository.update(meetup.id, {
-      deletedAt: new Date(),
+      deletedAt: () => 'CURRENT_TIMESTAMP(6)',
       deleteUserId: userId,
     });
   }
@@ -274,9 +274,8 @@ export class MeetupsService {
 
       // 참석자 배열 랜덤으로 섞고, 팀 배정
       this.assignAttendeesTeam(meetup.attendees, teamNum);
-      await queryRunner.manager.save(MeetupEntity, {
-        id: meetupId,
-        matchedAt: new Date(),
+      await queryRunner.manager.update(MeetupEntity, meetupId, {
+        matchedAt: () => 'CURRENT_TIMESTAMP(6)',
         matchUserId: userId,
       });
       await queryRunner.manager.save(MeetupAttendeeEntity, meetup.attendees);
