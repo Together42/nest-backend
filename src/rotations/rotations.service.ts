@@ -6,16 +6,23 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 // import { UpdateRotationDto } from './dto/rotation/update-rotation.dto';
 import { Rotation } from './entities/rotation/rotation.entity';
 import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 /* for test */ import { User } from './entities/user.entity';
+import { RotationRepository } from './rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
   getNextYearAndMonth,
   getTodayDate,
 } from './utils/date';
+
+interface DayObject {
+  day: number;
+  arr: number[];
+}
 
 @Injectable()
 export class RotationsService {
@@ -24,6 +31,7 @@ export class RotationsService {
   constructor(
     @InjectRepository(Rotation)
     private rotationRepository: Repository<Rotation>,
+    private customRotationRepository: RotationRepository,
     @InjectRepository(RotationAttendee)
     private attendeeRepository: Repository<RotationAttendee>,
 
@@ -31,6 +39,17 @@ export class RotationsService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
   ) {}
+
+  @Cron('* * * * * *', {
+    name: 'test',
+    timeZone: 'Asia/Seoul',
+  })
+  async test() {
+    const ret = await this.customRotationRepository.getInitMonthArray();
+    console.log(ret);
+    return;
+  }
+
   /*
    * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
    * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
@@ -44,6 +63,7 @@ export class RotationsService {
     const { attend_limit } = createRotationDto;
     const { year, month } = getNextYearAndMonth();
 
+    /* 4주차인지 확인 */
     if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
       throw new BadRequestException(
         'Invalid date: Today is not a fourth weekday of the month.',
@@ -55,7 +75,6 @@ export class RotationsService {
         where: {
           id: userId,
         },
-        // relation ... 찾아보기
       });
 
       if (!user) {
