@@ -24,6 +24,7 @@ import { MeetupCreatedEvent } from './event/meetup-created.event';
 import { MeetupMatchedEvent } from './event/meetup-matched.event';
 import { MeetupUnregisteredEvent } from './event/meetup-unregistered.event';
 import { MeetupRegisteredEvent } from './event/meetup-registered.event';
+import { NotFoundMeetupDto } from './dto/not-found-meetup.dto';
 
 @Injectable()
 export class MeetupsService {
@@ -78,7 +79,6 @@ export class MeetupsService {
     return meetupDtos;
   }
 
-  // TODO: 유저 데이터 타입 맞추기
   async findUserRanking() {
     // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
     const userRanking: UserRankingDto[] = await this.meetupAttendeeRepository
@@ -118,7 +118,7 @@ export class MeetupsService {
       relations: ['attendees', 'createUser', 'attendees.user'],
     });
     if (!meetup) {
-      throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND);
+      return new NotFoundMeetupDto();
     }
     const meetupDetailDto = MeetupDetailDto.from(meetup);
     return meetupDetailDto;

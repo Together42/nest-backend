@@ -26,6 +26,7 @@ import {
 } from '../common/dto/error-response.dto';
 import { MeetupIdDto } from './dto/meetup-id.dto';
 import { MeetupUserIdsDto } from './dto/meetup-user-ids.dto';
+import { NotFoundMeetupDto } from './dto/not-found-meetup.dto';
 
 @Controller('meetups')
 @ApiTags('meetups')
@@ -78,7 +79,7 @@ export class MeetupsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findOne(
     @Param() findMeetupParam: FindMeetupParam,
-  ): Promise<MeetupDetailDto> {
+  ): Promise<MeetupDetailDto | NotFoundMeetupDto> {
     return await this.meetupsService.findOne(findMeetupParam);
   }
 

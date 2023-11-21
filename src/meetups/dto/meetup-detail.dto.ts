@@ -8,7 +8,7 @@ export class MeetupAttendeeDto {
   intraId: string;
 
   @ApiProperty({ description: '이벤트에 신청한 유저의 프로필 사진' })
-  url: string;
+  profile: string;
 
   @ApiProperty({
     type: Number,
@@ -20,7 +20,7 @@ export class MeetupAttendeeDto {
   static from(meetupAttendeeEntity: MeetupAttendeeEntity) {
     const meetupAttendeeDto = new MeetupAttendeeDto();
     meetupAttendeeDto.intraId = meetupAttendeeEntity.user?.nickname;
-    meetupAttendeeDto.url = meetupAttendeeEntity.user?.profileImageUrl;
+    meetupAttendeeDto.profile = meetupAttendeeEntity.user?.profileImageUrl;
     meetupAttendeeDto.teamId = meetupAttendeeEntity.teamId;
     return meetupAttendeeDto;
   }

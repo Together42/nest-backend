@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 
 export class MatchMeetupBody {
@@ -7,6 +8,7 @@ export class MatchMeetupBody {
     minimum: 1,
     default: 1,
   })
+  @Transform((params) => params.value ?? 1)
   @IsOptional()
   @IsNumber()
   @Min(1)
