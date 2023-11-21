@@ -12,17 +12,12 @@ import { CreateRotationDto } from './dto/create-rotation.dto';
 import { Rotation } from './entities/rotation/rotation.entity';
 import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 /* for test */ import { User } from './entities/user.entity';
-import { RotationRepository } from './rotations.repository';
+import { CustomRotationRepository } from './rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
   getNextYearAndMonth,
   getTodayDate,
 } from './utils/date';
-
-interface DayObject {
-  day: number;
-  arr: number[];
-}
 
 @Injectable()
 export class RotationsService {
@@ -31,7 +26,7 @@ export class RotationsService {
   constructor(
     @InjectRepository(Rotation)
     private rotationRepository: Repository<Rotation>,
-    private customRotationRepository: RotationRepository,
+    private customRotationRepository: CustomRotationRepository,
     @InjectRepository(RotationAttendee)
     private attendeeRepository: Repository<RotationAttendee>,
 
@@ -46,8 +41,7 @@ export class RotationsService {
     timeZone: 'Asia/Seoul',
   })
   async test() {
-    const ret = await this.customRotationRepository.getInitMonthArray();
-    console.log(ret);
+    const ret = await this.customRotationRepository.setRotation();
     return;
   }
   /*
@@ -73,7 +67,7 @@ export class RotationsService {
     createRotationDto: CreateRotationDto,
     userId: number,
   ): Promise<RotationAttendee> {
-    const { attend_limit } = createRotationDto;
+    const { attendLimit } = createRotationDto;
     const { year, month } = getNextYearAndMonth();
 
     /* 4주차인지 확인 */
@@ -108,13 +102,13 @@ export class RotationsService {
         newRotation.userId = userId;
         newRotation.year = year;
         newRotation.month = month;
-        newRotation.attend_limit = attend_limit;
+        newRotation.attendLimit = attendLimit;
 
         await this.attendeeRepository.save(newRotation);
         return newRotation;
       }
 
-      attendeeExist.attend_limit = attend_limit; // update this month's attendee info
+      attendeeExist.attendLimit = attendLimit; // update this month's attendee info
       await this.attendeeRepository.save(attendeeExist);
       return attendeeExist;
     } catch (error) {
@@ -141,7 +135,7 @@ export class RotationsService {
           year: year,
           month: month,
         },
-        select: ['userId', 'year', 'month', 'attend_limit'],
+        select: ['userId', 'year', 'month', 'attendLimit'],
       });
 
       if (records.length > 1) {
@@ -188,6 +182,33 @@ export class RotationsService {
       }
 
       await this.attendeeRepository.delete(records.map((record) => record.id));
+    } catch (error) {
+      this.logger.error('Error occoured: ' + error);
+      throw new Error(error);
+    }
+  }
+
+  /*
+   * attendee 관련 모듈이지만, 현재 내부 로테이션 작업에만 사용중
+   * 해당 year와 month에 해당하는 모든 attendee를 반환한다.
+   */
+  async getAllRegistration(): Promise<Partial<RotationAttendee>[]> {
+    const { year, month } = getNextYearAndMonth();
+
+    try {
+      const records = await this.attendeeRepository.find({
+        where: {
+          year: year,
+          month: month,
+        },
+        select: ['userId', 'year', 'month', 'attendLimit'],
+      });
+
+      if (!records || records.length === 0) {
+        return [];
+      }
+
+      return records;
     } catch (error) {
       this.logger.error('Error occoured: ' + error);
       throw new Error(error);

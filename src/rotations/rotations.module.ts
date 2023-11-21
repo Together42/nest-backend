@@ -6,10 +6,11 @@ import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 import { RotationsService } from './rotations.service';
 import { RotationsController } from './rotations.controller';
 /* for test */ import { User } from './entities/user.entity';
-import { RotationRepository } from './rotations.repository';
+import { CustomRotationRepository } from './rotations.repository';
 import { RotationHoliday } from './entities/holiday/holiday.entity';
 import { HolidayService } from './holiday.service';
 import { HolidayRepository } from './holiday.repository';
+import { HolidayModule } from './holiday.module';
 
 @Module({
   imports: [
@@ -20,11 +21,12 @@ import { HolidayRepository } from './holiday.repository';
       RotationHoliday,
     ]),
     ScheduleModule.forRoot(),
+    HolidayModule,
   ],
   controllers: [RotationsController],
   providers: [
     RotationsService,
-    RotationRepository,
+    CustomRotationRepository,
     HolidayService,
     HolidayRepository,
   ],

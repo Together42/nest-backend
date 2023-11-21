@@ -30,7 +30,7 @@ export class RotationsController {
   async createOwnRegistration(
     @Body() createRotationDto: CreateRotationDto,
   ): Promise<RotationAttendee> {
-    const user_id = 3; // need to parse user's own user_id
+    const user_id = 14; // need to parse user's own user_id
     return await this.rotationsService.createRegistration(
       createRotationDto,
       user_id,
