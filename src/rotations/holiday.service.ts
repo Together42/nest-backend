@@ -61,6 +61,7 @@ export class HolidayService {
       this.logger.log('Successfully stored holiday info!');
     } catch (error: any) {
       this.logger.error(`Error occurred: ${error}`);
+      throw error;
     }
   }
 
@@ -75,6 +76,7 @@ export class HolidayService {
       );
     } catch (error: any) {
       this.logger.error(`Error occurred: ${error}`);
+      throw error;
     }
   }
 }

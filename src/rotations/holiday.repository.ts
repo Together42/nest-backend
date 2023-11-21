@@ -15,17 +15,21 @@ export class HolidayRepository extends Repository<RotationHoliday> {
     year: number,
     month: number,
   ): Promise<number[]> {
-    const records = await this.find({
-      where: {
-        year: year,
-        month: month,
-      },
-    });
+    try {
+      const records = await this.find({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
 
-    if (records.length === 0) {
-      return [];
+      if (records.length === 0) {
+        return [];
+      }
+
+      return records.map((record) => record.day);
+    } catch (error: any) {
+      throw new Error(`Error occurred in findHolidayByYearAndMonth: ${error}`);
     }
-
-    return records.map((record) => record.day);
   }
 }
