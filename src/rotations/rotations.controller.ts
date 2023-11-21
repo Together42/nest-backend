@@ -9,6 +9,16 @@ export class RotationsController {
   constructor(private readonly rotationsService: RotationsService) {}
 
   /*
+   * User Test
+   * Need to delete!
+   */
+  @Post('/test')
+  async createTestUser(@Body() body: any) {
+    const { nickname } = body;
+    return await this.rotationsService.createTestUser(nickname);
+  }
+
+  /*
    * 본인 로테이션 신청 (다음 달)
    * Auth : own
    * annotation getuser 찾아보기
@@ -25,16 +35,6 @@ export class RotationsController {
       createRotationDto,
       user_id,
     );
-  }
-
-  /*
-   * User Test
-   * Need to delete!
-   */
-  @Post('/test')
-  async createTestUser(@Body() body: any) {
-    const { nickname } = body;
-    return await this.rotationsService.createTestUser(nickname);
   }
 
   /*

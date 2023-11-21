@@ -40,6 +40,7 @@ export class RotationsService {
     private userRepository: Repository<User>,
   ) {}
 
+  // for testing
   @Cron('* * * * * *', {
     name: 'test',
     timeZone: 'Asia/Seoul',
@@ -49,8 +50,20 @@ export class RotationsService {
     console.log(ret);
     return;
   }
+  /*
+   * 테스팅용 서비스
+   * 나중에 유저 소스 머지 후 지울 것!
+   */
+  async createTestUser(nickname: string): Promise<User> {
+    const newUser = this.userRepository.create({
+      nickname,
+    });
+
+    return this.userRepository.save(newUser);
+  }
 
   /*
+   * /attendee
    * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
    * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
    * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
@@ -111,18 +124,7 @@ export class RotationsService {
   }
 
   /*
-   * 테스팅용 서비스
-   * 나중에 유저 소스 머지 후 지울 것!
-   */
-  async createTestUser(nickname: string): Promise<User> {
-    const newUser = this.userRepository.create({
-      nickname,
-    });
-
-    return this.userRepository.save(newUser);
-  }
-
-  /*
+   * /attendee
    * 본인의 다음 달 로테이션 기록을 반환한다.
    * 본인의 로테이션 기록을 반환.
    * 만약 기록이 없다면 빈 객체를 반환한다.
@@ -165,6 +167,7 @@ export class RotationsService {
   // }
 
   /*
+   * /attendee
    * 본인의 다음 달 로테이션 기록 삭제.
    * 반환값은 없다.
    */
