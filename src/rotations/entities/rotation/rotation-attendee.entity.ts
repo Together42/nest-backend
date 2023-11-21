@@ -31,14 +31,14 @@ export class RotationAttendee {
   month: number;
 
   @Column('json')
-  attend_limit: JSON;
+  attendLimit: JSON;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @DeleteDateColumn({ type: 'datetime' })
-  deleted_at: Date;
+  deletedAt: Date;
 }

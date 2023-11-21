@@ -44,11 +44,11 @@ export class Rotation {
   day: number;
 
   @CreateDateColumn({ type: 'datetime' })
-  created_at: Date;
+  createdAt: Date;
 
   @UpdateDateColumn({ type: 'datetime' })
-  updated_at: Date;
+  updatedAt: Date;
 
   @DeleteDateColumn({ type: 'datetime' })
-  deleted_at: Date;
+  deletedAt: Date;
 }
