@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { RotationsService } from './rotations.service';
 import { CreateRotationDto } from './dto/create-rotation.dto';
-// import { UpdateRotationDto } from './dto/rotation/update-rotation.dto';
+import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 
 @Controller('rotations')
@@ -61,10 +69,10 @@ export class RotationsController {
    * 본인 로테이션 생성 (달력)
    * Auth : own
    */
-  // @Post('/')
-  // createOwnRotation(@Body() createRotationDto: CreateRotationDto) {
-  //   return this.rotationsService.createRotation(createRotationDto);
-  // }
+  @Post('/')
+  createOwnRotation(@Body() createRotationDto: CreateRotationDto) {
+    return this.rotationsService.createRotation(createRotationDto);
+  }
 
   /*
    * 사서 로테이션 조회 (달력)
@@ -85,13 +93,13 @@ export class RotationsController {
    * 사서 로테이션 수정 (달력)
    * Auth : user
    */
-  // @Patch('/:id')
-  // updateUserRotation(
-  //   @Param('id') id: string,
-  //   @Body() updateRotationDto: UpdateRotationDto,
-  // ) {
-  //   return this.rotationsService.updateRotation(+id, updateRotationDto);
-  // }
+  @Patch('/:id')
+  updateUserRotation(
+    @Param('id') id: string,
+    @Body() updateRotationDto: UpdateRotationDto,
+  ) {
+    return this.rotationsService.updateRotation(+id, updateRotationDto);
+  }
 
   /*
    * 사서 로테이션 삭제 (달력)

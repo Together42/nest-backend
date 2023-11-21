@@ -19,9 +19,9 @@ export function getTodayDate(): number {
 const DAY_IN_WEEK = 7;
 const DAY_OF_THURSDAY = 4;
 
-const getFirstDateOfMonth = (date, offsetMonth = 0) =>
+const getFirstDateOfMonth = (date: Date, offsetMonth = 0) =>
   new Date(date.getFullYear(), date.getMonth() + offsetMonth, 1);
-const getFirstDayOfMonth = (date, offsetMonth = 0) =>
+const getFirstDayOfMonth = (date: Date, offsetMonth = 0) =>
   getFirstDateOfMonth(date, offsetMonth).getDay();
 const getFourthWeekPeriod = (date = new Date()): number[] => {
   const firstDay = getFirstDayOfMonth(date);
@@ -42,10 +42,9 @@ const getFourthWeekPeriod = (date = new Date()): number[] => {
 };
 
 export const getFourthWeekdaysOfMonth = (date = new Date()): number[] => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] =
     getFourthWeekPeriod(date);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const dateOfFridayOnFourthWeek = dateOfSundayOnFourthWeek - 2;
   const fourthWeekdays: number[] = [];
 
   for (let i = 0; i < 5; i++) {
@@ -54,4 +53,13 @@ export const getFourthWeekdaysOfMonth = (date = new Date()): number[] => {
   }
 
   return fourthWeekdays;
+};
+
+export const getFourthFridayOfMonth = (date = new Date()): number => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] =
+    getFourthWeekPeriod(date);
+  const dateOfFridayOnFourthWeek = dateOfSundayOnFourthWeek - 2;
+
+  return dateOfFridayOnFourthWeek;
 };

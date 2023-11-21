@@ -83,36 +83,87 @@ export class CustomRotationRepository extends Repository<Rotation> {
 
   /*
    * 다음 달 로테이션 참석자를 바탕으로 로테이션 결과 반환
+   * 반환값을 뭘로할까?
    */
-  async setRotation(): Promise<DayObject[]> {
-    const attendeeArray: Partial<RotationAttendee>[] =
-      await this.rotationService.getAllRegistration();
-    const monthArrayInfo: DayObject[][] = await this.getInitMonthArray();
+  async setRotation(): Promise<void> {
+    try {
+      const attendeeArray: Partial<RotationAttendee>[] =
+        await this.rotationService.getAllRegistration();
+      const monthArrayInfo: DayObject[][] = await this.getInitMonthArray();
 
-    if (!attendeeArray || attendeeArray.length === 0) {
-      this.logger.warn('No attendees participated in the rotation');
-      return monthArrayInfo.flat(Infinity) as DayObject[];
+      if (!attendeeArray || attendeeArray.length === 0) {
+        this.logger.warn('No attendees participated in the rotation');
+        return;
+      }
+
+      const rotationAttendeeInfo: RotationAttendeeInfo[] = attendeeArray.map(
+        (attendee) => {
+          const parsedAttendLimit: number[] = JSON.parse(
+            JSON.stringify(attendee.attendLimit),
+          );
+          return {
+            userId: attendee.userId,
+            year: attendee.year,
+            month: attendee.month,
+            attendLimit: parsedAttendLimit,
+            attended: 0,
+          };
+        },
+      );
+
+      const rotationResultArray: DayObject[] = createRotation(
+        rotationAttendeeInfo,
+        monthArrayInfo,
+      );
+
+      const { year, month } = getNextYearAndMonth();
+
+      for (const item of rotationResultArray) {
+        const [userId1, userId2] = item.arr;
+
+        let attendeeExist = await this.findOne({
+          where: {
+            userId: userId1,
+            year: year,
+            month: month,
+            day: item.day,
+          },
+        });
+
+        if (!attendeeExist) {
+          const rotation1 = new Rotation();
+          rotation1.userId = userId1;
+          rotation1.updateUserId = userId1;
+          rotation1.year = year;
+          rotation1.month = month;
+          rotation1.day = item.day;
+
+          await this.save(rotation1);
+        }
+
+        attendeeExist = await this.findOne({
+          where: {
+            userId: userId2,
+            year: year,
+            month: month,
+            day: item.day,
+          },
+        });
+
+        if (!attendeeExist) {
+          const rotation2 = new Rotation();
+          rotation2.userId = userId2;
+          rotation2.updateUserId = userId2;
+          rotation2.year = year;
+          rotation2.month = month;
+          rotation2.day = item.day;
+
+          await this.save(rotation2);
+        }
+      }
+    } catch (error: any) {
+      this.logger.error('Error occoured: ' + error);
+      throw new Error(error);
     }
-
-    const rotationAttendeeInfo: RotationAttendeeInfo[] = attendeeArray.map(
-      (attendee) => {
-        const parsedAttendLimit: number[] = JSON.parse(
-          JSON.stringify(attendee.attendLimit),
-        );
-        return {
-          userId: attendee.userId,
-          year: attendee.year,
-          month: attendee.month,
-          attendLimit: parsedAttendLimit,
-          attended: 0,
-        };
-      },
-    );
-
-    const rotationResultArray: DayObject[] = createRotation(
-      rotationAttendeeInfo,
-      monthArrayInfo,
-    );
-    return rotationResultArray;
   }
 }

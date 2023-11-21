@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { CreateRotationDto } from './dto/create-rotation.dto';
-// import { UpdateRotationDto } from './dto/rotation/update-rotation.dto';
+import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { Rotation } from './entities/rotation/rotation.entity';
 import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
 /* for test */ import { User } from './entities/user.entity';
@@ -35,14 +35,25 @@ export class RotationsService {
     private userRepository: Repository<User>,
   ) {}
 
-  // for testing
-  @Cron('* * * * * *', {
-    name: 'test',
+  /*
+   * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우, 로테이션을 돌린다.
+   */
+  @Cron(`23 59 * * 5`, {
+    name: 'setRotation',
     timeZone: 'Asia/Seoul',
   })
-  async test() {
-    const ret = await this.customRotationRepository.setRotation();
-    return;
+  async setRotation() {
+    if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) > 0) {
+      try {
+        this.logger.log('Setting rotation...');
+        await this.customRotationRepository.setRotation();
+        this.logger.log('Successfully set rotation!');
+      } catch (error: any) {
+        throw error;
+      }
+    } else {
+      // skipped...
+    }
   }
   /*
    * 테스팅용 서비스
@@ -57,7 +68,7 @@ export class RotationsService {
   }
 
   /*
-   * /attendee
+   * /rotations/attendee
    * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
    * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
    * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
@@ -118,7 +129,7 @@ export class RotationsService {
   }
 
   /*
-   * /attendee
+   * /rotations/attendee
    * 본인의 다음 달 로테이션 기록을 반환한다.
    * 본인의 로테이션 기록을 반환.
    * 만약 기록이 없다면 빈 객체를 반환한다.
@@ -161,7 +172,7 @@ export class RotationsService {
   // }
 
   /*
-   * /attendee
+   * /rotations/attendee
    * 본인의 다음 달 로테이션 기록 삭제.
    * 반환값은 없다.
    */
@@ -215,9 +226,9 @@ export class RotationsService {
     }
   }
 
-  // async createRotation(createRotationDto: CreateRotationDto) {
-  //   return 'This action adds a new rotation';
-  // }
+  async createRotation(createRotationDto: CreateRotationDto) {
+    return 'This action adds a new rotation';
+  }
 
   async findAllRotation() {
     return `This action returns all rotations`;
@@ -227,9 +238,9 @@ export class RotationsService {
   //   return `This action returns a #${id} rotation`;
   // }
 
-  // async updateRotation(id: number, updateRotationDto: UpdateRotationDto) {
-  //   return `This action updates a #${id} rotation`;
-  // }
+  async updateRotation(id: number, updateRotationDto: UpdateRotationDto) {
+    return `This action updates a #${id} rotation`;
+  }
 
   async removeRotation(id: number) {
     return `This action removes a #${id} rotation`;
