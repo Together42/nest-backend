@@ -2,8 +2,9 @@
 .env
 .env.dev
 .env.prod
+*.env
 00_init.sql
-*/data
+*data
 
 # compiled output
 /dist
