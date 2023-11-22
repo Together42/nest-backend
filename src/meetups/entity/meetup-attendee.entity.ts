@@ -7,18 +7,19 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { EventEntity } from './event.entity';
+import { MeetupEntity } from './meetup.entity';
+import { User } from 'src/user/entity/user.entity';
 
-@Entity('event_attendee')
-export class EventAttendeeEntity {
+@Entity('meetup_attendee')
+export class MeetupAttendeeEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ name: 'user_id' })
   userId: number;
 
-  @Column({ name: 'event_id' })
-  eventId: number;
+  @Column({ name: 'meetup_id' })
+  meetupId: number;
 
   @Column({ name: 'team_id', default: null })
   teamId: number;
@@ -29,7 +30,11 @@ export class EventAttendeeEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
   deletedAt: Date;
 
-  @ManyToOne(() => EventEntity, (event) => event.eventAttendees)
-  @JoinColumn({ name: 'event_id' })
-  event: EventEntity;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @ManyToOne(() => MeetupEntity, (meetup) => meetup.attendees)
+  @JoinColumn({ name: 'meetup_id' })
+  meetup: MeetupEntity;
 }

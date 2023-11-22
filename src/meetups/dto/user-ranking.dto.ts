@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class EventRankingDto {
+export class UserRankingDto {
   @ApiProperty({ description: '유저의 고유 아이디' })
   userId: number;
 
@@ -14,8 +14,8 @@ export class EventRankingDto {
   totalPoint: number;
 
   @ApiProperty({ description: '유저의 로테이션 참여 횟수' })
-  rotationPoint: number;
+  eventPoint: number;
 
   @ApiProperty({ description: '유저의 이벤트 참여 횟수' })
-  eventPoint: number;
+  meetingPoint: number;
 }

@@ -8,9 +8,12 @@ import { RotationsModule } from './rotations/rotations.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { HolidayModule } from './rotations/holiday.module';
+import { MeetupsModule } from './meetups/meetups.module';
+import { BatchModule } from './batch/batch.module';
+import { SlackModule } from 'nestjs-slack';
+import { CqrsModule } from '@nestjs/cqrs';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { EventsModule } from './events/events.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -19,6 +22,12 @@ import configuration from './config/configuration';
       envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
       isGlobal: true,
       load: [configuration],
+    }),
+    CqrsModule.forRoot(),
+    SlackModule.forRoot({
+      type: 'api',
+      token: process.env.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN,
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -39,7 +48,8 @@ import configuration from './config/configuration';
     HolidayModule,
     AuthModule,
     UserModule,
-    EventsModule,
+    MeetupsModule,
+    BatchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
