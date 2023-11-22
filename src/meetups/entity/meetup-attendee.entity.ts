@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { MeetupEntity } from './meetup.entity';
-import { UserEntity } from './user.entity';
+import { User } from 'src/user/entity/user.entity';
 
 @Entity('meetup_attendee')
 export class MeetupAttendeeEntity {
@@ -30,9 +30,9 @@ export class MeetupAttendeeEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
   deletedAt: Date;
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  user: UserEntity;
+  user: User;
 
   @ManyToOne(() => MeetupEntity, (meetup) => meetup.attendees)
   @JoinColumn({ name: 'meetup_id' })
