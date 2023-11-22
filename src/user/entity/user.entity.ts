@@ -18,11 +18,11 @@ export class User {
   @Column({ nullable: true })
   refreshToken: string;
 
-  // @Column({ nullable: true })
-  // slackMemberId: string;
+  @Column({ nullable: true })
+  slackMemberId: string;
 
-  // @Column({ nullable: true })
-  // profile: string;
+  @Column({ nullable: true })
+  profileImageUrl: string;
 
   @Column({ nullable: false, default: UserRole.USER })
   role: UserRole;
