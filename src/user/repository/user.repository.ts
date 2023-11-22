@@ -15,7 +15,6 @@ export class UserRepository extends Repository<User> {
     const newUser = new User();
     newUser.googleEmail = user.email;
     newUser.nickname = user.name;
-    newUser.createdAt = new Date();
     newUser.googleID = await bcrypt.hash(user.sub, 10);
     await this.save(newUser);
     return newUser;
