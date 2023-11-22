@@ -1,4 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import UserRole from '../enum/user.enum';
 
 @Entity({})
 export class User {
@@ -11,17 +12,20 @@ export class User {
   @Column({ nullable: false, unique: true })
   nickname: string;
 
+  @Column({ nullable: false })
+  googleID: string;
+
   // @Column({ nullable: true })
   // slackMemberId: string;
 
   // @Column({ nullable: true })
   // profile: string;
 
-  // @Column({ nullable: false})
-  // role: number;
+  @Column({ nullable: false, default: UserRole.USER })
+  role: UserRole;
 
-  // @Column({ nullable: false })
-  // isActive: boolean;
+  @Column({ nullable: false, default: true })
+  isActive: boolean;
 
   @Column({ nullable: false })
   createdAt: Date;

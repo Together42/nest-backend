@@ -15,6 +15,7 @@ export class UserRepository extends Repository<User> {
     newUser.googleEmail = user.email;
     newUser.nickname = user.name;
     newUser.createdAt = new Date();
+    newUser.googleID = user.sub;
     await this.save(newUser);
     return newUser;
   }
