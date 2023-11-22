@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -27,6 +35,11 @@ import {
 import { MeetupIdDto } from './dto/meetup-id.dto';
 import { MeetupUserIdsDto } from './dto/meetup-user-ids.dto';
 import { NotFoundMeetupDto } from './dto/not-found-meetup.dto';
+import { GetUser } from 'src/decorator/user.decorator';
+import { JwtGuard } from 'src/auth/jwt/jwt.guard';
+import { RoleGuard } from 'src/auth/role/role.guard';
+import { Role } from 'src/decorator/role.decorator';
+import UserRole from 'src/user/enum/user.enum';
 
 @Controller('meetups')
 @ApiTags('meetups')
@@ -34,6 +47,8 @@ export class MeetupsController {
   constructor(private meetupsService: MeetupsService) {}
 
   @Post()
+  @UseGuards(JwtGuard, RoleGuard)
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '이벤트 생성',
     description:
@@ -46,11 +61,11 @@ export class MeetupsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async create(
     @Body() createMeetupBody: CreateMeetupBody,
+    @GetUser() user: any,
   ): Promise<MeetupIdDto> {
-    const user = { id: 1 };
     const createMeetupDto: CreateMeetupDto = {
       ...createMeetupBody,
-      createUserId: user.id,
+      createUserId: user.uid,
     };
     return await this.meetupsService.create(createMeetupDto);
   }
@@ -84,6 +99,8 @@ export class MeetupsController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtGuard, RoleGuard)
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트 삭제',
     description: '이벤트를 생성한 유저와 관리자만 이벤트 삭제가 가능힙니다.',
@@ -94,16 +111,20 @@ export class MeetupsController {
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiForbiddenResponse({ type: ForbiddenExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async remove(@Param() findMeetupParam: FindMeetupParam): Promise<void> {
-    const user = { id: 1 };
+  async remove(
+    @Param() findMeetupParam: FindMeetupParam,
+    @GetUser() user: any,
+  ): Promise<void> {
     const removeMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.id,
+      userId: user.uid,
     };
     return await this.meetupsService.remove(removeMeetupDto);
   }
 
   @Post(':id/attendance')
+  @UseGuards(JwtGuard, RoleGuard)
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트에 참석',
     description:
@@ -114,16 +135,20 @@ export class MeetupsController {
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiNotFoundResponse({ type: NotFoundExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async registerMeetup(@Param() findMeetupParam: FindMeetupParam) {
-    const user = { id: 1 };
+  async registerMeetup(
+    @Param() findMeetupParam: FindMeetupParam,
+    @GetUser() user: any,
+  ) {
     const registerMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.id,
+      userId: user.uid,
     };
     return await this.meetupsService.registerMeetup(registerMeetupDto);
   }
 
   @Delete(':id/attendance')
+  @UseGuards(JwtGuard, RoleGuard)
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트 참석 취소',
     description:
@@ -136,16 +161,18 @@ export class MeetupsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async unregisterMeetup(
     @Param() findMeetupParam: FindMeetupParam,
+    @GetUser() user: any,
   ): Promise<void> {
-    const user = { id: 1 };
     const unregisterMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.id,
+      userId: user.uid,
     };
     return await this.meetupsService.unregisterMeetup(unregisterMeetupDto);
   }
 
   @Post(':id/matching')
+  @UseGuards(JwtGuard, RoleGuard)
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트 매칭',
     description:
@@ -162,13 +189,13 @@ export class MeetupsController {
   async createMatching(
     @Param() findMeetupParam: FindMeetupParam,
     @Body() matchMeetupBody: MatchMeetupBody,
+    @GetUser() user: any,
   ): Promise<void> {
-    const user = { id: 1 };
     const { teamNum } = matchMeetupBody;
     const matchMeetupDto: MatchMeetupDto = {
       teamNum,
       meetupId: findMeetupParam.id,
-      userId: user.id,
+      userId: user.uid,
     };
     return await this.meetupsService.createMatching(matchMeetupDto);
   }
