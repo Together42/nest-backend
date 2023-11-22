@@ -42,8 +42,7 @@ export class CustomRotationRepository extends Repository<Rotation> {
    * 다음 달 로테이션 날짜(day)와, 해당 날짜에 배정될
    * 유저 두 명의 아이디가 담길 배열(arr)로 구성된 이중 배열이 반환된다.
    */
-  async getInitMonthArray(): Promise<DayObject[][]> {
-    const { year, month } = getNextYearAndMonth();
+  async getInitMonthArray(year: number, month: number): Promise<DayObject[][]> {
     const daysOfMonth = new Date(year, month, 0).getDate();
     const holidayArrayOfMonth: number[] =
       await this.holidayService.getHolidayByYearAndMonth(year, month);
@@ -83,13 +82,16 @@ export class CustomRotationRepository extends Repository<Rotation> {
 
   /*
    * 다음 달 로테이션 참석자를 바탕으로 로테이션 결과 반환
-   * 반환값을 뭘로할까?
    */
   async setRotation(): Promise<void> {
     try {
+      const { year, month } = getNextYearAndMonth();
       const attendeeArray: Partial<RotationAttendee>[] =
         await this.rotationService.getAllRegistration();
-      const monthArrayInfo: DayObject[][] = await this.getInitMonthArray();
+      const monthArrayInfo: DayObject[][] = await this.getInitMonthArray(
+        year,
+        month,
+      );
 
       if (!attendeeArray || attendeeArray.length === 0) {
         this.logger.warn('No attendees participated in the rotation');
@@ -115,8 +117,6 @@ export class CustomRotationRepository extends Repository<Rotation> {
         rotationAttendeeInfo,
         monthArrayInfo,
       );
-
-      const { year, month } = getNextYearAndMonth();
 
       for (const item of rotationResultArray) {
         const [userId1, userId2] = item.arr;

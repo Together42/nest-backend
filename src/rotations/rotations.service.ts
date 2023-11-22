@@ -7,11 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
+import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { Rotation } from './entities/rotation/rotation.entity';
 import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
-/* for test */ import { User } from './entities/user.entity';
 import { CustomRotationRepository } from './rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
@@ -29,16 +29,14 @@ export class RotationsService {
     private customRotationRepository: CustomRotationRepository,
     @InjectRepository(RotationAttendee)
     private attendeeRepository: Repository<RotationAttendee>,
-
-    /****  for test  ****/
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-  ) {}
+  ) // 유저 레포지토리 추가 필요
+  {}
 
   /*
-   * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우, 로테이션을 돌린다.
+   * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우,
+   * 23시 59분에 로테이션을 돌린다.
    */
-  @Cron(`23 59 * * 5`, {
+  @Cron(`59 23 * * 5`, {
     name: 'setRotation',
     timeZone: 'Asia/Seoul',
   })
@@ -55,17 +53,6 @@ export class RotationsService {
       // skipped...
     }
   }
-  /*
-   * 테스팅용 서비스
-   * 나중에 유저 소스 머지 후 지울 것!
-   */
-  async createTestUser(nickname: string): Promise<User> {
-    const newUser = this.userRepository.create({
-      nickname,
-    });
-
-    return this.userRepository.save(newUser);
-  }
 
   /*
    * /rotations/attendee
@@ -75,10 +62,10 @@ export class RotationsService {
    * 올바르게 처리되었다면 요청이 처리된 attendee를 반환한다.
    */
   async createRegistration(
-    createRotationDto: CreateRotationDto,
+    createRegistrationDto: CreateRegistrationDto,
     userId: number,
   ): Promise<RotationAttendee> {
-    const { attendLimit } = createRotationDto;
+    const { attendLimit } = createRegistrationDto;
     const { year, month } = getNextYearAndMonth();
 
     /* 4주차인지 확인 */
@@ -124,7 +111,7 @@ export class RotationsService {
       return attendeeExist;
     } catch (error) {
       this.logger.error('Error occoured: ' + error);
-      throw new Error(error);
+      throw error;
     }
   }
 
@@ -159,7 +146,7 @@ export class RotationsService {
       return records[0];
     } catch (error) {
       this.logger.error('Error occoured: ' + error);
-      throw new Error(error);
+      throw error;
     }
   }
 
@@ -195,7 +182,7 @@ export class RotationsService {
       await this.attendeeRepository.delete(records.map((record) => record.id));
     } catch (error) {
       this.logger.error('Error occoured: ' + error);
-      throw new Error(error);
+      throw error;
     }
   }
 
@@ -221,28 +208,222 @@ export class RotationsService {
 
       return records;
     } catch (error) {
-      this.logger.error('Error occoured: ' + error);
-      throw new Error(error);
+      throw error;
     }
   }
 
-  async createRotation(createRotationDto: CreateRotationDto) {
-    return 'This action adds a new rotation';
+  /*
+   * 유저 본인이 달력에 자신의 일정을 추가하는 서비스.
+   * 만약 같은 날을 입력했다면, TypeORM의 save 메서드가 알아서 업데이트 해주는 것 같다.
+   */
+  async createOrUpdateRotation(
+    createRotationDto: CreateRotationDto,
+    userId: number,
+  ): Promise<string> {
+    const { attendDate, year, month } = createRotationDto;
+
+    try {
+      const parsedData: number[] = JSON.parse(JSON.stringify(attendDate));
+
+      for (const day of parsedData) {
+        const recordExist = await this.rotationRepository.findOne({
+          where: {
+            userId: userId,
+            year: year,
+            month: month,
+            day: day,
+          },
+        });
+
+        if (recordExist) {
+          await this.rotationRepository
+            .createQueryBuilder()
+            .update(Rotation)
+            .set({ updateUserId: userId })
+            .where(
+              'userId = :userId AND year = :year AND month = :month AND day = :day',
+              { userId, year, month, day },
+            )
+            .execute();
+        } else {
+          const newRotation = this.rotationRepository.create({
+            userId,
+            updateUserId: userId,
+            year,
+            month,
+            day,
+          });
+          await this.rotationRepository.save(newRotation);
+        }
+        return `successfully create user ${userId}'s information`;
+      }
+    } catch (error: any) {
+      throw error;
+    }
   }
 
-  async findAllRotation() {
-    return `This action returns all rotations`;
+  /*
+   * 로테이션의 모든 기록을 반환하는 서비스
+   * 만약 parameter로 month와 year가 들어오면,
+   * 해당 스코프에 맞는 자료를 반환한다.
+   */
+  async findAllRotation(
+    year?: number,
+    month?: number,
+  ): Promise<Partial<Rotation>[]> {
+    try {
+      let query = this.rotationRepository.createQueryBuilder('rotation');
+
+      if (month && year) {
+        query = query.where(
+          'rotation.year = :year AND rotation.month = :month',
+          {
+            year,
+            month,
+          },
+        );
+      } else if (month && !year) {
+        const currentYear = new Date().getFullYear();
+        query = query.where(
+          'rotation.year = :currentYear AND rotation.month = :month',
+          {
+            currentYear,
+            month,
+          },
+        );
+      } else if (!month && year) {
+        query = query.where('rotation.year = :year', { year });
+      }
+
+      return query.getMany();
+    } catch (error: any) {
+      throw error;
+    }
   }
 
-  // findOne(id: number) {
-  //   return `This action returns a #${id} rotation`;
-  // }
+  /*
+   * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
+   */
+  async findOne(): Promise<Partial<Rotation>[]> {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
 
-  async updateRotation(id: number, updateRotationDto: UpdateRotationDto) {
-    return `This action updates a #${id} rotation`;
+    try {
+      const records = await this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+          day: day,
+        },
+        select: ['userId', 'year', 'month', 'day'],
+      });
+
+      if (!records || records.length === 0) {
+        return [];
+      }
+
+      return records;
+    } catch (error: any) {
+      throw error;
+    }
   }
 
-  async removeRotation(id: number) {
-    return `This action removes a #${id} rotation`;
+  async updateRotation(
+    updateRotationDto: UpdateRotationDto,
+    updateUserId: number,
+    userId: number,
+  ): Promise<string> {
+    const { attendDate, updateDate, year, month } = updateRotationDto;
+    const day: number = JSON.parse(JSON.stringify(attendDate))[0];
+
+    try {
+      const recordExist = await this.rotationRepository.findOne({
+        where: {
+          userId: updateUserId,
+          year: year,
+          month: month,
+          day: day,
+        },
+      });
+
+      if (recordExist) {
+        await this.rotationRepository
+          .createQueryBuilder()
+          .update(Rotation)
+          .set({ updateUserId: userId, day: updateDate })
+          .where(
+            'userId = :updateUserId AND year = :year AND month = :month AND day = :day',
+            { updateUserId, year, month, day },
+          )
+          .execute();
+      } else {
+        throw new NotFoundException(
+          `User ${updateUserId} information not found`,
+        );
+      }
+
+      return `successfully update user ${updateUserId}'s information`;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
+  /*
+   * 로테이션을 삭제하는 서비스
+   * month, year가 주어진다면 해당 스코프에 맞는 유저의 day를 삭제
+   * 아무것도 없다면 다음 달에 해당하는 유저의 day를 삭제
+   */
+  async removeRotation(
+    userId: number,
+    day?: number,
+    month?: number,
+    year?: number,
+  ): Promise<string> {
+    if (!day) {
+      return `Day is not provided in delete API. This request is ignored.`;
+    }
+
+    try {
+      let deleteQuery = this.rotationRepository
+        .createQueryBuilder('rotation')
+        .delete();
+
+      if (month && year) {
+        deleteQuery = deleteQuery.where(
+          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
+          {
+            userId,
+            year,
+            month,
+            day,
+          },
+        );
+      } else {
+        const { year, month } = getNextYearAndMonth();
+        deleteQuery = deleteQuery.where(
+          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
+          {
+            userId,
+            year,
+            month,
+            day,
+          },
+        );
+      }
+
+      const deleteResult = await deleteQuery.execute();
+
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(
+          `User ${userId} rotation information not found`,
+        );
+      }
+
+      return `User ${userId} rotation information has been deleted successfully`;
+    } catch (error: any) {
+      throw error;
+    }
   }
 }
