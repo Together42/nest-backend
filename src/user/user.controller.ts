@@ -5,6 +5,7 @@ import { JwtGuard } from 'src/auth/jwt/jwt.guard';
 import { RoleGuard } from 'src/auth/role/role.guard';
 import { Role } from 'src/decorator/role.decorator';
 import UserRole from './enum/user.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
@@ -12,7 +13,8 @@ export class UserController {
 
   @Get('test')
   @UseGuards(JwtGuard, RoleGuard)
-  @Role([UserRole.USER, UserRole.LIBRARIAN])
+  @ApiBearerAuth()
+  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
   async jwtAuthTest(@GetUser() user) {
     console.log('user', user);
     return 'jwtAuthTest';
