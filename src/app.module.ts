@@ -1,26 +1,45 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RotationsModule } from './rotations/rotations.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { HolidayModule } from './rotations/holiday.module';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
+import { EventsModule } from './events/events.module';
+import configuration from './config/configuration';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.MYSQL_HOST,
-      port: +process.env.MYSQL_PORT,
-      username: process.env.MYSQL_USER,
-      password: process.env.MYSQL_PASSWORD,
-      database: process.env.MYSQL_DATABASE,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: true,
+    ConfigModule.forRoot({
+      envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
+      isGlobal: true,
+      load: [configuration],
+    }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get('database.DB_HOST'),
+        port: configService.get('database.DB_PORT'),
+        username: configService.get('database.DB_USER'),
+        password: configService.get('database.DB_PASSWORD'),
+        database: configService.get('database.DB_DATABASE'),
+        entities: ['dist/**/*.entity.js'],
+        synchronize: configService.get('database.DB_SYNC') === 'true',
+        namingStrategy: new SnakeNamingStrategy(),
+      }),
     }),
     RotationsModule,
     HolidayModule,
+    AuthModule,
+    UserModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
