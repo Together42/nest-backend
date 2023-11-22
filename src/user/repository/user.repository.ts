@@ -1,5 +1,6 @@
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { User } from '../entity/user.entity';
 
 export class UserRepository extends Repository<User> {
@@ -15,7 +16,7 @@ export class UserRepository extends Repository<User> {
     newUser.googleEmail = user.email;
     newUser.nickname = user.name;
     newUser.createdAt = new Date();
-    newUser.googleID = user.sub;
+    newUser.googleID = await bcrypt.hash(user.sub, 10);
     await this.save(newUser);
     return newUser;
   }

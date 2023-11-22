@@ -1,8 +1,4 @@
-import { 
-  Injectable,
-  ExecutionContext,
-  Logger
-} from '@nestjs/common';
+import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
@@ -19,8 +15,14 @@ export class JwtGuard extends AuthGuard('jwt') {
     const token = context.switchToHttp().getRequest().headers?.authorization?.split('Bearer ')[1];
     this.logger.debug(`canActivate [token: ${token}]`);
 
-    const result: boolean = (await super.canActivate(context)) as boolean;
-    this.logger.log(`canActivate [result: ${result}]`);
+    let result: boolean = false;
+    try {
+      result = (await super.canActivate(context)) as boolean;
+      this.logger.debug(`canActivate [result: ${result}]`);
+    } catch (error) {
+      this.logger.error(`canActivate [error: ${error}]`);
+      result = false;
+    }
     return result;
   }
 }

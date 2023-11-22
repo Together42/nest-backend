@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import * as process from "process";
 
 export default () => ({
   database: {
@@ -12,6 +13,8 @@ export default () => ({
   jwt: {
     secret: process.env.JWT_SECRET || 'default',
     expiresIn: process.env.JWT_EXPIRES_IN || '1d',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'default',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID || 'default',

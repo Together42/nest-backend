@@ -1,11 +1,8 @@
-import { 
-  Injectable,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
+import { VerifyCallback } from 'jsonwebtoken';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -17,14 +14,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get<string>('jwt.secret'),
       expiresIn: configService.get<string>('jwt.expiresIn'),
-    })
+    });
   }
-  
-  async validate(payload: any, done: Function) {
+  async validate(payload: any, done: VerifyCallback) {
     this.logger.debug(`validate [payload: ${JSON.stringify(payload)}]`);
     try {
       done(null, payload);
-    } catch {
+    } catch (error) {
+      this.logger.error(`validate [error: ${error.message}]`);
       throw new UnauthorizedException('Unauthorized', '401');
     }
   }

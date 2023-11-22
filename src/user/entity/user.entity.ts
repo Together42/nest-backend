@@ -15,6 +15,9 @@ export class User {
   @Column({ nullable: false })
   googleID: string;
 
+  @Column({ nullable: true })
+  refreshToken: string;
+
   // @Column({ nullable: true })
   // slackMemberId: string;
 
