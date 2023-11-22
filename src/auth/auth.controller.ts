@@ -39,7 +39,7 @@ export class AuthController {
         sameSite: 'none',
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
       });
-      res.redirect(`http://localhost:3050/auth/callback/?token=${accessToken}`);
+      res.redirect(`${process.env.FRONT_URL}/auth/callback/?token=${accessToken}`);
     } catch (error) {
       this.logger.error(`googleAuthRedirect [error: ${error.message}]`);
       res.status(500).json({ message: error.message });
