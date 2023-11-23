@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Logger } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
-import 'dotenv/config';
+import { ConfigService } from '@nestjs/config';
 
 interface HolidayItem {
   locdate?: string;
@@ -32,8 +32,9 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
   const MAX_RETRIES = 3;
   const RETRY_INTERVAL_MS = 2000;
   const logger = new Logger(getHolidayArray.name);
+  const configService = new ConfigService();
 
-  const SERVICE_KEY: string | undefined = process.env.SERVICE_KEY;
+  const SERVICE_KEY: string = configService.get('openApi.serviceKey');
   const OPENAPI_URL: string =
     'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo';
   const SOL_YEAR: number = new Date().getFullYear() + 1;

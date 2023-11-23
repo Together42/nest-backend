@@ -28,9 +28,10 @@ export class RotationsService {
     private rotationRepository: Repository<RotationEntity>,
     private customRotationRepository: CustomRotationRepository,
     @InjectRepository(RotationAttendeeEntity)
-    private attendeeRepository: Repository<RotationAttendeeEntity>,
-  ) // 유저 레포지토리 추가 필요
-  {}
+    private attendeeRepository: Repository<RotationAttendeeEntity>, // 유저 레포지토리 추가 필요
+  ) {}
+
+  // 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
 
   /*
    * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우,
@@ -124,7 +125,9 @@ export class RotationsService {
    * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
    * 로그로 남기고 하나만 가져온다.
    */
-  async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
+  async findRegistration(
+    userId: number,
+  ): Promise<Partial<RotationAttendeeEntity>> {
     const { year, month } = getNextYearAndMonth();
 
     try {
