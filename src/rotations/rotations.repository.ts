@@ -162,8 +162,8 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
         }
       }
     } catch (error: any) {
-      this.logger.error('Error occoured: ' + error);
-      throw new Error(error);
+      this.logger.error(error);
+      throw error;
     }
   }
 }

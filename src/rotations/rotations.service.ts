@@ -10,8 +10,8 @@ import { Cron } from '@nestjs/schedule';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { Rotation } from './entities/rotation/rotation.entity';
-import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
+import { RotationEntity } from './entities/rotation/rotation.entity';
+import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
 import { CustomRotationRepository } from './rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
@@ -24,11 +24,11 @@ export class RotationsService {
   private readonly logger = new Logger(RotationsService.name);
 
   constructor(
-    @InjectRepository(Rotation)
-    private rotationRepository: Repository<Rotation>,
+    @InjectRepository(RotationEntity)
+    private rotationRepository: Repository<RotationEntity>,
     private customRotationRepository: CustomRotationRepository,
-    @InjectRepository(RotationAttendee)
-    private attendeeRepository: Repository<RotationAttendee>,
+    @InjectRepository(RotationAttendeeEntity)
+    private attendeeRepository: Repository<RotationAttendeeEntity>,
   ) // 유저 레포지토리 추가 필요
   {}
 
@@ -47,6 +47,7 @@ export class RotationsService {
         await this.customRotationRepository.setRotation();
         this.logger.log('Successfully set rotation!');
       } catch (error: any) {
+        this.logger.error(error);
         throw error;
       }
     } else {
@@ -64,7 +65,7 @@ export class RotationsService {
   async createRegistration(
     createRegistrationDto: CreateRegistrationDto,
     userId: number,
-  ): Promise<RotationAttendee> {
+  ): Promise<RotationAttendeeEntity> {
     const { attendLimit } = createRegistrationDto;
     const { year, month } = getNextYearAndMonth();
 
@@ -96,7 +97,7 @@ export class RotationsService {
       });
 
       if (!attendeeExist) {
-        const newRotation = new RotationAttendee();
+        const newRotation = new RotationAttendeeEntity();
         newRotation.userId = userId;
         newRotation.year = year;
         newRotation.month = month;
@@ -110,7 +111,7 @@ export class RotationsService {
       await this.attendeeRepository.save(attendeeExist);
       return attendeeExist;
     } catch (error) {
-      this.logger.error('Error occoured: ' + error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -123,7 +124,7 @@ export class RotationsService {
    * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
    * 로그로 남기고 하나만 가져온다.
    */
-  async findRegistration(userId: number): Promise<Partial<RotationAttendee>> {
+  async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
     const { year, month } = getNextYearAndMonth();
 
     try {
@@ -145,7 +146,7 @@ export class RotationsService {
       }
       return records[0];
     } catch (error) {
-      this.logger.error('Error occoured: ' + error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -181,7 +182,7 @@ export class RotationsService {
 
       await this.attendeeRepository.delete(records.map((record) => record.id));
     } catch (error) {
-      this.logger.error('Error occoured: ' + error);
+      this.logger.error(error);
       throw error;
     }
   }
@@ -190,7 +191,7 @@ export class RotationsService {
    * attendee 관련 모듈이지만, 현재 내부 로테이션 작업에만 사용중
    * 해당 year와 month에 해당하는 모든 attendee를 반환한다.
    */
-  async getAllRegistration(): Promise<Partial<RotationAttendee>[]> {
+  async getAllRegistration(): Promise<Partial<RotationAttendeeEntity>[]> {
     const { year, month } = getNextYearAndMonth();
 
     try {
@@ -208,6 +209,7 @@ export class RotationsService {
 
       return records;
     } catch (error) {
+      this.logger.error(error);
       throw error;
     }
   }
@@ -238,7 +240,7 @@ export class RotationsService {
         if (recordExist) {
           await this.rotationRepository
             .createQueryBuilder()
-            .update(Rotation)
+            .update(RotationEntity)
             .set({ updateUserId: userId })
             .where(
               'userId = :userId AND year = :year AND month = :month AND day = :day',
@@ -258,6 +260,7 @@ export class RotationsService {
         return `successfully create user ${userId}'s information`;
       }
     } catch (error: any) {
+      this.logger.error(error);
       throw error;
     }
   }
@@ -270,7 +273,7 @@ export class RotationsService {
   async findAllRotation(
     year?: number,
     month?: number,
-  ): Promise<Partial<Rotation>[]> {
+  ): Promise<Partial<RotationEntity>[]> {
     try {
       let query = this.rotationRepository.createQueryBuilder('rotation');
 
@@ -297,6 +300,7 @@ export class RotationsService {
 
       return query.getMany();
     } catch (error: any) {
+      this.logger.error(error);
       throw error;
     }
   }
@@ -304,7 +308,7 @@ export class RotationsService {
   /*
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
    */
-  async findOne(): Promise<Partial<Rotation>[]> {
+  async findOne(): Promise<Partial<RotationEntity>[]> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
@@ -326,6 +330,7 @@ export class RotationsService {
 
       return records;
     } catch (error: any) {
+      this.logger.error(error);
       throw error;
     }
   }
@@ -351,7 +356,7 @@ export class RotationsService {
       if (recordExist) {
         await this.rotationRepository
           .createQueryBuilder()
-          .update(Rotation)
+          .update(RotationEntity)
           .set({ updateUserId: userId, day: updateDate })
           .where(
             'userId = :updateUserId AND year = :year AND month = :month AND day = :day',
@@ -366,6 +371,7 @@ export class RotationsService {
 
       return `successfully update user ${updateUserId}'s information`;
     } catch (error: any) {
+      this.logger.error(error);
       throw error;
     }
   }
@@ -423,6 +429,7 @@ export class RotationsService {
 
       return `User ${userId} rotation information has been deleted successfully`;
     } catch (error: any) {
+      this.logger.error(error);
       throw error;
     }
   }
