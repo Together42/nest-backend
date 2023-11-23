@@ -17,6 +17,7 @@ import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
+import { GetUser } from 'src/decorator/user.decorator';
 
 @Controller('rotations')
 export class RotationsController {
@@ -28,11 +29,13 @@ export class RotationsController {
    */
   @Post('/')
   @UsePipes(ValidationPipe)
-  // 유저 파이프 필요
-  createOwnRotation(@Body() createRotationDto: CreateRotationDto) {
+  createOwnRotation(
+    @GetUser() user: any,
+    @Body() createRotationDto: CreateRotationDto,
+  ) {
     return this.rotationsService.createOrUpdateRotation(
       createRotationDto,
-      userId,
+      user.uid,
     );
   }
 
@@ -64,6 +67,7 @@ export class RotationsController {
   /*
    * 당일 사서 조회 (달력)
    * 구글 시트를 위한 API
+   * Auth : None
    */
   @Get('/today/')
   findOne() {
@@ -77,10 +81,15 @@ export class RotationsController {
   @Patch('/:id')
   @UsePipes(new ValidationPipe({ transform: true }))
   updateUserRotation(
+    @GetUser() user: any,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRotationDto: UpdateRotationDto,
   ) {
-    return this.rotationsService.updateRotation(updateRotationDto, id, userId);
+    return this.rotationsService.updateRotation(
+      updateRotationDto,
+      id,
+      user.uid,
+    );
   }
 
   /*
@@ -93,12 +102,13 @@ export class RotationsController {
   @Delete('/:id')
   @UsePipes(new ValidationPipe({ transform: true }))
   removeOwnRotation(
+    @GetUser() user: any,
     @Param('id', ParseIntPipe) id: number,
     @Query('day', new ValidationPipe({ transform: true })) day?: number,
     @Query('month', new ValidationPipe({ transform: true })) month?: number,
     @Query('year', new ValidationPipe({ transform: true })) year?: number,
   ) {
-    if (id != userId) {
+    if (id != user.uid) {
       throw new UnauthorizedException(
         `User don't have permission to access this API`,
       );
@@ -126,11 +136,12 @@ export class RotationsController {
   @Post('/attendee')
   @UsePipes(ValidationPipe)
   async createOwnRegistration(
+    @GetUser() user: any,
     @Body() createRegistrationDto: CreateRegistrationDto,
   ): Promise<RotationAttendeeEntity> {
     return await this.rotationsService.createRegistration(
       createRegistrationDto,
-      userId,
+      user.uid,
     );
   }
 
@@ -139,8 +150,10 @@ export class RotationsController {
    * Auth : own
    */
   @Get('/attendee')
-  async findOwnRegistration(): Promise<Partial<RotationAttendeeEntity>> {
-    return await this.rotationsService.findRegistration(userId);
+  async findOwnRegistration(
+    @GetUser() user: any,
+  ): Promise<Partial<RotationAttendeeEntity>> {
+    return await this.rotationsService.findRegistration(user.uid);
   }
 
   /*
@@ -148,7 +161,7 @@ export class RotationsController {
    * Auth : own
    */
   @Delete('/attendee')
-  async removeOwnRegistration(): Promise<void> {
-    return await this.rotationsService.removeRegistration(userId);
+  async removeOwnRegistration(@GetUser() user: any): Promise<void> {
+    return await this.rotationsService.removeRegistration(user.uid);
   }
 }

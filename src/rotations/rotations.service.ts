@@ -12,6 +12,7 @@ import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationEntity } from './entities/rotation/rotation.entity';
 import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
+import { User } from 'src/user/entity/user.entity';
 import { CustomRotationRepository } from './rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
@@ -28,10 +29,27 @@ export class RotationsService {
     private rotationRepository: Repository<RotationEntity>,
     private customRotationRepository: CustomRotationRepository,
     @InjectRepository(RotationAttendeeEntity)
-    private attendeeRepository: Repository<RotationAttendeeEntity>, // 유저 레포지토리 추가 필요
+    private attendeeRepository: Repository<RotationAttendeeEntity>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   // 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
+  @Cron(`0 0 * * 1`, {
+    name: 'setRotation',
+    timeZone: 'Asia/Seoul',
+  })
+  async initRotation(): Promise<void> {
+    if (getFourthWeekdaysOfMonth().includes(getTodayDate())) {
+      try {
+        await this.customRotationRepository.initRotation();
+        this.logger.log('Init rotation finished');
+      } catch (error: any) {
+        this.logger.error(error);
+        throw error;
+      }
+    }
+  }
 
   /*
    * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우,
@@ -41,7 +59,7 @@ export class RotationsService {
     name: 'setRotation',
     timeZone: 'Asia/Seoul',
   })
-  async setRotation() {
+  async setRotation(): Promise<void> {
     if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) > 0) {
       try {
         this.logger.log('Setting rotation...');
