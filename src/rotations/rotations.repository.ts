@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { Rotation } from './entities/rotation/rotation.entity';
+import { RotationEntity } from './entities/rotation/rotation.entity';
 import { getNextYearAndMonth } from './utils/date';
 import { HolidayService } from './holiday.service';
 import { RotationsService } from './rotations.service';
-import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
+import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
 import { createRotation } from './utils/rotation';
 
 interface DayObject {
@@ -25,7 +25,7 @@ interface RotationAttendeeInfo {
  * (rotations service 모듈이 너무 길어져서...)
  */
 @Injectable()
-export class CustomRotationRepository extends Repository<Rotation> {
+export class CustomRotationRepository extends Repository<RotationEntity> {
   private readonly logger = new Logger(CustomRotationRepository.name);
   constructor(
     // RotationsService와 customRotationRepository가 상호 참조 관계여서 필요한 설정
@@ -34,7 +34,7 @@ export class CustomRotationRepository extends Repository<Rotation> {
     private holidayService: HolidayService,
     private dataSource: DataSource,
   ) {
-    super(Rotation, dataSource.createEntityManager());
+    super(RotationEntity, dataSource.createEntityManager());
   }
 
   /*
@@ -86,7 +86,7 @@ export class CustomRotationRepository extends Repository<Rotation> {
   async setRotation(): Promise<void> {
     try {
       const { year, month } = getNextYearAndMonth();
-      const attendeeArray: Partial<RotationAttendee>[] =
+      const attendeeArray: Partial<RotationAttendeeEntity>[] =
         await this.rotationService.getAllRegistration();
       const monthArrayInfo: DayObject[][] = await this.getInitMonthArray(
         year,
@@ -131,7 +131,7 @@ export class CustomRotationRepository extends Repository<Rotation> {
         });
 
         if (!attendeeExist) {
-          const rotation1 = new Rotation();
+          const rotation1 = new RotationEntity();
           rotation1.userId = userId1;
           rotation1.updateUserId = userId1;
           rotation1.year = year;
@@ -151,7 +151,7 @@ export class CustomRotationRepository extends Repository<Rotation> {
         });
 
         if (!attendeeExist) {
-          const rotation2 = new Rotation();
+          const rotation2 = new RotationEntity();
           rotation2.userId = userId2;
           rotation2.updateUserId = userId2;
           rotation2.year = year;

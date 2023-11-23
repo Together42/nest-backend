@@ -1,14 +1,14 @@
 import { DataSource, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { RotationHoliday } from './entities/holiday/holiday.entity';
+import { RotationHolidayEntity } from './entities/holiday/holiday.entity';
 
 /* 레포지토리 연습용으로 한 번 만들어보기
  * https://stackoverflow.com/questions/72549668/how-to-do-custom-repository-using-typeorm-mongodb-in-nestjs
  */
 @Injectable()
-export class HolidayRepository extends Repository<RotationHoliday> {
+export class HolidayRepository extends Repository<RotationHolidayEntity> {
   constructor(private dataSource: DataSource) {
-    super(RotationHoliday, dataSource.createEntityManager());
+    super(RotationHolidayEntity, dataSource.createEntityManager());
   }
 
   async findHolidayByYearAndMonth(

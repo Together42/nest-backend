@@ -16,7 +16,7 @@ import { RotationsService } from './rotations.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { RotationAttendee } from './entities/rotation/rotation-attendee.entity';
+import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
 
 @Controller('rotations')
 export class RotationsController {
@@ -127,7 +127,7 @@ export class RotationsController {
   @UsePipes(ValidationPipe)
   async createOwnRegistration(
     @Body() createRegistrationDto: CreateRegistrationDto,
-  ): Promise<RotationAttendee> {
+  ): Promise<RotationAttendeeEntity> {
     return await this.rotationsService.createRegistration(
       createRegistrationDto,
       userId,
@@ -139,7 +139,7 @@ export class RotationsController {
    * Auth : own
    */
   @Get('/attendee')
-  async findOwnRegistration(): Promise<Partial<RotationAttendee>> {
+  async findOwnRegistration(): Promise<Partial<RotationAttendeeEntity>> {
     return await this.rotationsService.findRegistration(userId);
   }
 

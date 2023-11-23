@@ -1,7 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('rotation_holiday')
-export class RotationHoliday {
+export class RotationHolidayEntity {
   @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
   id: number;
 

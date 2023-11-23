@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { RotationHoliday } from './entities/holiday/holiday.entity';
+import { RotationHolidayEntity } from './entities/holiday/holiday.entity';
 import { getHolidayArray } from './utils/holiday';
 import { HolidayRepository } from './holiday.repository';
 
@@ -19,8 +19,8 @@ export class HolidayService {
   private readonly logger = new Logger(HolidayService.name);
 
   constructor(
-    @InjectRepository(RotationHoliday)
-    private holidayRepository: Repository<RotationHoliday>,
+    @InjectRepository(RotationHolidayEntity)
+    private holidayRepository: Repository<RotationHolidayEntity>,
     private myHolidayRepository: HolidayRepository,
   ) {}
 
@@ -50,7 +50,7 @@ export class HolidayService {
           continue;
         }
 
-        const newHoliday = new RotationHoliday();
+        const newHoliday = new RotationHolidayEntity();
         newHoliday.year = year;
         newHoliday.month = month;
         newHoliday.day = day;

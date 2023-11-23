@@ -8,10 +8,9 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../user.entity';
 
 @Entity('rotation_attendee')
-export class RotationAttendee {
+export class RotationAttendeeEntity {
   @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
   id: number;
 
