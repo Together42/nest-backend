@@ -13,7 +13,11 @@ import { HolidayModule } from './holiday.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RotationEntity, RotationAttendeeEntity, RotationHolidayEntity]),
+    TypeOrmModule.forFeature([
+      RotationEntity,
+      RotationAttendeeEntity,
+      RotationHolidayEntity,
+    ]),
     ScheduleModule.forRoot(),
     HolidayModule,
   ],

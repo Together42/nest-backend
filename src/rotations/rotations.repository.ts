@@ -166,4 +166,14 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
       throw error;
     }
   }
+
+  async initRotation(): Promise<void> {
+    try {
+      // get all users
+      // make new rotation
+    } catch (error: any) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
 }
