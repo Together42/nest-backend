@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import * as process from "process";
+import * as process from 'process';
 
 export default () => ({
   database: {
@@ -21,5 +21,8 @@ export default () => ({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'default',
     callbackUrl: process.env.GOOGLE_REDIRECT_URI || 'default',
     prompt: process.env.GOOGLE_PROMPT || '',
+  },
+  openApi: {
+    serviceKey: process.env.SERVICE_KEY || '',
   },
 });
