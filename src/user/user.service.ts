@@ -12,6 +12,11 @@ export class UserService {
     return await this.userRepository.findOneByEmail(email);
   }
 
+  async findOneById(id: number): Promise<User | null> {
+    this.logger.debug(`findOneById [id: ${id}]`);
+    return await this.userRepository.findOneById(id);
+  }
+
   async createUser(user: Partial<User>): Promise<User> {
     this.logger.debug(`createUser [user: ${JSON.stringify(user)}]`);
     return await this.userRepository.createUser(user);

@@ -2,6 +2,7 @@ import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../entity/user.entity';
+import { Logger } from '@nestjs/common';
 
 export class UserRepository extends Repository<User> {
   constructor(
@@ -10,6 +11,7 @@ export class UserRepository extends Repository<User> {
   ) {
     super(User, dataSource.manager);
   }
+  private readonly logger = new Logger(UserRepository.name);
 
   async createUser(user: any): Promise<User> {
     const newUser = new User();
@@ -28,5 +30,24 @@ export class UserRepository extends Repository<User> {
         googleEmail: email,
       },
     });
+  }
+
+  async findOneById(id: number): Promise<User | undefined> {
+    try {
+      const record = await this.find({
+        where: {
+          id: id,
+        },
+      });
+
+      if (record.length > 1) {
+        this.logger.warn(`Duplicated records found on ${id}`);
+      }
+
+      return record[0];
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
   }
 }
