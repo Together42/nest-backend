@@ -328,15 +328,16 @@ export class RotationsService {
 
   /*
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
+   * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
    */
-  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+  async findTodayRotation(): Promise<Partial<RotationEntity>> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
     const day = today.getDate();
 
     try {
-      const records = await this.rotationRepository.find({
+      const record = await this.rotationRepository.find({
         where: {
           year: year,
           month: month,
@@ -345,11 +346,11 @@ export class RotationsService {
         select: ['userId', 'year', 'month', 'day'],
       });
 
-      if (!records || records.length === 0) {
-        return [];
+      if (record.length > 1) {
+        this.logger.warn(`Duplicated records found on ${month}, ${day}`);
       }
 
-      return records;
+      return record[0];
     } catch (error: any) {
       this.logger.error(error);
       throw error;

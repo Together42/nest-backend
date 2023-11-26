@@ -70,7 +70,7 @@ export class RotationsController {
    * Auth : None
    */
   @Get('/today/')
-  findOne() {
+  findTodayRotation() {
     return this.rotationsService.findTodayRotation();
   }
 
