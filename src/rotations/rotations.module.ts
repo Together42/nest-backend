@@ -11,6 +11,9 @@ import { HolidayService } from './holiday.service';
 import { HolidayRepository } from './holiday.repository';
 import { HolidayModule } from './holiday.module';
 import { UserService } from 'src/user/user.service';
+import { UserRepository } from 'src/user/repository/user.repository';
+import { UserModule } from 'src/user/user.module';
+import { User } from 'src/user/entity/user.entity';
 
 @Module({
   imports: [
@@ -18,13 +21,16 @@ import { UserService } from 'src/user/user.service';
       RotationEntity,
       RotationAttendeeEntity,
       RotationHolidayEntity,
+      User,
     ]),
     ScheduleModule.forRoot(),
+    UserModule,
     HolidayModule,
   ],
   controllers: [RotationsController],
   providers: [
     UserService,
+    UserRepository,
     RotationsService,
     CustomRotationRepository,
     HolidayService,
