@@ -24,8 +24,10 @@ export class HolidayService {
     private myHolidayRepository: HolidayRepository,
   ) {}
 
-  /* 12월 25일 4시 42분에 실행 */
-  @Cron('42 4 25 12 *', {
+  /* 12월 25일 4시 42분에 실행
+   * 왜 갑자기 month가 0부터 11까지로 된거지?
+   */
+  @Cron('42 4 25 11 *', {
     name: 'saveHolidayInfo',
     timeZone: 'Asia/Seoul',
   })
