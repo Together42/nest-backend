@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { RotationHolidayEntity } from './entities/holiday/holiday.entity';
+import { RotationHolidayEntity } from './entity/holiday/holiday.entity';
 import { getHolidayArray } from './utils/holiday';
 import { HolidayRepository } from './holiday.repository';
 

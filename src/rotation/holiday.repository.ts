@@ -1,6 +1,6 @@
 import { DataSource, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
-import { RotationHolidayEntity } from './entities/holiday/holiday.entity';
+import { RotationHolidayEntity } from './entity/holiday/holiday.entity';
 
 /* 레포지토리 연습용으로 한 번 만들어보기
  * https://stackoverflow.com/questions/72549668/how-to-do-custom-repository-using-typeorm-mongodb-in-nestjs

@@ -10,8 +10,8 @@ import { Cron } from '@nestjs/schedule';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { RotationEntity } from './entities/rotation/rotation.entity';
-import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
+import { RotationEntity } from './entity/rotation/rotation.entity';
+import { RotationAttendeeEntity } from './entity/rotation/rotation-attendee.entity';
 import { UserService } from 'src/user/user.service';
 import { CustomRotationRepository } from './rotations.repository';
 import {

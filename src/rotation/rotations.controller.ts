@@ -16,7 +16,7 @@ import { RotationsService } from './rotations.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
+import { RotationAttendeeEntity } from './entity/rotation/rotation-attendee.entity';
 import { GetUser } from 'src/decorator/user.decorator';
 
 @Controller('rotations')
