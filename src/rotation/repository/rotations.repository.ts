@@ -1,13 +1,13 @@
 import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { RotationEntity } from './entity/rotation.entity';
-import { getNextYearAndMonth } from './utils/date';
-import { HolidayService } from '../holiday/holiday.service';
-import { RotationsService } from './rotations.service';
-import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
-import { createRotation } from './utils/rotation';
+import { RotationEntity } from '../entity/rotation.entity';
+import { getNextYearAndMonth } from '../utils/date';
+import { HolidayService } from '../../holiday/holiday.service';
+import { RotationsService } from '../rotations.service';
+import { RotationAttendeeEntity } from '../entity/rotation-attendee.entity';
+import { createRotation } from '../utils/rotation';
 import { UserService } from 'src/user/user.service';
-import { CreateRegistrationDto } from './dto/create-registration.dto';
+import { CreateRegistrationDto } from '../dto/create-registration.dto';
 
 interface DayObject {
   day: number;

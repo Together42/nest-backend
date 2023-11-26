@@ -13,7 +13,7 @@ import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationEntity } from './entity/rotation.entity';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { UserService } from 'src/user/user.service';
-import { CustomRotationRepository } from './rotations.repository';
+import { CustomRotationRepository } from './repository/rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
   getNextYearAndMonth,

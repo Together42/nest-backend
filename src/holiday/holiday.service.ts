@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { RotationHolidayEntity } from './entity/holiday.entity';
 import { getHolidayArray } from '../rotation/utils/holiday';
-import { HolidayRepository } from './holiday.repository';
+import { HolidayRepository } from './repository/holiday.repository';
 
 /* 인터페이스 파일을 따로 만들어야 하나? */
 interface HolidayInfo {
