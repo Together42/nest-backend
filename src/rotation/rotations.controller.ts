@@ -20,6 +20,7 @@ import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { GetUser } from 'src/decorator/user.decorator';
 import { FindRotationQueryDto } from './dto/find-rotation-query.dto';
 import { getNextYearAndMonth } from './utils/date';
+import { RemoveRotationQueryDto } from './dto/remove-rotation.dto';
 
 @Controller('rotations')
 export class RotationsController {
@@ -93,9 +94,12 @@ export class RotationsController {
 
   /*
    * 사서 로테이션 삭제 (달력)
-   * Query: year=?&month=?
-   *  - year & month : year, month 스코프에 해당하는 user 정보를 삭제
-   *  - none : 다음 달 year, month에 해당하는 user 정보를 삭제
+   * Param: id
+   *  - id: 삭제하고자 하는 유저의 id. 즉, API를 호출하는 유저 본인의 id
+   * Query: day=?&year=?&month=?
+   *  - day: 필수적으로 입력해야 하는 쿼리
+   *  - year & month: year, month 스코프에 해당하는 user 정보를 삭제
+   *    - 만약 없다면, 다음 달 year, month에 해당하는 user 정보를 삭제
    * Auth : own
    */
   @Delete('/:id')
@@ -103,26 +107,18 @@ export class RotationsController {
   removeOwnRotation(
     @GetUser() user: any,
     @Param('id', ParseIntPipe) id: number,
-    @Query('day', new ValidationPipe({ transform: true })) day?: number,
-    @Query('month', new ValidationPipe({ transform: true })) month?: number,
-    @Query('year', new ValidationPipe({ transform: true })) year?: number,
+    @Query(new ValidationPipe({ transform: true }))
+    removeRotationQueryDto: RemoveRotationQueryDto,
   ) {
     if (id != user.uid) {
       throw new UnauthorizedException(
-        `User don't have permission to access this API`,
+        `User don't have permission to remove ${id}'s information`,
       );
     }
 
-    if (year && month) {
-      return this.rotationsService.removeRotation(id, day, month, year);
-    } else {
-      return this.rotationsService.removeRotation(
-        id,
-        day,
-        undefined,
-        undefined,
-      );
-    }
+    const { day, month = undefined, year = undefined } = removeRotationQueryDto;
+
+    return this.rotationsService.removeRotation(id, day, month, year);
   }
 
   /*

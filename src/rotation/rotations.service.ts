@@ -384,14 +384,10 @@ export class RotationsService {
    */
   async removeRotation(
     userId: number,
-    day?: number,
+    day: number,
     month?: number,
     year?: number,
   ): Promise<string> {
-    if (!day) {
-      return `Day is not provided in delete API. This request is ignored.`;
-    }
-
     try {
       let deleteQuery = this.rotationRepository
         .createQueryBuilder('rotation')
@@ -423,12 +419,10 @@ export class RotationsService {
       const deleteResult = await deleteQuery.execute();
 
       if (deleteResult.affected === 0) {
-        throw new NotFoundException(
-          `User ${userId} rotation information not found`,
-        );
+        throw new NotFoundException(`${userId} rotation not found`);
       }
 
-      return `User ${userId} rotation information has been deleted successfully`;
+      return `${userId} rotation at ${month}/${year} has been successfully deleted`;
     } catch (error: any) {
       this.logger.error(error);
       throw error;
