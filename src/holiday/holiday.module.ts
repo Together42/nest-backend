@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
-import { RotationHolidayEntity } from './entity/holiday/holiday.entity';
+import { RotationHolidayEntity } from './entity/holiday.entity';
 import { HolidayService } from './holiday.service';
 import { HolidayRepository } from './holiday.repository';
 

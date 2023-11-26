@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
-import { RotationHolidayEntity } from './entity/holiday/holiday.entity';
-import { getHolidayArray } from './utils/holiday';
+import { RotationHolidayEntity } from './entity/holiday.entity';
+import { getHolidayArray } from '../rotation/utils/holiday';
 import { HolidayRepository } from './holiday.repository';
 
 /* 인터페이스 파일을 따로 만들어야 하나? */

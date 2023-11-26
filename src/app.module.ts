@@ -5,7 +5,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RotationsModule } from './rotation/rotations.module';
-import { HolidayModule } from './rotation/holiday.module';
+import { HolidayModule } from './holiday/holiday.module';
 import { MeetupsModule } from './meetups/meetups.module';
 import { BatchModule } from './batch/batch.module';
 import { SlackModule } from 'nestjs-slack';
