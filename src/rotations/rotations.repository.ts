@@ -170,10 +170,30 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
     }
   }
 
+  /*
+   * 로테이션 시작 전, 참석 가능한 모든 유저를 로테이션에 설정
+   */
   async initRotation(): Promise<void> {
     try {
-      // get all users
-      // make new rotation
+      // get all attendable users
+      const users = await this.userService.getAllActiveUser();
+
+      for (const user of users) {
+        try {
+          const userId = user.id;
+          const createRegistrationDto: CreateRegistrationDto = {
+            attendLimit: {} as JSON,
+          };
+
+          // make new rotation
+          await this.rotationService.createRegistration(
+            createRegistrationDto,
+            userId,
+          );
+        } catch (error: any) {
+          this.logger.error(`Error processing user ${user.id}: `, error);
+        }
+      }
     } catch (error: any) {
       this.logger.error(error);
       throw error;
