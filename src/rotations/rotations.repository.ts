@@ -6,6 +6,8 @@ import { HolidayService } from './holiday.service';
 import { RotationsService } from './rotations.service';
 import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
 import { createRotation } from './utils/rotation';
+import { UserService } from 'src/user/user.service';
+import { CreateRegistrationDto } from './dto/create-registration.dto';
 
 interface DayObject {
   day: number;
@@ -32,6 +34,7 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
     @Inject(forwardRef(() => RotationsService))
     private rotationService: RotationsService,
     private holidayService: HolidayService,
+    private userService: UserService,
     private dataSource: DataSource,
   ) {
     super(RotationEntity, dataSource.createEntityManager());

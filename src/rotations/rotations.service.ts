@@ -12,7 +12,7 @@ import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationEntity } from './entities/rotation/rotation.entity';
 import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
-import { User } from 'src/user/entity/user.entity';
+import { UserService } from 'src/user/user.service';
 import { CustomRotationRepository } from './rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
@@ -30,8 +30,7 @@ export class RotationsService {
     private customRotationRepository: CustomRotationRepository,
     @InjectRepository(RotationAttendeeEntity)
     private attendeeRepository: Repository<RotationAttendeeEntity>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userService: UserService,
   ) {}
 
   // 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
@@ -96,11 +95,7 @@ export class RotationsService {
     }
 
     try {
-      const user = await this.userRepository.findOne({
-        where: {
-          id: userId,
-        },
-      });
+      const user = await this.userService.findOneById(userId);
 
       if (!user) {
         this.logger.error(`User with ID ${userId} not found`);

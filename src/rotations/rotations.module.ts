@@ -10,6 +10,7 @@ import { RotationHolidayEntity } from './entities/holiday/holiday.entity';
 import { HolidayService } from './holiday.service';
 import { HolidayRepository } from './holiday.repository';
 import { HolidayModule } from './holiday.module';
+import { UserService } from 'src/user/user.service';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { HolidayModule } from './holiday.module';
   ],
   controllers: [RotationsController],
   providers: [
+    UserService,
     RotationsService,
     CustomRotationRepository,
     HolidayService,
