@@ -291,30 +291,14 @@ export class RotationsService {
     month?: number,
   ): Promise<Partial<RotationEntity>[]> {
     try {
-      let query = this.rotationRepository.createQueryBuilder('rotation');
+      const records = this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
 
-      if (month && year) {
-        query = query.where(
-          'rotation.year = :year AND rotation.month = :month',
-          {
-            year,
-            month,
-          },
-        );
-      } else if (month && !year) {
-        const currentYear = new Date().getFullYear();
-        query = query.where(
-          'rotation.year = :currentYear AND rotation.month = :month',
-          {
-            currentYear,
-            month,
-          },
-        );
-      } else if (!month && year) {
-        query = query.where('rotation.year = :year', { year });
-      }
-
-      return query.getMany();
+      return records;
     } catch (error: any) {
       this.logger.error(error);
       throw error;

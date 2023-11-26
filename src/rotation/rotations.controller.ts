@@ -18,6 +18,8 @@ import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { GetUser } from 'src/decorator/user.decorator';
+import { FindRotationQueryDto } from './dto/find-rotation-query.dto';
+import { getNextYearAndMonth } from './utils/date';
 
 @Controller('rotations')
 export class RotationsController {
@@ -50,18 +52,15 @@ export class RotationsController {
    */
   @Get('/')
   findAllRotation(
-    @Query('month', new ValidationPipe({ transform: true })) month?: number,
-    @Query('year', new ValidationPipe({ transform: true })) year?: number,
+    @Query(new ValidationPipe({ transform: true }))
+    findRotationQueryDto: FindRotationQueryDto,
   ) {
-    if (year && month) {
-      return this.rotationsService.findAllRotation(year, month);
-    } else if (!year && month) {
-      return this.rotationsService.findAllRotation(month);
-    } else if (year && !month) {
-      return this.rotationsService.findAllRotation(year, undefined);
-    } else {
-      return this.rotationsService.findAllRotation();
-    }
+    const {
+      month = getNextYearAndMonth().month,
+      year = getNextYearAndMonth().year,
+    } = findRotationQueryDto;
+
+    return this.rotationsService.findAllRotation(year, month);
   }
 
   /*
