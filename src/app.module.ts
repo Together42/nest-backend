@@ -5,8 +5,6 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RotationsModule } from './rotations/rotations.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
 import { HolidayModule } from './rotations/holiday.module';
 import { MeetupsModule } from './meetups/meetups.module';
 import { BatchModule } from './batch/batch.module';
