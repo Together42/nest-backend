@@ -21,4 +21,8 @@ export class UserService {
     this.logger.debug(`createUser [user: ${JSON.stringify(user)}]`);
     return await this.userRepository.createUser(user);
   }
+
+  async getAllActiveUser(): Promise<User[]> {
+    return await this.userRepository.getAllActiveUser();
+  }
 }

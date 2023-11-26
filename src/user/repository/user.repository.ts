@@ -22,6 +22,21 @@ export class UserRepository extends Repository<User> {
     return newUser;
   }
 
+  async getAllActiveUser(): Promise<User[]> {
+    try {
+      const records = await this.find({
+        where: {
+          isActive: true,
+        },
+      });
+
+      return records;
+    } catch (error: any) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
   async findOneByEmail(
     email: string,
   ): Promise<User | undefined | Partial<User>> {
