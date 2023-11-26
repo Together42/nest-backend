@@ -329,7 +329,7 @@ export class RotationsService {
   /*
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
    */
-  async findOne(): Promise<Partial<RotationEntity>[]> {
+  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;

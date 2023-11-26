@@ -71,7 +71,7 @@ export class RotationsController {
    */
   @Get('/today/')
   findOne() {
-    return this.rotationsService.findOne();
+    return this.rotationsService.findTodayRotation();
   }
 
   /*
