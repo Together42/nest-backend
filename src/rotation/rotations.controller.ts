@@ -70,7 +70,7 @@ export class RotationsController {
    * 구글 시트를 위한 API
    * Auth : None
    */
-  @Get('/today/')
+  @Get('/today')
   findTodayRotation(): Promise<Partial<RotationEntity>[]> {
     return this.rotationsService.findTodayRotation();
   }
@@ -129,7 +129,7 @@ export class RotationsController {
    * Auth 스코프는 어떻게 정해야 할까?
    * - useGuard : JWT guard : seowokim님 머지 후 다시 보기
    */
-  @Post('/attendee')
+  @Post('/attendance')
   @UsePipes(ValidationPipe)
   async createOwnRegistration(
     @GetUser() user: any,
@@ -145,7 +145,7 @@ export class RotationsController {
    * 본인 로테이션 신청 조회 (다음 달)
    * Auth : own
    */
-  @Get('/attendee')
+  @Get('/attendance')
   async findOwnRegistration(
     @GetUser() user: any,
   ): Promise<Partial<RotationAttendeeEntity>> {
@@ -156,7 +156,7 @@ export class RotationsController {
    * 본인 로테이션 신청 취소 (다음 달)
    * Auth : own
    */
-  @Delete('/attendee')
+  @Delete('/attendance')
   async removeOwnRegistration(@GetUser() user: any): Promise<void> {
     return await this.rotationsService.removeRegistration(user.uid);
   }
