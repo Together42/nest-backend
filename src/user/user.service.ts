@@ -16,7 +16,7 @@ export class UserService {
 
   async findOneByUid(id: number): Promise<UserEntity | null> {
     this.logger.debug(`findOneByUid [id: ${id}]`);
-    return this.userRepository.findOneByUid(id);
+    return this.userRepository.findOneById(id);
   }
 
   async findOneById(id: number): Promise<UserEntity | null> {
@@ -28,7 +28,7 @@ export class UserService {
     return this.userRepository.createUser(user);
   }
 
-  async getAllActiveUser(): Promise<User[]> {
+  async getAllActiveUser(): Promise<UserEntity[]> {
     return await this.userRepository.getAllActiveUser();
   }
 }

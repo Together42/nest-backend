@@ -8,18 +8,18 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from 'src/user/entity/user.entity';
+import { UserEntity } from 'src/user/entity/user.entity';
 
 @Entity('rotation_attendee')
 export class RotationAttendeeEntity {
   @PrimaryGeneratedColumn({ type: 'int', name: 'id' })
   id: number;
 
-  @ManyToOne(() => User, (user) => user.id, {
+  @ManyToOne(() => UserEntity, (user) => user.id, {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' }) // 설정 안하면 PK로 자동 매핑됨
-  user: User;
+  user: UserEntity;
 
   @Column('int')
   userId: number;
