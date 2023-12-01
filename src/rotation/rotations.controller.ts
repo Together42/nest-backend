@@ -50,15 +50,12 @@ export class RotationsController {
   async findOwnRegistration(
     @GetUser() user: any,
   ): Promise<Partial<RotationAttendeeEntity>> {
-    return await this.rotationsService.findRegistration(user.uid); // inraId도 반환 필요
+    return await this.rotationsService.findRegistration(user.uid);
   }
 
   /*
    * 본인 로테이션 신청 (다음 달)
    * Auth : own
-   * annotation getuser 찾아보기
-   * Auth 스코프는 어떻게 정해야 할까?
-   * - useGuard : JWT guard : seowokim님 머지 후 다시 보기
    */
   @Post('/attendance')
   @UsePipes(ValidationPipe)
@@ -95,7 +92,7 @@ export class RotationsController {
       year = getNextYearAndMonth().year,
     } = findRotationQueryDto;
 
-    return this.rotationsService.findAllRotation(year, month); // intraId 반환 필요
+    return this.rotationsService.findAllRotation(year, month);
   }
 
   /*
@@ -144,12 +141,12 @@ export class RotationsController {
   @UsePipes(ValidationPipe)
   updateUserRotation(
     @GetUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) intraId: string,
     @Body() updateRotationDto: UpdateRotationDto,
   ): Promise<string> {
     return this.rotationsService.updateRotation(
       updateRotationDto,
-      id,
+      intraId,
       user.uid,
     );
   }

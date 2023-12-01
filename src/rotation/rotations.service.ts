@@ -157,10 +157,10 @@ export class RotationsService {
         this.logger.warn(`Duplicated records found on ${userId}`);
       }
 
-      if (!records || records.length === 0) {
-        return {};
-      }
-      return records[0];
+      const record = await this.userService.findOneById(userId);
+      const modifiedRecord = { ...records[0], intraId: record.nickname };
+
+      return modifiedRecord;
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -298,7 +298,15 @@ export class RotationsService {
         },
       });
 
-      return records;
+      const modifiedRecords = await Promise.all(
+        (await records).map(async (record) => {
+          const userRecord = await this.userService.findOneById(record.userId);
+
+          return { ...record, intraId: userRecord.nickname };
+        }),
+      );
+
+      return modifiedRecords;
     } catch (error: any) {
       this.logger.error(error);
       throw error;
@@ -335,13 +343,24 @@ export class RotationsService {
 
   async updateRotation(
     updateRotationDto: UpdateRotationDto,
-    updateUserId: number,
+    updateUserintraId: string,
     userId: number,
   ): Promise<string> {
     const { attendDate, updateDate, year, month } = updateRotationDto;
     const day: number = JSON.parse(JSON.stringify(attendDate))[0];
 
     try {
+      const findUser =
+        await this.userService.findOneByIntraId(updateUserintraId);
+
+      if (!findUser) {
+        throw new NotFoundException(
+          `User ${updateUserintraId} information not found`,
+        );
+      }
+
+      const updateUserId = findUser.id;
+
       const recordExist = await this.rotationRepository.findOne({
         where: {
           userId: updateUserId,
