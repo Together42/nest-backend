@@ -53,7 +53,7 @@ export class RotationsController {
    */
   @Get('/')
   findAllRotation(
-    @Query(new ValidationPipe({ transform: true }))
+    @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
   ) {
     const {
@@ -79,7 +79,7 @@ export class RotationsController {
    * Auth : user
    */
   @Patch('/:id')
-  @UsePipes(new ValidationPipe({ transform: true }))
+  @UsePipes(ValidationPipe)
   updateUserRotation(
     @GetUser() user: any,
     @Param('id', ParseIntPipe) id: number,
@@ -103,11 +103,11 @@ export class RotationsController {
    * Auth : own
    */
   @Delete('/:id')
-  @UsePipes(new ValidationPipe({ transform: true }))
+  @UsePipes(ValidationPipe)
   removeOwnRotation(
     @GetUser() user: any,
     @Param('id', ParseIntPipe) id: number,
-    @Query(new ValidationPipe({ transform: true }))
+    @Query(ValidationPipe)
     removeRotationQueryDto: RemoveRotationQueryDto,
   ) {
     if (id != user.uid) {
