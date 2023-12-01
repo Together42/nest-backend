@@ -36,7 +36,7 @@ export class RotationsController {
   createOwnRotation(
     @GetUser() user: any,
     @Body() createRotationDto: CreateRotationDto,
-  ) {
+  ): Promise<string> {
     return this.rotationsService.createOrUpdateRotation(
       createRotationDto,
       user.uid,
@@ -56,7 +56,7 @@ export class RotationsController {
   findAllRotation(
     @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
-  ) {
+  ): Promise<Partial<RotationEntity>[]> {
     const {
       month = getNextYearAndMonth().month,
       year = getNextYearAndMonth().year,
@@ -85,7 +85,7 @@ export class RotationsController {
     @GetUser() user: any,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRotationDto: UpdateRotationDto,
-  ) {
+  ): Promise<string> {
     return this.rotationsService.updateRotation(
       updateRotationDto,
       id,
@@ -110,7 +110,7 @@ export class RotationsController {
     @Param('id', ParseIntPipe) id: number,
     @Query(ValidationPipe)
     removeRotationQueryDto: RemoveRotationQueryDto,
-  ) {
+  ): Promise<string> {
     if (id != user.uid) {
       throw new UnauthorizedException(
         `User don't have permission to remove ${id}'s information`,
