@@ -1,13 +1,25 @@
-import { Controller, Get, UseGuards, Req, Res, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  Req,
+  Res,
+  Body,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { GoogleAuthGuard } from './google/google.guard';
 import { User as AuthUser } from 'passport';
-import { User } from 'src/user/entity/user.entity';
+import { UserEntity } from 'src/user/entity/user.entity';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { SignUpUserDto } from 'src/user/dto/signup-user.dto';
 
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
+
   constructor(private readonly authService: AuthService) {}
 
   @Get('google')
@@ -20,29 +32,67 @@ export class AuthController {
     @Req() req: Request & { user: AuthUser },
     @Res() res: Response,
   ): Promise<void> {
+    this.logger.debug(`googleAuthRedirect`);
     try {
-      const user = req.user;
-      this.logger.debug(`googleAuthRedirect [user: ${JSON.stringify(user)}]`);
-      const userEntity: { isNew: boolean; user: Partial<User> } =
-        await this.authService.findOrCreateUser(user);
-      const accessToken: string = await this.authService.generateToken(userEntity.user);
-      const refreshToken: string = await this.authService.generateRefreshToken(userEntity.user);
-      // res.cookie('access_token', accessToken, {
-      //   httpOnly: true,
-      //   secure: true,
-      //   sameSite: 'none',
-      //   // expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-      // });
-      res.cookie('refresh_token', refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-      });
-      res.redirect(`${process.env.FRONT_URL}/auth/callback/?token=${accessToken}`);
+      const user: AuthUser = req.user;
+      const findUser: Partial<UserEntity> =
+        await this.authService.findOneByEmail(user.email);
+      if (typeof findUser === 'undefined' || findUser === null) {
+        this.logger.debug(`new user [user: ${JSON.stringify(user)}]`);
+        res.cookie('google_token', user.accessToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none',
+        });
+        res.redirect(`${process.env.FRONT_URL}/auth/signup`);
+      } else {
+        this.logger.debug(`existing user [user: ${JSON.stringify(user)}]`);
+        const accessToken: string =
+          await this.authService.generateToken(findUser);
+        const refreshToken: string =
+          await this.authService.generateRefreshToken(findUser);
+        this.setCookie(res, accessToken, refreshToken);
+        res.redirect(`${process.env.FRONT_URL}/auth/callback/`);
+      }
     } catch (error) {
       this.logger.error(`googleAuthRedirect [error: ${error.message}]`);
       res.status(500).json({ message: error.message });
     }
+  }
+
+  @Post('signup')
+  async signup(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() body: SignUpUserDto,
+  ) {
+    const user = req['user'];
+    const userInfo: CreateUserDto = {
+      email: user.email,
+      googleId: user.sub,
+      nickname: body.nickname,
+      slackId: body.slackId,
+    };
+    console.log('userInfo', userInfo);
+    const newUser = await this.authService.createUser(userInfo);
+    const accessToken = await this.authService.generateToken(newUser);
+    const refreshToken = await this.authService.generateRefreshToken(newUser);
+    this.setCookie(res, accessToken, refreshToken);
+    res.redirect(`${process.env.FRONT_URL}/auth/callback/`);
+  }
+
+  private setCookie(res: Response, accessToken: string, refreshToken: string) {
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    });
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1),
+    });
   }
 }

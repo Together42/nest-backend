@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
+import { GoogleMiddleware } from './google/google.middleware';
 
 @Module({
   imports: [
@@ -32,4 +33,8 @@ import { UserService } from 'src/user/user.service';
   controllers: [AuthController],
   providers: [UserService, AuthService, GoogleStrategy, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): any {
+    consumer.apply(GoogleMiddleware).forRoutes('/auth/signup');
+  }
+}
