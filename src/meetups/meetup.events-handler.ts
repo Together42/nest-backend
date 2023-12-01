@@ -38,19 +38,19 @@ export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
           });
           break;
 
-        case MeetupRegisteredEvent.name:
-          message = meetupRegisteredMessage({
-            channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
-            meetup: (meetupEvent as MeetupRegisteredEvent).meetup,
-          });
-          break;
+        // case MeetupRegisteredEvent.name:
+        //   message = meetupRegisteredMessage({
+        //     channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        //     meetup: (meetupEvent as MeetupRegisteredEvent).meetup,
+        //   });
+        //   break;
 
-        case MeetupUnregisteredEvent.name:
-          message = meetupUnregisteredMessage({
-            channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
-            meetup: (meetupEvent as MeetupRegisteredEvent).meetup,
-          });
-          break;
+        // case MeetupUnregisteredEvent.name:
+        //   message = meetupUnregisteredMessage({
+        //     channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        //     meetup: (meetupEvent as MeetupRegisteredEvent).meetup,
+        //   });
+        //   break;
 
         default:
           break;
