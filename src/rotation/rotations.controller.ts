@@ -113,12 +113,6 @@ export class RotationsController {
 
   /*
    * 사서 로테이션 삭제 (달력)
-   * Param: id
-   *  - id: 삭제하고자 하는 유저의 id. 즉, API를 호출하는 유저 본인의 id
-   * Query: day=?&year=?&month=?
-   *  - day: 필수적으로 입력해야 하는 쿼리
-   *  - year & month: year, month 스코프에 해당하는 user 정보를 삭제
-   *    - 만약 없다면, 다음 달 year, month에 해당하는 user 정보를 삭제
    * Auth : own
    */
   @Delete('/')
@@ -137,7 +131,7 @@ export class RotationsController {
    * 사서 로테이션 수정 (달력)
    * Auth : user
    */
-  @Patch('/:id') // intraId로 변경
+  @Patch('/:id')
   @UsePipes(ValidationPipe)
   updateUserRotation(
     @GetUser() user: any,

@@ -33,7 +33,9 @@ export class RotationsService {
     private userService: UserService,
   ) {}
 
-  // 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
+  /*
+   * 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
+   */
   @Cron(`0 0 * * 1`, {
     name: 'setRotation',
     timeZone: 'Asia/Seoul',
@@ -74,7 +76,73 @@ export class RotationsService {
   }
 
   /*
-   * /rotations/attendee
+   * /rotations/today (GET)
+   * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
+   * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
+   */
+  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+
+    try {
+      const records: Partial<RotationEntity>[] =
+        await this.rotationRepository.find({
+          where: {
+            year: year,
+            month: month,
+            day: day,
+          },
+          select: ['userId', 'year', 'month', 'day'],
+        });
+
+      return records;
+    } catch (error: any) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  /*
+   * /rotations/attendee (GET)
+   * 본인의 다음 달 로테이션 기록을 반환한다.
+   * 본인의 로테이션 기록을 반환.
+   * 만약 기록이 없다면 빈 객체를 반환한다.
+   * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
+   * 로그로 남기고 하나만 가져온다.
+   */
+  async findRegistration(
+    userId: number,
+  ): Promise<Partial<RotationAttendeeEntity>> {
+    const { year, month } = getNextYearAndMonth();
+
+    try {
+      const records = await this.attendeeRepository.find({
+        where: {
+          userId: userId,
+          year: year,
+          month: month,
+        },
+        select: ['userId', 'year', 'month', 'attendLimit'],
+      });
+
+      if (records.length > 1) {
+        this.logger.warn(`Duplicated records found on ${userId}`);
+      }
+
+      const record = await this.userService.findOneById(userId);
+      const modifiedRecord = { ...records[0], intraId: record.nickname };
+
+      return modifiedRecord;
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  /*
+   * /rotations/attendee (POST)
    * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
    * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
    * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
@@ -131,52 +199,7 @@ export class RotationsService {
   }
 
   /*
-   * /rotations/attendee
-   * 본인의 다음 달 로테이션 기록을 반환한다.
-   * 본인의 로테이션 기록을 반환.
-   * 만약 기록이 없다면 빈 객체를 반환한다.
-   * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
-   * 로그로 남기고 하나만 가져온다.
-   */
-  async findRegistration(
-    userId: number,
-  ): Promise<Partial<RotationAttendeeEntity>> {
-    const { year, month } = getNextYearAndMonth();
-
-    try {
-      const records = await this.attendeeRepository.find({
-        where: {
-          userId: userId,
-          year: year,
-          month: month,
-        },
-        select: ['userId', 'year', 'month', 'attendLimit'],
-      });
-
-      if (records.length > 1) {
-        this.logger.warn(`Duplicated records found on ${userId}`);
-      }
-
-      const record = await this.userService.findOneById(userId);
-      const modifiedRecord = { ...records[0], intraId: record.nickname };
-
-      return modifiedRecord;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
-  }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} rotation`;
-  // }
-
-  // updateRegistration(id: number, updateRotationDto: UpdateRotationDto) {
-  //   return `This action updates a #${id} rotation`;
-  // }
-
-  /*
-   * /rotations/attendee
+   * /rotations/attendee (DELETE)
    * 본인의 다음 달 로테이션 기록 삭제.
    * 반환값은 없다.
    */
@@ -231,6 +254,40 @@ export class RotationsService {
   }
 
   /*
+   * /rotations (GET)
+   * 로테이션의 모든 기록을 반환하는 서비스.
+   * 기본적으로는 다음 달의 로테이션을 반환.
+   * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
+   */
+  async findAllRotation(
+    year?: number,
+    month?: number,
+  ): Promise<Partial<RotationEntity>[]> {
+    try {
+      const records = this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
+
+      const modifiedRecords = await Promise.all(
+        (await records).map(async (record) => {
+          const userRecord = await this.userService.findOneById(record.userId);
+
+          return { ...record, intraId: userRecord.nickname };
+        }),
+      );
+
+      return modifiedRecords;
+    } catch (error: any) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  /*
+   * /rotations (POST)
    * 유저 본인이 달력에 자신의 일정을 추가하는 서비스.
    * 만약 같은 날을 입력했다면, TypeORM의 save 메서드가 알아서 업데이트 해주는 것 같다.
    */
@@ -282,31 +339,52 @@ export class RotationsService {
   }
 
   /*
-   * 로테이션의 모든 기록을 반환하는 서비스
-   * 만약 parameter로 month와 year가 들어오면,
-   * 해당 스코프에 맞는 자료를 반환한다.
+   * /rotations (DELETE)
+   * 로테이션을 삭제하는 서비스
+   * month, year가 주어진다면 해당 스코프에 맞는 유저의 day를 삭제
+   * 아무것도 없다면 다음 달에 해당하는 유저의 day를 삭제
    */
-  async findAllRotation(
-    year?: number,
+  async removeRotation(
+    userId: number,
+    day: number,
     month?: number,
-  ): Promise<Partial<RotationEntity>[]> {
+    year?: number,
+  ): Promise<string> {
     try {
-      const records = this.rotationRepository.find({
-        where: {
-          year: year,
-          month: month,
-        },
-      });
+      let deleteQuery = this.rotationRepository
+        .createQueryBuilder('rotation')
+        .delete();
 
-      const modifiedRecords = await Promise.all(
-        (await records).map(async (record) => {
-          const userRecord = await this.userService.findOneById(record.userId);
+      if (month && year) {
+        deleteQuery = deleteQuery.where(
+          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
+          {
+            userId,
+            year,
+            month,
+            day,
+          },
+        );
+      } else {
+        const { year, month } = getNextYearAndMonth();
+        deleteQuery = deleteQuery.where(
+          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
+          {
+            userId,
+            year,
+            month,
+            day,
+          },
+        );
+      }
 
-          return { ...record, intraId: userRecord.nickname };
-        }),
-      );
+      const deleteResult = await deleteQuery.execute();
 
-      return modifiedRecords;
+      if (deleteResult.affected === 0) {
+        throw new NotFoundException(`${userId} rotation not found`);
+      }
+
+      return `${userId} rotation at ${month}/${year} has been successfully deleted`;
     } catch (error: any) {
       this.logger.error(error);
       throw error;
@@ -314,33 +392,11 @@ export class RotationsService {
   }
 
   /*
-   * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
-   * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
+   * /rotations/:id (PATCH)
+   * 로테이션을 업데이트하는 서비스.
+   * id는 유저의 intra id를 의미한다.
+   * 해당 유저의 정보를 찾은 다음, 해당 유저의 정보를 업데이트한다.
    */
-  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-
-    try {
-      const records: Partial<RotationEntity>[] =
-        await this.rotationRepository.find({
-          where: {
-            year: year,
-            month: month,
-            day: day,
-          },
-          select: ['userId', 'year', 'month', 'day'],
-        });
-
-      return records;
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
-    }
-  }
-
   async updateRotation(
     updateRotationDto: UpdateRotationDto,
     updateUserintraId: string,
@@ -387,58 +443,6 @@ export class RotationsService {
       }
 
       return `successfully update user ${updateUserId}'s information`;
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
-    }
-  }
-
-  /*
-   * 로테이션을 삭제하는 서비스
-   * month, year가 주어진다면 해당 스코프에 맞는 유저의 day를 삭제
-   * 아무것도 없다면 다음 달에 해당하는 유저의 day를 삭제
-   */
-  async removeRotation(
-    userId: number,
-    day: number,
-    month?: number,
-    year?: number,
-  ): Promise<string> {
-    try {
-      let deleteQuery = this.rotationRepository
-        .createQueryBuilder('rotation')
-        .delete();
-
-      if (month && year) {
-        deleteQuery = deleteQuery.where(
-          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
-          {
-            userId,
-            year,
-            month,
-            day,
-          },
-        );
-      } else {
-        const { year, month } = getNextYearAndMonth();
-        deleteQuery = deleteQuery.where(
-          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
-          {
-            userId,
-            year,
-            month,
-            day,
-          },
-        );
-      }
-
-      const deleteResult = await deleteQuery.execute();
-
-      if (deleteResult.affected === 0) {
-        throw new NotFoundException(`${userId} rotation not found`);
-      }
-
-      return `${userId} rotation at ${month}/${year} has been successfully deleted`;
     } catch (error: any) {
       this.logger.error(error);
       throw error;
