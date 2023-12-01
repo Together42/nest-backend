@@ -21,6 +21,7 @@ import { GetUser } from 'src/decorator/user.decorator';
 import { FindRotationQueryDto } from './dto/find-rotation-query.dto';
 import { getNextYearAndMonth } from './utils/date';
 import { RemoveRotationQueryDto } from './dto/remove-rotation.dto';
+import { RotationEntity } from './entity/rotation.entity';
 
 @Controller('rotations')
 export class RotationsController {
@@ -70,7 +71,7 @@ export class RotationsController {
    * Auth : None
    */
   @Get('/today/')
-  findTodayRotation() {
+  findTodayRotation(): Promise<Partial<RotationEntity>[]> {
     return this.rotationsService.findTodayRotation();
   }
 
