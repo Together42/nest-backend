@@ -1,18 +1,29 @@
-version: "3"
+version: '3'
 
 services:
-  mysql:
-    image: mysql:latest
+  backend:
+    build: .
     restart: always
-    environment:
-      - TZ=Asia/Seoul
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
     ports:
-      - ${MYSQL_PORT}:3306
-    volumes:
-      - ./test_db/initdb:/docker-entrypoint-initdb.d
-      - ./test_db/data:/var/lib/mysql
+      - ${BACK_PORT}:${BACKEND_CONTAINER_PORT}
+    environment:
+      TZ: Asia/Seoul
+      BACK_PORT: ${BACKEND_CONTAINER_PORT}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      GOOGLE_PROMPT: ${GOOGLE_REDIRECT_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+      SERVICE_KEY: ${SERVICE_KEY}
+      SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${SLACK_BOT_USER_OAUTH_ACCESS_TOKEN}
+      SLACK_CHANNEL_JIPHYEONJEON: ${SLACK_CHANNEL_JIPHYEONJEON}
+      TOGETHER_HOME_URL: ${TOGETHER_HOME_URL}
     tty: true
