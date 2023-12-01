@@ -1,19 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { User } from './entity/user.entity';
+import { UserEntity } from './entity/user.entity';
 import { UserRepository } from './repository/user.repository';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
+
   constructor(private readonly userRepository: UserRepository) {}
 
-  async findOneByEmail(email: string): Promise<User | null | Partial<User>> {
+  async findOneByEmail(email: string): Promise<UserEntity | null> {
     this.logger.debug(`findOneByEmail [email: ${email}]`);
-    return await this.userRepository.findOneByEmail(email);
+    return this.userRepository.findOneByEmail(email);
   }
 
-  async createUser(user: Partial<User>): Promise<User> {
-    this.logger.debug(`createUser [user: ${JSON.stringify(user)}]`);
-    return await this.userRepository.createUser(user);
+  async findOneByUid(id: number): Promise<UserEntity | null> {
+    this.logger.debug(`findOneByUid [id: ${id}]`);
+    return this.userRepository.findOneByUid(id);
+  }
+
+  async createUser(user: CreateUserDto): Promise<UserEntity> {
+    return this.userRepository.createUser(user);
   }
 }
