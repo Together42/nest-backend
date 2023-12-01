@@ -1,28 +1,31 @@
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../entity/user.entity';
 import { Logger } from '@nestjs/common';
+import { UserEntity } from '../entity/user.entity';
+import { CreateUserDto } from '../dto/create-user.dto';
 
-export class UserRepository extends Repository<User> {
+export class UserRepository extends Repository<UserEntity> {
   constructor(
-    @InjectRepository(User)
+    @InjectRepository(UserEntity)
     private readonly dataSource: DataSource,
   ) {
-    super(User, dataSource.manager);
+    super(UserEntity, dataSource.manager);
   }
   private readonly logger = new Logger(UserRepository.name);
 
-  async createUser(user: any): Promise<User> {
-    const newUser = new User();
-    newUser.googleEmail = user.email;
-    newUser.nickname = user.name;
-    newUser.googleID = await bcrypt.hash(user.sub, 10);
+  async createUser(user: CreateUserDto): Promise<UserEntity> {
+    const newUser = this.create({
+      googleEmail: user.email,
+      nickname: user.nickname,
+      googleID: await bcrypt.hash(user.googleId, 10),
+      slackMemberId: user.slackId,
+    });
     await this.save(newUser);
     return newUser;
   }
 
-  async getAllActiveUser(): Promise<User[]> {
+  async getAllActiveUser(): Promise<UserEntity[]> {
     try {
       const records = await this.find({
         where: {
@@ -37,17 +40,15 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async findOneByEmail(
-    email: string,
-  ): Promise<User | undefined | Partial<User>> {
-    return await this.findOne({
+  async findOneByEmail(email: string): Promise<UserEntity | null> {
+    return this.findOne({
       where: {
         googleEmail: email,
       },
     });
   }
 
-  async findOneById(id: number): Promise<User | undefined> {
+  async findOneById(id: number): Promise<UserEntity | undefined> {
     try {
       const record = await this.find({
         where: {
