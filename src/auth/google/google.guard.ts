@@ -8,7 +8,9 @@ export class GoogleAuthGuard extends AuthGuard('google') {
   constructor() {
     super({});
   }
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    let result: boolean = false;
     if (context.getType() === 'http') {
       this.logger.debug(
         `canActivate [http, ${context.getArgs()[0].method} ${
@@ -16,16 +18,7 @@ export class GoogleAuthGuard extends AuthGuard('google') {
         }]`,
       );
     }
-    // const token = context
-    //   .switchToHttp()
-    //   .getRequest()
-    //   .headers?.authorization?.split('Bearer ')[1];
-    const result: boolean = (await super.canActivate(context)) as boolean;
-    const request = context.switchToHttp().getRequest();
-    // await super.logIn(request);
-    this.logger.debug(
-      `canActivate success [request.user: ${JSON.stringify(request.user)}]`,
-    );
+    result = (await super.canActivate(context)) as boolean;
     return result;
   }
 }
