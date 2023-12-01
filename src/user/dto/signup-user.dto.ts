@@ -1,10 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class SignUpUserDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   readonly nickname: string;
 
+  @IsOptional()
   @IsString()
   readonly slackId: string;
 }
