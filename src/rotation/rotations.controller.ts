@@ -28,6 +28,45 @@ export class RotationsController {
   constructor(private readonly rotationsService: RotationsService) {}
 
   /*
+   * 본인 로테이션 신청 (다음 달)
+   * Auth : own
+   * annotation getuser 찾아보기
+   * Auth 스코프는 어떻게 정해야 할까?
+   * - useGuard : JWT guard : seowokim님 머지 후 다시 보기
+   */
+  @Post('/attendance')
+  @UsePipes(ValidationPipe)
+  async createOwnRegistration(
+    @GetUser() user: any,
+    @Body() createRegistrationDto: CreateRegistrationDto,
+  ): Promise<RotationAttendeeEntity> {
+    return await this.rotationsService.createRegistration(
+      createRegistrationDto,
+      user.uid,
+    );
+  }
+
+  /*
+   * 본인 로테이션 신청 조회 (다음 달)
+   * Auth : own
+   */
+  @Get('/attendance')
+  async findOwnRegistration(
+    @GetUser() user: any,
+  ): Promise<Partial<RotationAttendeeEntity>> {
+    return await this.rotationsService.findRegistration(user.uid);
+  }
+
+  /*
+   * 본인 로테이션 신청 취소 (다음 달)
+   * Auth : own
+   */
+  @Delete('/attendance')
+  async removeOwnRegistration(@GetUser() user: any): Promise<void> {
+    return await this.rotationsService.removeRegistration(user.uid);
+  }
+
+  /*
    * 본인 로테이션 생성 (달력)
    * Auth : own
    */
@@ -120,44 +159,5 @@ export class RotationsController {
     const { day, month = undefined, year = undefined } = removeRotationQueryDto;
 
     return this.rotationsService.removeRotation(id, day, month, year);
-  }
-
-  /*
-   * 본인 로테이션 신청 (다음 달)
-   * Auth : own
-   * annotation getuser 찾아보기
-   * Auth 스코프는 어떻게 정해야 할까?
-   * - useGuard : JWT guard : seowokim님 머지 후 다시 보기
-   */
-  @Post('/attendance')
-  @UsePipes(ValidationPipe)
-  async createOwnRegistration(
-    @GetUser() user: any,
-    @Body() createRegistrationDto: CreateRegistrationDto,
-  ): Promise<RotationAttendeeEntity> {
-    return await this.rotationsService.createRegistration(
-      createRegistrationDto,
-      user.uid,
-    );
-  }
-
-  /*
-   * 본인 로테이션 신청 조회 (다음 달)
-   * Auth : own
-   */
-  @Get('/attendance')
-  async findOwnRegistration(
-    @GetUser() user: any,
-  ): Promise<Partial<RotationAttendeeEntity>> {
-    return await this.rotationsService.findRegistration(user.uid);
-  }
-
-  /*
-   * 본인 로테이션 신청 취소 (다음 달)
-   * Auth : own
-   */
-  @Delete('/attendance')
-  async removeOwnRegistration(@GetUser() user: any): Promise<void> {
-    return await this.rotationsService.removeRegistration(user.uid);
   }
 }
