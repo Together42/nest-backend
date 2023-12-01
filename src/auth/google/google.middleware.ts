@@ -31,7 +31,6 @@ export class GoogleMiddleware implements NestMiddleware {
           throw new Error('Invalid token');
         }
         req['user'] = userInfo;
-        console.log('userInfo', userInfo);
         next();
       } catch (error) {
         this.logger.error(error);
