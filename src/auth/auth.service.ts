@@ -36,14 +36,20 @@ export class AuthService {
     return this.userService.createUser(user);
   }
 
-  setCookie(res: Response, accessToken: string, refreshToken: string) {
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    });
-    res.cookie('access_token', accessToken, {
+  setCookie(
+    res: Response,
+    googleToken: string | null,
+    refreshToken: string | null,
+  ) {
+    if (refreshToken) {
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      });
+    }
+    res.cookie('google_token', googleToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'none',

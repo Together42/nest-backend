@@ -39,11 +39,7 @@ export class AuthController {
         await this.authService.findOneByEmail(user.email);
       if (typeof findUser === 'undefined' || findUser === null) {
         this.logger.debug(`new user [user: ${JSON.stringify(user)}]`);
-        res.cookie('google_token', user.accessToken, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'none',
-        });
+        this.authService.setCookie(res, user.accessToken, null);
         res.redirect(`${process.env.FRONT_URL}/auth/signup`);
       } else {
         this.logger.debug(`existing user [user: ${JSON.stringify(user)}]`);
@@ -51,8 +47,10 @@ export class AuthController {
           await this.authService.generateToken(findUser);
         const refreshToken: string =
           await this.authService.generateRefreshToken(findUser);
-        this.authService.setCookie(res, accessToken, refreshToken);
-        res.redirect(`${process.env.FRONT_URL}/auth/callback/`);
+        this.authService.setCookie(res, user.access_token, refreshToken);
+        res.redirect(
+          `${process.env.FRONT_URL}/auth/callback/?token=${accessToken}`,
+        );
       }
     } catch (error) {
       this.logger.error(`googleAuthRedirect [error: ${error.message}]`);
@@ -73,11 +71,12 @@ export class AuthController {
       nickname: body.nickname,
       slackId: body.slackId,
     };
-    console.log('userInfo', userInfo);
     const newUser = await this.authService.createUser(userInfo);
     const accessToken = await this.authService.generateToken(newUser);
     const refreshToken = await this.authService.generateRefreshToken(newUser);
-    this.authService.setCookie(res, accessToken, refreshToken);
-    res.redirect(`${process.env.FRONT_URL}/auth/callback/`);
+    this.authService.setCookie(res, null, refreshToken);
+    res.redirect(
+      `${process.env.FRONT_URL}/auth/callback/?token=${accessToken}`,
+    );
   }
 }
