@@ -51,7 +51,7 @@ export class AuthController {
           await this.authService.generateToken(findUser);
         const refreshToken: string =
           await this.authService.generateRefreshToken(findUser);
-        this.setCookie(res, accessToken, refreshToken);
+        this.authService.setCookie(res, accessToken, refreshToken);
         res.redirect(`${process.env.FRONT_URL}/auth/callback/`);
       }
     } catch (error) {
@@ -77,22 +77,7 @@ export class AuthController {
     const newUser = await this.authService.createUser(userInfo);
     const accessToken = await this.authService.generateToken(newUser);
     const refreshToken = await this.authService.generateRefreshToken(newUser);
-    this.setCookie(res, accessToken, refreshToken);
+    this.authService.setCookie(res, accessToken, refreshToken);
     res.redirect(`${process.env.FRONT_URL}/auth/callback/`);
-  }
-
-  private setCookie(res: Response, accessToken: string, refreshToken: string) {
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    });
-    res.cookie('access_token', accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1),
-    });
   }
 }

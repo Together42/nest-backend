@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserService } from 'src/user/user.service';
 import { UserEntity } from 'src/user/entity/user.entity';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -33,5 +34,20 @@ export class AuthService {
 
   async createUser(user: CreateUserDto): Promise<Partial<UserEntity> | null> {
     return this.userService.createUser(user);
+  }
+
+  setCookie(res: Response, accessToken: string, refreshToken: string) {
+    res.cookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    });
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1),
+    });
   }
 }
