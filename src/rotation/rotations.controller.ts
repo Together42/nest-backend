@@ -10,7 +10,6 @@ import {
   ValidationPipe,
   ParseIntPipe,
   Query,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { RotationsService } from './rotations.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
@@ -23,9 +22,36 @@ import { getNextYearAndMonth } from './utils/date';
 import { RemoveRotationQueryDto } from './dto/remove-rotation.dto';
 import { RotationEntity } from './entity/rotation.entity';
 
+/* TODO:
+ * :id -> intraId로 변경
+ * 반환 시 id 말고 intraId로 반환
+ *
+ */
+
 @Controller('rotations')
 export class RotationsController {
   constructor(private readonly rotationsService: RotationsService) {}
+
+  /*
+   * 당일 사서 조회 (달력)
+   * 구글 시트를 위한 API
+   * Auth : None
+   */
+  @Get('/today')
+  findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+    return this.rotationsService.findTodayRotation();
+  }
+
+  /*
+   * 본인 로테이션 신청 조회 (다음 달)
+   * Auth : own
+   */
+  @Get('/attendance')
+  async findOwnRegistration(
+    @GetUser() user: any,
+  ): Promise<Partial<RotationAttendeeEntity>> {
+    return await this.rotationsService.findRegistration(user.uid); // inraId도 반환 필요
+  }
 
   /*
    * 본인 로테이션 신청 (다음 달)
@@ -47,23 +73,29 @@ export class RotationsController {
   }
 
   /*
-   * 본인 로테이션 신청 조회 (다음 달)
-   * Auth : own
-   */
-  @Get('/attendance')
-  async findOwnRegistration(
-    @GetUser() user: any,
-  ): Promise<Partial<RotationAttendeeEntity>> {
-    return await this.rotationsService.findRegistration(user.uid);
-  }
-
-  /*
    * 본인 로테이션 신청 취소 (다음 달)
    * Auth : own
    */
   @Delete('/attendance')
   async removeOwnRegistration(@GetUser() user: any): Promise<void> {
     return await this.rotationsService.removeRegistration(user.uid);
+  }
+
+  /*
+   * 사서 로테이션 조회 (달력)
+   * Auth : None
+   */
+  @Get('/')
+  findAllRotation(
+    @Query(ValidationPipe)
+    findRotationQueryDto: FindRotationQueryDto,
+  ): Promise<Partial<RotationEntity>[]> {
+    const {
+      month = getNextYearAndMonth().month,
+      year = getNextYearAndMonth().year,
+    } = findRotationQueryDto;
+
+    return this.rotationsService.findAllRotation(year, month); // intraId 반환 필요
   }
 
   /*
@@ -83,42 +115,32 @@ export class RotationsController {
   }
 
   /*
-   * 사서 로테이션 조회 (달력)
-   * Query: year=?&month=?
-   *  - year&month : 해당 year와 month에 해당하는 쿼리 반환
-   *  - year : 해당 year에 해당하는 모든 month의 쿼리 반환
-   *  - month : 해당 month에 해당하는 이번 연도 쿼리 반환
-   *  - none : DB에 있는 모든 쿼리 반환
-   * Auth : None
+   * 사서 로테이션 삭제 (달력)
+   * Param: id
+   *  - id: 삭제하고자 하는 유저의 id. 즉, API를 호출하는 유저 본인의 id
+   * Query: day=?&year=?&month=?
+   *  - day: 필수적으로 입력해야 하는 쿼리
+   *  - year & month: year, month 스코프에 해당하는 user 정보를 삭제
+   *    - 만약 없다면, 다음 달 year, month에 해당하는 user 정보를 삭제
+   * Auth : own
    */
-  @Get('/')
-  findAllRotation(
+  @Delete('/')
+  @UsePipes(ValidationPipe)
+  removeOwnRotation(
+    @GetUser() user: any,
     @Query(ValidationPipe)
-    findRotationQueryDto: FindRotationQueryDto,
-  ): Promise<Partial<RotationEntity>[]> {
-    const {
-      month = getNextYearAndMonth().month,
-      year = getNextYearAndMonth().year,
-    } = findRotationQueryDto;
+    removeRotationQueryDto: RemoveRotationQueryDto,
+  ): Promise<string> {
+    const { day, month = undefined, year = undefined } = removeRotationQueryDto;
 
-    return this.rotationsService.findAllRotation(year, month);
-  }
-
-  /*
-   * 당일 사서 조회 (달력)
-   * 구글 시트를 위한 API
-   * Auth : None
-   */
-  @Get('/today')
-  findTodayRotation(): Promise<Partial<RotationEntity>[]> {
-    return this.rotationsService.findTodayRotation();
+    return this.rotationsService.removeRotation(user.uid, day, month, year);
   }
 
   /*
    * 사서 로테이션 수정 (달력)
    * Auth : user
    */
-  @Patch('/:id')
+  @Patch('/:id') // intraId로 변경
   @UsePipes(ValidationPipe)
   updateUserRotation(
     @GetUser() user: any,
@@ -130,34 +152,5 @@ export class RotationsController {
       id,
       user.uid,
     );
-  }
-
-  /*
-   * 사서 로테이션 삭제 (달력)
-   * Param: id
-   *  - id: 삭제하고자 하는 유저의 id. 즉, API를 호출하는 유저 본인의 id
-   * Query: day=?&year=?&month=?
-   *  - day: 필수적으로 입력해야 하는 쿼리
-   *  - year & month: year, month 스코프에 해당하는 user 정보를 삭제
-   *    - 만약 없다면, 다음 달 year, month에 해당하는 user 정보를 삭제
-   * Auth : own
-   */
-  @Delete('/:id')
-  @UsePipes(ValidationPipe)
-  removeOwnRotation(
-    @GetUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
-    @Query(ValidationPipe)
-    removeRotationQueryDto: RemoveRotationQueryDto,
-  ): Promise<string> {
-    if (id != user.uid) {
-      throw new UnauthorizedException(
-        `User don't have permission to remove ${id}'s information`,
-      );
-    }
-
-    const { day, month = undefined, year = undefined } = removeRotationQueryDto;
-
-    return this.rotationsService.removeRotation(id, day, month, year);
   }
 }
