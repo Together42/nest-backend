@@ -38,4 +38,4 @@ jobs:
             SLACK_CHANNEL_JIPHYEONJEON=${{ secrets.SLACK_CHANNEL_JIPHYEONJEON_DEV }}
             FRONT_URL=${{ secrets.FRONTEND_URL }}
             TOGETHER_HOME_URL=${{ secrets.TOGETHER_HOME_URL }}" > .env
-            docker-compose up -d
+            docker-compose up -d --build
