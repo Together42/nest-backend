@@ -10,10 +10,10 @@ import { Cron } from '@nestjs/schedule';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
-import { RotationEntity } from './entities/rotation/rotation.entity';
-import { RotationAttendeeEntity } from './entities/rotation/rotation-attendee.entity';
-import { User } from 'src/user/entity/user.entity';
-import { CustomRotationRepository } from './rotations.repository';
+import { RotationEntity } from './entity/rotation.entity';
+import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
+import { UserService } from 'src/user/user.service';
+import { CustomRotationRepository } from './repository/rotations.repository';
 import {
   getFourthWeekdaysOfMonth,
   getNextYearAndMonth,
@@ -30,8 +30,7 @@ export class RotationsService {
     private customRotationRepository: CustomRotationRepository,
     @InjectRepository(RotationAttendeeEntity)
     private attendeeRepository: Repository<RotationAttendeeEntity>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userService: UserService,
   ) {}
 
   // 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
@@ -96,11 +95,7 @@ export class RotationsService {
     }
 
     try {
-      const user = await this.userRepository.findOne({
-        where: {
-          id: userId,
-        },
-      });
+      const user = await this.userService.findOneById(userId);
 
       if (!user) {
         this.logger.error(`User with ID ${userId} not found`);
@@ -296,30 +291,14 @@ export class RotationsService {
     month?: number,
   ): Promise<Partial<RotationEntity>[]> {
     try {
-      let query = this.rotationRepository.createQueryBuilder('rotation');
+      const records = this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
 
-      if (month && year) {
-        query = query.where(
-          'rotation.year = :year AND rotation.month = :month',
-          {
-            year,
-            month,
-          },
-        );
-      } else if (month && !year) {
-        const currentYear = new Date().getFullYear();
-        query = query.where(
-          'rotation.year = :currentYear AND rotation.month = :month',
-          {
-            currentYear,
-            month,
-          },
-        );
-      } else if (!month && year) {
-        query = query.where('rotation.year = :year', { year });
-      }
-
-      return query.getMany();
+      return records;
     } catch (error: any) {
       this.logger.error(error);
       throw error;
@@ -328,26 +307,24 @@ export class RotationsService {
 
   /*
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
+   * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
    */
-  async findOne(): Promise<Partial<RotationEntity>[]> {
+  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
     const day = today.getDate();
 
     try {
-      const records = await this.rotationRepository.find({
-        where: {
-          year: year,
-          month: month,
-          day: day,
-        },
-        select: ['userId', 'year', 'month', 'day'],
-      });
-
-      if (!records || records.length === 0) {
-        return [];
-      }
+      const records: Partial<RotationEntity>[] =
+        await this.rotationRepository.find({
+          where: {
+            year: year,
+            month: month,
+            day: day,
+          },
+          select: ['userId', 'year', 'month', 'day'],
+        });
 
       return records;
     } catch (error: any) {
@@ -404,14 +381,10 @@ export class RotationsService {
    */
   async removeRotation(
     userId: number,
-    day?: number,
+    day: number,
     month?: number,
     year?: number,
   ): Promise<string> {
-    if (!day) {
-      return `Day is not provided in delete API. This request is ignored.`;
-    }
-
     try {
       let deleteQuery = this.rotationRepository
         .createQueryBuilder('rotation')
@@ -443,12 +416,10 @@ export class RotationsService {
       const deleteResult = await deleteQuery.execute();
 
       if (deleteResult.affected === 0) {
-        throw new NotFoundException(
-          `User ${userId} rotation information not found`,
-        );
+        throw new NotFoundException(`${userId} rotation not found`);
       }
 
-      return `User ${userId} rotation information has been deleted successfully`;
+      return `${userId} rotation at ${month}/${year} has been successfully deleted`;
     } catch (error: any) {
       this.logger.error(error);
       throw error;

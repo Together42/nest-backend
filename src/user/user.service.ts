@@ -19,7 +19,16 @@ export class UserService {
     return this.userRepository.findOneByUid(id);
   }
 
+  async findOneById(id: number): Promise<UserEntity | null> {
+    this.logger.debug(`findOneById [id: ${id}]`);
+    return await this.userRepository.findOneById(id);
+  }
+
   async createUser(user: CreateUserDto): Promise<UserEntity> {
     return this.userRepository.createUser(user);
+  }
+
+  async getAllActiveUser(): Promise<User[]> {
+    return await this.userRepository.getAllActiveUser();
   }
 }

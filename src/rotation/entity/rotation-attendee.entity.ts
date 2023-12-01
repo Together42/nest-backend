@@ -8,6 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { User } from 'src/user/entity/user.entity';
 
 @Entity('rotation_attendee')
 export class RotationAttendeeEntity {
