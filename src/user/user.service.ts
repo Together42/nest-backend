@@ -24,6 +24,11 @@ export class UserService {
     return await this.userRepository.findOneById(id);
   }
 
+  async findOneByIntraId(intraId: string): Promise<UserEntity | null> {
+    this.logger.debug(`findOneByIntraId [intraId: ${intraId}]`);
+    return await this.userRepository.findOneByIntraId(intraId);
+  }
+
   async createUser(user: CreateUserDto): Promise<UserEntity> {
     return this.userRepository.createUser(user);
   }

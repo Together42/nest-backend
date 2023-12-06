@@ -66,4 +66,23 @@ export class UserRepository extends Repository<UserEntity> {
       throw error;
     }
   }
+
+  async findOneByIntraId(intraId: string): Promise<UserEntity | undefined> {
+    try {
+      const record = await this.find({
+        where: {
+          nickname: intraId,
+        },
+      });
+
+      if (record.length > 1) {
+        this.logger.warn(`Duplicated records found on ${intraId}`);
+      }
+
+      return record[0];
+    } catch (error) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
 }
