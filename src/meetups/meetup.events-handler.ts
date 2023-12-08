@@ -13,10 +13,14 @@ import { MeetupEvent } from 'src/meetups/event/meetup.event';
 import { MeetupRegisteredEvent } from './event/meetup-registered.event';
 import { MeetupUnregisteredEvent } from './event/meetup-unregistered.event';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @EventsHandler(MeetupEvent)
 export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
-  constructor(private slackService: SlackService) {}
+  constructor(
+    private slackService: SlackService,
+    private configService: ConfigService,
+  ) {}
   private readonly logger = new Logger(MeetupEventsHandler.name);
 
   async handle(meetupEvent: MeetupEvent) {
@@ -26,28 +30,28 @@ export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
       switch (meetupEvent.name) {
         case MeetupCreatedEvent.name:
           message = meetupCreatedMessage({
-            channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+            channel: this.configService.get('slack.jiphyeonjeonChannel'),
             meetup: (meetupEvent as MeetupCreatedEvent).meetup,
           });
           break;
 
         case MeetupMatchedEvent.name:
           message = meetupMatchedMessage({
-            channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+            channel: this.configService.get('slack.jiphyeonjeonChannel'),
             meetupDetail: (meetupEvent as MeetupMatchedEvent).meetupDetail,
           });
           break;
 
         // case MeetupRegisteredEvent.name:
         //   message = meetupRegisteredMessage({
-        //     channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        //     channel: this.configService.get('slack.jiphyeonjeonChannel'),
         //     meetup: (meetupEvent as MeetupRegisteredEvent).meetup,
         //   });
         //   break;
 
         // case MeetupUnregisteredEvent.name:
         //   message = meetupUnregisteredMessage({
-        //     channel: process.env.SLACK_CHANNEL_JIPHYEONJEON!,
+        //     channel: this.configService.get('slack.jiphyeonjeonChannel'),
         //     meetup: (meetupEvent as MeetupRegisteredEvent).meetup,
         //   });
         //   break;

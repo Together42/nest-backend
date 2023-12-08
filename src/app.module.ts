@@ -21,10 +21,14 @@ import configuration from './config/configuration';
       load: [configuration],
     }),
     CqrsModule.forRoot(),
-    SlackModule.forRoot({
-      type: 'api',
-      token: process.env.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN,
+    SlackModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
       isGlobal: true,
+      useFactory: (configService: ConfigService) => ({
+        type: 'api',
+        token: configService.get('slack.botToken'),
+      }),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
