@@ -189,12 +189,12 @@ export class MeetupsService {
       await queryRunner.manager.save(attendance);
 
       // 이벤트 신청시 슬랙봇 메세지 전송
-      this.eventBus.publish(
-        new MeetupRegisteredEvent({
-          title: meetup.title,
-          description: meetup.description,
-        }),
-      );
+      //   this.eventBus.publish(
+      //     new MeetupRegisteredEvent({
+      //       title: meetup.title,
+      //       description: meetup.description,
+      //     }),
+      //   );
 
       await queryRunner.commitTransaction();
     } catch (e) {
@@ -230,12 +230,12 @@ export class MeetupsService {
       await this.meetupAttendeeRepository.softDelete(meetupAttendee.id);
 
       // 이벤트 신청 취소시 슬랙봇 메세지 전송
-      this.eventBus.publish(
-        new MeetupUnregisteredEvent({
-          title: meetup.title,
-          description: meetup.description,
-        }),
-      );
+      //   this.eventBus.publish(
+      //     new MeetupUnregisteredEvent({
+      //       title: meetup.title,
+      //       description: meetup.description,
+      //     }),
+      //   );
 
       await queryRunner.commitTransaction();
     } catch (e) {
