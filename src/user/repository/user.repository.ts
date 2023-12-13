@@ -13,11 +13,16 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async createUser(user: CreateUserDto): Promise<UserEntity> {
+    /*
+      duplicate check
+    */
+    const saltRounds = 10;
     const newUser = this.create({
       googleEmail: user.email,
       nickname: user.nickname,
-      googleID: await bcrypt.hash(user.googleId, 10),
+      googleID: await bcrypt.hash(user.googleId, saltRounds),
       slackMemberId: user.slackId,
+      profileImageUrl: user.imageUrl,
     });
     await this.save(newUser);
     return newUser;
@@ -36,6 +41,24 @@ export class UserRepository extends Repository<UserEntity> {
       where: {
         id,
       },
+    });
+  }
+
+  async updateRefreshToken(
+    id: number,
+    refreshToken: string,
+    refreshTokenExpiredAt: Date,
+  ): Promise<void> {
+    const user: UserEntity = await this.findOneByUid(id);
+    user.refreshToken = refreshToken;
+    user.refreshTokenExpiredAt = refreshTokenExpiredAt;
+    await this.update(id, user);
+  }
+
+  async deleteRefreshToken(id: number): Promise<void> {
+    await this.update(id, {
+      refreshToken: null,
+      refreshTokenExpiredAt: null,
     });
   }
 }
