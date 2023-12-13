@@ -15,4 +15,8 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   readonly googleId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  readonly imageUrl: string;
 }

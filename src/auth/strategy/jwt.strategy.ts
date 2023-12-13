@@ -7,9 +7,7 @@ import { VerifyCallback } from 'jsonwebtoken';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   private readonly logger = new Logger(JwtStrategy.name);
-  constructor (
-    private readonly configService: ConfigService,
-  ){
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: configService.get<string>('jwt.secret'),

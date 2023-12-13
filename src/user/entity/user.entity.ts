@@ -25,6 +25,9 @@ export class UserEntity {
   @Column({ nullable: true })
   refreshToken: string;
 
+  @Column({ type: 'datetime', nullable: true })
+  refreshTokenExpiredAt: Date;
+
   @Column({ nullable: true })
   slackMemberId: string;
 
