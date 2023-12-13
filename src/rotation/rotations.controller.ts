@@ -8,7 +8,6 @@ import {
   Patch,
   UsePipes,
   ValidationPipe,
-  ParseIntPipe,
   Query,
 } from '@nestjs/common';
 import { RotationsService } from './rotations.service';
@@ -18,7 +17,6 @@ import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { GetUser } from 'src/decorator/user.decorator';
 import { FindRotationQueryDto } from './dto/find-rotation-query.dto';
-import { getNextYearAndMonth } from './utils/date';
 import { RemoveRotationQueryDto } from './dto/remove-rotation.dto';
 import { RotationEntity } from './entity/rotation.entity';
 
@@ -87,10 +85,7 @@ export class RotationsController {
     @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
   ): Promise<Partial<RotationEntity>[]> {
-    const {
-      month = getNextYearAndMonth().month,
-      year = getNextYearAndMonth().year,
-    } = findRotationQueryDto;
+    const { month = undefined, year = undefined } = findRotationQueryDto;
 
     return this.rotationsService.findAllRotation(year, month);
   }
@@ -119,11 +114,10 @@ export class RotationsController {
   @UsePipes(ValidationPipe)
   removeOwnRotation(
     @GetUser() user: any,
-    @Query(ValidationPipe)
+    @Body()
     removeRotationQueryDto: RemoveRotationQueryDto,
   ): Promise<string> {
     const { day, month = undefined, year = undefined } = removeRotationQueryDto;
-
     return this.rotationsService.removeRotation(user.uid, day, month, year);
   }
 
@@ -135,7 +129,7 @@ export class RotationsController {
   @UsePipes(ValidationPipe)
   updateUserRotation(
     @GetUser() user: any,
-    @Param('id', ParseIntPipe) intraId: string,
+    @Param('id') intraId: string,
     @Body() updateRotationDto: UpdateRotationDto,
   ): Promise<string> {
     return this.rotationsService.updateRotation(

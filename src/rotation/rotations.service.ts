@@ -37,7 +37,7 @@ export class RotationsService {
    * 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
    */
   @Cron(`0 0 * * 1`, {
-    name: 'setRotation',
+    name: 'initRotation',
     timeZone: 'Asia/Seoul',
   })
   async initRotation(): Promise<void> {
@@ -256,7 +256,7 @@ export class RotationsService {
   /*
    * /rotations (GET)
    * 로테이션의 모든 기록을 반환하는 서비스.
-   * 기본적으로는 다음 달의 로테이션을 반환.
+   * 기본적으로는 모든 로테이션을 반환.
    * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
    */
   async findAllRotation(
@@ -264,17 +264,22 @@ export class RotationsService {
     month?: number,
   ): Promise<Partial<RotationEntity>[]> {
     try {
-      const records = this.rotationRepository.find({
-        where: {
-          year: year,
-          month: month,
-        },
-      });
+      let records: Promise<Partial<RotationEntity>[]>;
+
+      if (year && month) {
+        records = this.rotationRepository.find({
+          where: {
+            year: year,
+            month: month,
+          },
+        });
+      } else {
+        records = this.rotationRepository.find();
+      }
 
       const modifiedRecords = await Promise.all(
         (await records).map(async (record) => {
           const userRecord = await this.userService.findOneById(record.userId);
-
           return { ...record, intraId: userRecord.nickname };
         }),
       );
@@ -351,6 +356,10 @@ export class RotationsService {
     year?: number,
   ): Promise<string> {
     try {
+      if (!day) {
+        throw new BadRequestException('Invalid date: day is not provided');
+      }
+
       let deleteQuery = this.rotationRepository
         .createQueryBuilder('rotation')
         .delete();
@@ -381,7 +390,7 @@ export class RotationsService {
       const deleteResult = await deleteQuery.execute();
 
       if (deleteResult.affected === 0) {
-        throw new NotFoundException(`${userId} rotation not found`);
+        throw new NotFoundException(`userId ${userId} rotation not found`);
       }
 
       return `${userId} rotation at ${month}/${year} has been successfully deleted`;
