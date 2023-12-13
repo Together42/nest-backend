@@ -80,7 +80,6 @@ export class AuthController {
     const accessToken = await this.authService.generateToken(newUser);
     const refreshToken = await this.authService.generateRefreshToken(newUser);
     await this.authService.setCookie(res, newUser.id, null, refreshToken);
-    console.log('signup', accessToken);
     res.send({
       message: 'success',
       access_token: accessToken,
@@ -105,7 +104,6 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   async logout(@Req() req: Request, @Res() res: Response) {
     this.logger.debug(`logout`);
-    // console.log('logout', req.headers);
     // await this.authService.deleteRefreshToken(user.id);
     res.clearCookie('refresh_token');
     res.clearCookie('google_token');

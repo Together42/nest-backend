@@ -10,7 +10,6 @@ export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    console.log('JwtRefreshGuard');
     const token = this.getToken(context);
     const result = await this.validateToken(token);
     return result;
@@ -33,7 +32,6 @@ export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {
       const result = verify(token, process.env.JWT_REFRESH_SECRET, {
         ignoreExpiration: false,
       });
-      console.log('validateToken', result);
       return true;
     } catch (error) {
       return false;

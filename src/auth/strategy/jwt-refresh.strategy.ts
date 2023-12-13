@@ -25,7 +25,6 @@ export class JwtRefreshStrategy extends PassportStrategy(
   }
 
   // async validate(req: Request, payload: any) {
-  //   console.log('JwtRefreshStrategy');
   //   const refreshToken = req?.cookies?.Refresh;
   //   try {
   //     const user = await this.userService.isRefreshTokenVaild(
@@ -41,11 +40,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
   //   }
   // }
   // async validate(payload: any, done: VerifyCallback) {
-  //   console.log('JwtRefreshStrategy');
   //   try {
   //     done(null, payload);
   //   } catch (error) {
   //     throw new UnauthorizedException('Unauthorized', '401');
   //   }
-  }
+  // }
 }
