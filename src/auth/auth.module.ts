@@ -3,12 +3,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PassportModule } from '@nestjs/passport';
-import { GoogleStrategy } from './google/google.strategy';
-import { JwtStrategy } from './jwt/jwt.strategy';
+import { GoogleStrategy } from './strategy/google.strategy';
+import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
-import { GoogleMiddleware } from './google/google.middleware';
+import { GoogleMiddleware } from '../middleware/google.middleware';
+import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
 
 @Module({
   imports: [
@@ -31,7 +32,13 @@ import { GoogleMiddleware } from './google/google.middleware';
     UserModule,
   ],
   controllers: [AuthController],
-  providers: [UserService, AuthService, GoogleStrategy, JwtStrategy],
+  providers: [
+    UserService,
+    AuthService,
+    GoogleStrategy,
+    JwtStrategy,
+    JwtRefreshStrategy,
+  ],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer): any {

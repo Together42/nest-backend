@@ -4,6 +4,7 @@ import { Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { UserService } from 'src/user/user.service';
+import { VerifyCallback } from 'jsonwebtoken';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -23,16 +24,28 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, payload: any) {
-    const refreshToken = req?.cookies?.Refresh;
-    const user = await this.userService.isRefreshTokenVaild(
-      refreshToken,
-      payload.id,
-    );
-    try {
-    } catch (error) {
-      throw new UnauthorizedException('Unauthorized', '401');
-    }
-    return user;
+  // async validate(req: Request, payload: any) {
+  //   console.log('JwtRefreshStrategy');
+  //   const refreshToken = req?.cookies?.Refresh;
+  //   try {
+  //     const user = await this.userService.isRefreshTokenVaild(
+  //       refreshToken,
+  //       payload.id,
+  //     );
+  //     if (!user) {
+  //       throw new UnauthorizedException('Unauthorized', '401');
+  //     }
+  //     return user;
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+  // async validate(payload: any, done: VerifyCallback) {
+  //   console.log('JwtRefreshStrategy');
+  //   try {
+  //     done(null, payload);
+  //   } catch (error) {
+  //     throw new UnauthorizedException('Unauthorized', '401');
+  //   }
   }
 }
