@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { MeetupAttendeeEntity } from './meetup-attendee.entity';
 import { MeetupCategory } from '../enum/meetup-category.enum';
-import { User } from 'src/user/entity/user.entity';
+import { UserEntity } from 'src/user/entity/user.entity';
 
 @Entity('meetup')
 export class MeetupEntity {
@@ -49,17 +49,17 @@ export class MeetupEntity {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp' })
   deletedAt: Date;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'create_user_id' })
-  createUser: User;
+  createUser: UserEntity;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'match_user_id' })
-  matchUser: User;
+  matchUser: UserEntity;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'delete_user_id' })
-  deleteUser: User;
+  deleteUser: UserEntity;
 
   @OneToMany(
     () => MeetupAttendeeEntity,

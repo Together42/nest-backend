@@ -8,6 +8,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { UserEntity } from 'src/user/entity/user.entity';
 
 @Entity('rotation')
 export class RotationEntity {
@@ -15,20 +16,20 @@ export class RotationEntity {
   id: number;
 
   // eager: Rotation entity와 함께 User entity도 로드되도록 한다.
-  @ManyToOne(() => User, {
+  @ManyToOne(() => UserEntity, {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: User;
+  user: UserEntity;
 
   @Column('int', { name: 'user_id' })
   userId: number;
 
-  @ManyToOne(() => User, {
+  @ManyToOne(() => UserEntity, {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'update_user_id', referencedColumnName: 'id' })
-  updateUser: User;
+  updateUser: UserEntity;
 
   @Column('int', { name: 'update_user_id' })
   updateUserId: number;

@@ -28,7 +28,7 @@ export class BatchService {
     const { meetupId } = await this.meetupsService.create(createMeetupDto);
 
     // 생성한 이벤트 마감 크론잡 등록 및 실행
-    const cronJob = CronJob.from({
+    const cronJob: any = CronJob.from({
       cronTime: '0 17 * * 3',
       timeZone: 'Asia/Seoul',
       onTick: async () => {
@@ -53,7 +53,7 @@ export class BatchService {
     const { meetupId } = await this.meetupsService.create(createMeetupDto);
 
     // 생성한 이벤트 마감 크론잡 등록 및 실행
-    const cronJob = CronJob.from({
+    const cronJob: any = CronJob.from({
       cronTime: '0 18 * * 3',
       timeZone: 'Asia/Seoul',
       onTick: async () => {

@@ -313,10 +313,12 @@ export class MeetupsService {
         await queryRunner.manager.softDelete(MeetupEntity, meetup.id);
       }
 
-      // 이벤트 매칭시 슬랙봇으로 이벤트 정보 전송
-      this.eventBus.publish(
-        new MeetupMatchedEvent(MeetupDetailDto.from(meetup)),
-      );
+      // 이벤트 매칭시 참여자가 2명 이상일 때만 슬랙봇으로 이벤트 정보 전송
+      if (meetup.attendees.length >= 2) {
+        this.eventBus.publish(
+          new MeetupMatchedEvent(MeetupDetailDto.from(meetup)),
+        );
+      }
 
       await queryRunner.commitTransaction();
     } catch (e) {

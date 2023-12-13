@@ -17,11 +17,25 @@ export class UserService {
 
   async findOneByUid(id: number): Promise<UserEntity | null> {
     this.logger.debug(`findOneByUid [id: ${id}]`);
-    return this.userRepository.findOneByUid(id);
+    return this.userRepository.findOneById(id);
+  }
+
+  async findOneById(id: number): Promise<UserEntity | null> {
+    this.logger.debug(`findOneById [id: ${id}]`);
+    return await this.userRepository.findOneById(id);
+  }
+
+  async findOneByIntraId(intraId: string): Promise<UserEntity | null> {
+    this.logger.debug(`findOneByIntraId [intraId: ${intraId}]`);
+    return await this.userRepository.findOneByIntraId(intraId);
   }
 
   async createUser(user: CreateUserDto): Promise<UserEntity> {
     return this.userRepository.createUser(user);
+  }
+
+  async getAllActiveUser(): Promise<UserEntity[]> {
+    return await this.userRepository.getAllActiveUser();
   }
 
   /*
