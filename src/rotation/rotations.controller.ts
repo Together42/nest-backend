@@ -85,7 +85,7 @@ export class RotationsController {
     @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
   ): Promise<Partial<RotationEntity>[]> {
-    const { month = undefined, year = undefined } = findRotationQueryDto;
+    const { month, year } = findRotationQueryDto;
 
     return this.rotationsService.findAllRotation(year, month);
   }
@@ -117,7 +117,7 @@ export class RotationsController {
     @Body()
     removeRotationQueryDto: RemoveRotationQueryDto,
   ): Promise<string> {
-    const { day, month = undefined, year = undefined } = removeRotationQueryDto;
+    const { day, month, year } = removeRotationQueryDto;
     return this.rotationsService.removeRotation(user.uid, day, month, year);
   }
 
