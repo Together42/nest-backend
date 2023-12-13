@@ -8,4 +8,8 @@ export class SignUpUserDto {
   @IsOptional()
   @IsString()
   readonly slackId: string;
+
+  @IsNotEmpty()
+  @IsString()
+  readonly imageUrl: string;
 }
