@@ -2,10 +2,10 @@ FROM node:20
 
 WORKDIR /backend
 
-COPY package*.json .
-COPY yarn.lock .
-COPY tsconfig*.json .
-COPY nest-cli.json .
+COPY ./package*.json ./package*.json
+COPY ./yarn.lock ./yarn.lock
+COPY ./tsconfig*.json ./tsconfig*.json
+COPY ./nest-cli.json ./nest-cli.json
 
 RUN yarn install
 
