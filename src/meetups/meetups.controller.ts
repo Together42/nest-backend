@@ -36,8 +36,8 @@ import { MeetupIdDto } from './dto/meetup-id.dto';
 import { MeetupUserIdsDto } from './dto/meetup-user-ids.dto';
 import { NotFoundMeetupDto } from './dto/not-found-meetup.dto';
 import { GetUser } from 'src/decorator/user.decorator';
-import { JwtGuard } from 'src/auth/jwt/jwt.guard';
-import { RoleGuard } from 'src/auth/role/role.guard';
+import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { RoleGuard } from 'src/auth/guard/role.guard';
 import { Role } from 'src/decorator/role.decorator';
 import UserRole from 'src/user/enum/user.enum';
 

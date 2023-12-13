@@ -96,7 +96,7 @@ export class UserRepository extends Repository<UserEntity> {
     refreshToken: string,
     refreshTokenExpiredAt: Date,
   ): Promise<void> {
-    const user: UserEntity = await this.findOneByUid(id);
+    const user: UserEntity = await this.findOneById(id);
     user.refreshToken = refreshToken;
     user.refreshTokenExpiredAt = refreshTokenExpiredAt;
     await this.update(id, user);
