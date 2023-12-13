@@ -10,7 +10,7 @@ COPY nest-cli.json ./
 RUN mkdir -p src
 RUN yarn install
 
-COPY ./src/* ./src/
+COPY ./src/ ./src/
 
 RUN yarn build
 
