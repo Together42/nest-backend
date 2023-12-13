@@ -125,15 +125,6 @@ export class MeetupsService {
   }
 
   /**
-   * 유저가 서비스의 관리자인지 판별
-   */
-  private isAdminUser(userId: number): boolean {
-    // TODO: 유저 엔티티를 조회하여 유저가 관리자인지 확인해야함, 유저 모듈로 빼기
-    userId;
-    return true;
-  }
-
-  /**
    * 유저가 해당 이벤트를 생성한 유저인지 판별
    */
   private isMeetupOwner(meetup: MeetupEntity, targetUserId: number): boolean {
@@ -166,7 +157,7 @@ export class MeetupsService {
     if (!meetup) {
       throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND);
     }
-    if (!(this.isMeetupOwner(meetup, userId) || this.isAdminUser(userId))) {
+    if (!this.isMeetupOwner(meetup, userId)) {
       throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
     }
     await this.meetupRepository.update(meetup.id, {
@@ -198,12 +189,12 @@ export class MeetupsService {
       await queryRunner.manager.save(attendance);
 
       // 이벤트 신청시 슬랙봇 메세지 전송
-      this.eventBus.publish(
-        new MeetupRegisteredEvent({
-          title: meetup.title,
-          description: meetup.description,
-        }),
-      );
+      //   this.eventBus.publish(
+      //     new MeetupRegisteredEvent({
+      //       title: meetup.title,
+      //       description: meetup.description,
+      //     }),
+      //   );
 
       await queryRunner.commitTransaction();
     } catch (e) {
@@ -239,12 +230,12 @@ export class MeetupsService {
       await this.meetupAttendeeRepository.softDelete(meetupAttendee.id);
 
       // 이벤트 신청 취소시 슬랙봇 메세지 전송
-      this.eventBus.publish(
-        new MeetupUnregisteredEvent({
-          title: meetup.title,
-          description: meetup.description,
-        }),
-      );
+      //   this.eventBus.publish(
+      //     new MeetupUnregisteredEvent({
+      //       title: meetup.title,
+      //       description: meetup.description,
+      //     }),
+      //   );
 
       await queryRunner.commitTransaction();
     } catch (e) {
@@ -291,7 +282,6 @@ export class MeetupsService {
         userId &&
         !(
           this.isMeetupOwner(meetup, userId) ||
-          this.isAdminUser(userId) ||
           this.isMeetupAttendee(meetup.attendees, userId)
         )
       ) {

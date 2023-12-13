@@ -17,15 +17,18 @@ import configuration from './config/configuration';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
       isGlobal: true,
       load: [configuration],
     }),
     CqrsModule.forRoot(),
-    SlackModule.forRoot({
-      type: 'api',
-      token: process.env.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN,
+    SlackModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
       isGlobal: true,
+      useFactory: (configService: ConfigService) => ({
+        type: 'api',
+        token: configService.get('slack.botToken'),
+      }),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

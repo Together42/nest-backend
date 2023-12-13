@@ -25,4 +25,8 @@ export default () => ({
   openApi: {
     serviceKey: process.env.SERVICE_KEY || '',
   },
+  slack: {
+    botToken: process.env.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN,
+    jiphyeonjeonChannel: process.env.SLACK_CHANNEL_JIPHYEONJEON,
+  },
 });
