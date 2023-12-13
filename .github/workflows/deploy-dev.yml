@@ -12,9 +12,10 @@ jobs:
         with:
           host: ${{ secrets.AWS_EC2_HOST }}
           username: ${{ secrets.AWS_EC2_USERNAME }}
-          key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          key: ${{ secrets.AWS_KEY }}
           port: ${{ secrets.AWS_EC2_SSH_PORT }}
           script: |
+            whoami
             cd /home/ubuntu/together-dev
             git checkout dev
             git pull origin dev
