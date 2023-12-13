@@ -12,18 +12,13 @@ export class JwtGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     if (context.getType() === 'http') {
       this.logger.debug(
-        `canActivate [http, ${context.getArgs()[0].method} ${
-          context.getArgs()[0].url
-        }]`,
+        `canActivate [http, ${context.getArgs()[0].method} ${context.getArgs()[0].url}]`,
       );
     } else {
       this.logger.debug(`canActivate [not http]`);
       return false;
     }
-    const token = context
-      .switchToHttp()
-      .getRequest()
-      .headers?.authorization?.split('Bearer ')[1];
+    const token = context.switchToHttp().getRequest().headers?.authorization?.split('Bearer ')[1];
     this.logger.debug(`canActivate [token: ${token}]`);
 
     // if (!token) {
@@ -45,4 +40,17 @@ export class JwtGuard extends AuthGuard('jwt') {
     this.logger.debug(`canActivate [result: ${result}]`);
     return result;
   }
+
+  // handleRequest<TUser = any>(
+  //   err: Error,
+  //   user: any,
+  //   info: any,
+  //   context: ExecutionContext,
+  //   status?: any,
+  // ): TUser {
+  //   if (err || !user) {
+  //     throw err || new UnauthorizedException();
+  //   }
+  //   return user;
+  // }
 }
