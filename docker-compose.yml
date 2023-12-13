@@ -4,6 +4,7 @@ services:
   backend:
     build: .
     restart: always
+    container_name: ${BACKEND_CONTAINER_NAME}
     ports:
       - ${BACK_PORT}:${BACKEND_CONTAINER_PORT}
     environment:

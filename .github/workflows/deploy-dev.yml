@@ -20,6 +20,7 @@ jobs:
             git checkout dev
             git pull origin dev
             echo "BACK_PORT=${{ secrets.BACKEND_HOST_PORT_DEV }}
+            BACKEND_CONTAINER_NAME=${{ secrets.BACKEND_CONTAINER_NAME_DEV }}
             BACKEND_CONTAINER_PORT=${{ secrets.BACKEND_CONTAINER_PORT }}
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
             MYSQL_PORT=${{ secrets.MYSQL_PORT }}
