@@ -103,9 +103,11 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
 
       const rotationAttendeeInfo: RotationAttendeeInfo[] = attendeeArray.map(
         (attendee) => {
-          const parsedAttendLimit: number[] = JSON.parse(
-            JSON.stringify(attendee.attendLimit),
-          );
+          const parsedAttendLimit: number[] = Array.isArray(
+            attendee.attendLimit,
+          )
+            ? JSON.parse(JSON.stringify(attendee.attendLimit))
+            : [];
           return {
             userId: attendee.userId,
             year: attendee.year,
@@ -116,6 +118,23 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
         },
       );
 
+      // 만약 year & month에 해당하는 로테이션 정보가 이미 존재한다면,
+      // 해당 로테이션 정보를 삭제하고 다시 생성한다.
+      const hasInfo = await this.count({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
+
+      if (hasInfo) {
+        this.logger.log('Rotation info already exists. Deleting...');
+        await this.delete({
+          year: year,
+          month: month,
+        });
+      }
+
       const rotationResultArray: DayObject[] = createRotation(
         rotationAttendeeInfo,
         monthArrayInfo,
@@ -124,7 +143,7 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
       for (const item of rotationResultArray) {
         const [userId1, userId2] = item.arr;
 
-        let attendeeExist = await this.findOne({
+        const attendeeOneExist = await this.findOne({
           where: {
             userId: userId1,
             year: year,
@@ -133,7 +152,7 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
           },
         });
 
-        if (!attendeeExist) {
+        if (!attendeeOneExist) {
           const rotation1 = new RotationEntity();
           rotation1.userId = userId1;
           rotation1.updateUserId = userId1;
@@ -144,7 +163,7 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
           await this.save(rotation1);
         }
 
-        attendeeExist = await this.findOne({
+        const attendeeTwoExist = await this.findOne({
           where: {
             userId: userId2,
             year: year,
@@ -153,7 +172,7 @@ export class CustomRotationRepository extends Repository<RotationEntity> {
           },
         });
 
-        if (!attendeeExist) {
+        if (!attendeeTwoExist) {
           const rotation2 = new RotationEntity();
           rotation2.userId = userId2;
           rotation2.updateUserId = userId2;
