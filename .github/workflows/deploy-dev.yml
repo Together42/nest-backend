@@ -15,12 +15,13 @@ jobs:
           key: ${{ secrets.AWS_KEY }}
           port: ${{ secrets.AWS_EC2_SSH_PORT }}
           script: |
-            whoami
-            cd /home/ubuntu/together-dev
+            cd /home/ubuntu/together-backend
             git checkout dev
             git pull origin dev
-            echo "BACK_PORT=${{ secrets.BACKEND_HOST_PORT_DEV }}
+            echo "DEPLOY_ENV=development
+            BACK_PORT=${{ secrets.BACKEND_HOST_PORT_DEV }}
             BACKEND_CONTAINER_NAME=${{ secrets.BACKEND_CONTAINER_NAME_DEV }}
+            BACKEND_IMAGE_NAME=${{ secrets.BACKEND_IMAGE_NAME_DEV }}
             BACKEND_CONTAINER_PORT=${{ secrets.BACKEND_CONTAINER_PORT }}
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
             MYSQL_PORT=${{ secrets.MYSQL_PORT }}
@@ -39,5 +40,5 @@ jobs:
             SLACK_BOT_USER_OAUTH_ACCESS_TOKEN=${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN_DEV }}
             SLACK_CHANNEL_JIPHYEONJEON=${{ secrets.SLACK_CHANNEL_JIPHYEONJEON_DEV }}
             FRONT_URL=${{ secrets.FRONTEND_URL }}
-            TOGETHER_HOME_URL=${{ secrets.TOGETHER_HOME_URL }}" > .env
-            docker-compose up -d --build
+            TOGETHER_HOME_URL=${{ secrets.TOGETHER_HOME_URL }}" > .env.dev
+            docker-compose up backend -d --build

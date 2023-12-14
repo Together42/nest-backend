@@ -8,7 +8,7 @@ export default () => ({
     DB_USER: process.env.MYSQL_USER || 'default',
     DB_PASSWORD: process.env.MYSQL_PASSWORD || 'default',
     DB_DATABASE: process.env.MYSQL_DATABASE || 'default',
-    DB_SYNC: process.env.NODE_ENV === 'prod' ? 'false' : 'true',
+    DB_SYNC: process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'development',
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'default',
