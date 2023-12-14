@@ -39,6 +39,6 @@ jobs:
             SERVICE_KEY=${{ secrets.OPENAPI_HOLIDAY_SERVICE_KEY }}
             SLACK_BOT_USER_OAUTH_ACCESS_TOKEN=${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN_DEV }}
             SLACK_CHANNEL_JIPHYEONJEON=${{ secrets.SLACK_CHANNEL_JIPHYEONJEON_DEV }}
-            FRONT_URL=${{ secrets.FRONTEND_URL }}
+            FRONT_URL=${{ secrets.FRONT_URL_LOCAL }}
             TOGETHER_HOME_URL=${{ secrets.TOGETHER_HOME_URL }}" > .env.dev
             docker-compose up backend -d --build
