@@ -4,6 +4,7 @@ services:
   backend:
     build: .
     restart: always
+    image: ${BACKEND_IMAGE_NAME}
     container_name: ${BACKEND_CONTAINER_NAME}
     ports:
       - ${BACK_PORT}:${BACKEND_CONTAINER_PORT}
@@ -27,4 +28,19 @@ services:
       SLACK_BOT_USER_OAUTH_ACCESS_TOKEN: ${SLACK_BOT_USER_OAUTH_ACCESS_TOKEN}
       SLACK_CHANNEL_JIPHYEONJEON: ${SLACK_CHANNEL_JIPHYEONJEON}
       TOGETHER_HOME_URL: ${TOGETHER_HOME_URL}
+    tty: true
+  test_db:
+    image: mysql:latest
+    restart: always
+    environment:
+      - TZ=Asia/Seoul
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - ${MYSQL_PORT}:3306
+    volumes:
+      - ./test/db/initdb:/docker-entrypoint-initdb.d
+      - ./test/db/data:/var/lib/mysql
     tty: true
