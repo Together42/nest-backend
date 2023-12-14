@@ -18,7 +18,7 @@ jobs:
             cd /home/ubuntu/together-backend
             git checkout dev
             git pull origin dev
-            echo "DEPLOY_ENV=development
+            echo "NODE_ENV=development
             BACK_PORT=${{ secrets.BACKEND_HOST_PORT_DEV }}
             BACKEND_CONTAINER_NAME=${{ secrets.BACKEND_CONTAINER_NAME_DEV }}
             BACKEND_IMAGE_NAME=${{ secrets.BACKEND_IMAGE_NAME_DEV }}
