@@ -17,6 +17,12 @@ import configuration from './config/configuration';
 @Module({
   imports: [
     ConfigModule.forRoot({
+      envFilePath:
+        process.env.NODE_ENV === 'production'
+          ? '.env.prod'
+          : process.env.NODE_ENV === 'development'
+            ? '.env.dev'
+            : '.env',
       isGlobal: true,
       load: [configuration],
     }),
@@ -41,7 +47,7 @@ import configuration from './config/configuration';
         password: configService.get('database.DB_PASSWORD'),
         database: configService.get('database.DB_DATABASE'),
         entities: ['dist/**/*.entity.js'],
-        synchronize: configService.get('database.DB_SYNC') === 'true',
+        synchronize: configService.get('database.DB_SYNC'),
         namingStrategy: new SnakeNamingStrategy(),
       }),
     }),

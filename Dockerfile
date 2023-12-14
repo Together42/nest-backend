@@ -1,6 +1,6 @@
 FROM node:20
 
-WORKDIR /backend
+WORKDIR /app
 
 COPY package*.json ./
 COPY yarn.lock ./
