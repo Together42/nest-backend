@@ -12,7 +12,6 @@ import { DataSource, IsNull, Repository } from 'typeorm';
 import { MeetupAttendeeEntity } from './entity/meetup-attendee.entity';
 import { CreateMeetupDto } from './dto/create-meetup.dto';
 import { MatchMeetupDto } from './dto/match-meetup.dto';
-import { UserRankingDto } from './dto/user-ranking.dto';
 import { FindMeetupDto } from './dto/find-meetup.dto';
 import { MeetupDetailDto } from './dto/meetup-detail.dto';
 import { MeetupDto } from './dto/meetup.dto';
@@ -77,38 +76,6 @@ export class MeetupsService {
     });
     const meetupDtos = meetups.map((meetup) => MeetupDto.from(meetup));
     return meetupDtos;
-  }
-
-  async findUserRanking() {
-    // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
-    const userRanking: UserRankingDto[] = await this.meetupAttendeeRepository
-      .createQueryBuilder()
-      .leftJoinAndSelect('user', 'user', 'user.id = user_id')
-      .leftJoinAndSelect('meetup', 'meetup', 'meetup.id = meetup_id')
-      .select('user_id', 'userId')
-      .addSelect('ANY_VALUE(user.nickname)', 'intraId')
-      .addSelect('ANY_VALUE(user.profile_image_url)', 'profile')
-      .addSelect(
-        'CAST(COUNT(case when meetup.category_id = 1 then 1 end) AS SIGNED)',
-        'meetingPoint',
-      )
-      .addSelect(
-        'CONVERT(COUNT(case when meetup.category_id = 2 then 1 end), SIGNED)',
-        'eventPoint',
-      )
-      .addSelect('COUNT(meetup_id)', 'totalPoint')
-      .groupBy('user_id')
-      .orderBy('totalPoint')
-      .getRawMany();
-    const userRankingDto: UserRankingDto[] = userRanking.map((ranking) => {
-      return {
-        ...ranking,
-        meetingPoint: +ranking.meetingPoint,
-        eventPoint: +ranking.eventPoint,
-        totalPoint: +ranking.totalPoint,
-      };
-    });
-    return userRankingDto;
   }
 
   async findOne(findMeetupDto: FindMeetupDto) {

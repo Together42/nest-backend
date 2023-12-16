@@ -22,7 +22,6 @@ import {
 import { MeetupsService } from './meetups.service';
 import { CreateMeetupBody, CreateMeetupDto } from './dto/create-meetup.dto';
 import { MatchMeetupBody, MatchMeetupDto } from './dto/match-meetup.dto';
-import { UserRankingDto } from './dto/user-ranking.dto';
 import { MeetupDto } from './dto/meetup.dto';
 import { MeetupDetailDto } from './dto/meetup-detail.dto';
 import { FindMeetupParam } from './dto/find-meetup.dto';
@@ -76,14 +75,6 @@ export class MeetupsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findAll(): Promise<MeetupDto[]> {
     return await this.meetupsService.findAll();
-  }
-
-  @Get('ranking')
-  @ApiOperation({ summary: '친해지길 바라 점수 및 랭킹 조회' })
-  @ApiOkResponse({ type: [UserRankingDto] })
-  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async findUserRanking(): Promise<UserRankingDto[]> {
-    return await this.meetupsService.findUserRanking();
   }
 
   @Get(':id')

@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { Logger } from '@nestjs/common';
 import { UserEntity } from '../entity/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
+import { UserRankingDto } from '../dto/user-ranking.dto';
+import { MeetupAttendeeEntity } from 'src/meetups/entity/meetup-attendee.entity';
 
 export class UserRepository extends Repository<UserEntity> {
   constructor(
@@ -107,5 +109,29 @@ export class UserRepository extends Repository<UserEntity> {
       refreshToken: null,
       refreshTokenExpiredAt: null,
     });
+  }
+
+  async getUserRanking() {
+    // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
+    const userRanking: UserRankingDto[] = await this.dataSource.manager
+      .createQueryBuilder(MeetupAttendeeEntity, 'meetup_attendee')
+      .leftJoinAndSelect('user', 'user', 'user.id = user_id')
+      .leftJoinAndSelect('meetup', 'meetup', 'meetup.id = meetup_id')
+      .select('user_id', 'userId')
+      .addSelect('ANY_VALUE(user.nickname)', 'intraId')
+      .addSelect('ANY_VALUE(user.profile_image_url)', 'profile')
+      .addSelect(
+        'CAST(COUNT(case when meetup.category_id = 1 then 1 end) AS SIGNED)',
+        'meetingPoint',
+      )
+      .addSelect(
+        'CONVERT(COUNT(case when meetup.category_id = 2 then 1 end), SIGNED)',
+        'eventPoint',
+      )
+      .addSelect('COUNT(meetup_id)', 'totalPoint')
+      .groupBy('user_id')
+      .orderBy('totalPoint')
+      .getRawMany();
+    return userRanking;
   }
 }
