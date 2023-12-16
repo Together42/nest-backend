@@ -124,7 +124,7 @@ export class MeetupsController {
 
   @Post(':id/attendance')
   @UseGuards(JwtGuard, RoleGuard)
-  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트에 참석',
     description:
@@ -148,7 +148,7 @@ export class MeetupsController {
 
   @Delete(':id/attendance')
   @UseGuards(JwtGuard, RoleGuard)
-  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트 참석 취소',
     description:
