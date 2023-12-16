@@ -153,7 +153,10 @@ export class MeetupsService {
 
   async remove(meetupUserIdsDto: MeetupUserIdsDto) {
     const { userId, meetupId } = meetupUserIdsDto;
-    const meetup = await this.meetupRepository.findOneBy({ id: meetupId });
+    const meetup = await this.meetupRepository.findOne({
+      where: { id: meetupId },
+      relations: ['attendees'],
+    });
     if (!meetup) {
       throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND);
     }
@@ -161,9 +164,9 @@ export class MeetupsService {
       throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
     }
     await this.meetupRepository.update(meetup.id, {
-      deletedAt: () => 'CURRENT_TIMESTAMP(6)',
       deleteUserId: userId,
     });
+    await this.meetupRepository.softRemove(meetup);
   }
 
   async registerMeetup(meetupUserIdsDto: MeetupUserIdsDto) {
