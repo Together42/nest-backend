@@ -109,6 +109,7 @@ export class MeetupsController {
     const removeMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
       userId: user.uid,
+      userRole: user.role as UserRole,
     };
     return await this.meetupsService.remove(removeMeetupDto);
   }
@@ -187,6 +188,7 @@ export class MeetupsController {
       teamNum,
       meetupId: findMeetupParam.id,
       userId: user.uid,
+      userRole: user.role as UserRole,
     };
     return await this.meetupsService.createMatching(matchMeetupDto);
   }

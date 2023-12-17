@@ -119,7 +119,7 @@ export class MeetupsService {
   }
 
   async remove(meetupUserIdsDto: MeetupUserIdsDto) {
-    const { userId, meetupId } = meetupUserIdsDto;
+    const { userId, userRole, meetupId } = meetupUserIdsDto;
     const meetup = await this.meetupRepository.findOne({
       where: { id: meetupId },
       relations: ['attendees'],
@@ -127,7 +127,7 @@ export class MeetupsService {
     if (!meetup) {
       throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND);
     }
-    if (!this.isMeetupOwner(meetup, userId)) {
+    if (!(userRole === 'admin' || this.isMeetupOwner(meetup, userId))) {
       throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
     }
     await this.meetupRepository.update(meetup.id, {
@@ -239,7 +239,7 @@ export class MeetupsService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const { meetupId, userId, teamNum } = matchMeetupDto;
+      const { meetupId, userId, userRole, teamNum } = matchMeetupDto;
       const meetup = await queryRunner.manager.findOne(MeetupEntity, {
         where: { id: meetupId, matchedAt: IsNull() },
         relations: ['attendees', 'attendees.user'],
@@ -251,6 +251,7 @@ export class MeetupsService {
       if (
         userId &&
         !(
+          userRole === 'admin' ||
           this.isMeetupOwner(meetup, userId) ||
           this.isMeetupAttendee(meetup.attendees, userId)
         )
