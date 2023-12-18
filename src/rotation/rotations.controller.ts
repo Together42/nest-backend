@@ -128,7 +128,7 @@ export class RotationsController {
    * Auth : all user, admin
    */
   @Patch('/:id')
-  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
   @UsePipes(ValidationPipe)
   updateUserRotation(
