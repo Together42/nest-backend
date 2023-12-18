@@ -61,9 +61,8 @@ export class MeetupEntity {
   @JoinColumn({ name: 'delete_user_id' })
   deleteUser: UserEntity;
 
-  @OneToMany(
-    () => MeetupAttendeeEntity,
-    (meetupAttendee) => meetupAttendee.meetup,
-  )
+  @OneToMany(() => MeetupAttendeeEntity, (meetupAttendee) => meetupAttendee.meetup, {
+    cascade: true,
+  })
   attendees: MeetupAttendeeEntity[];
 }

@@ -3,6 +3,7 @@ import * as bcrypt from 'bcrypt';
 import { UserEntity } from './entity/user.entity';
 import { UserRepository } from './repository/user.repository';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserRankingDto } from './dto/user-ranking.dto';
 
 @Injectable()
 export class UserService {
@@ -93,5 +94,19 @@ export class UserService {
       this.logger.error(`hashedRefreshToken [error: ${error.message}]`);
       throw error;
     }
+  }
+
+  async getUserRanking() {
+    // TODO: 쿼리빌더가 타입 반환을 any로 반환하는 것을 해결하기
+    const userRanking = await this.userRepository.getUserRanking();
+    const userRankingDto: UserRankingDto[] = userRanking.map((ranking) => {
+      return {
+        ...ranking,
+        meetingPoint: +ranking.meetingPoint,
+        eventPoint: +ranking.eventPoint,
+        totalPoint: +ranking.totalPoint,
+      };
+    });
+    return userRankingDto;
   }
 }

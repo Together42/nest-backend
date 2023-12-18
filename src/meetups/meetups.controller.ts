@@ -22,7 +22,6 @@ import {
 import { MeetupsService } from './meetups.service';
 import { CreateMeetupBody, CreateMeetupDto } from './dto/create-meetup.dto';
 import { MatchMeetupBody, MatchMeetupDto } from './dto/match-meetup.dto';
-import { UserRankingDto } from './dto/user-ranking.dto';
 import { MeetupDto } from './dto/meetup.dto';
 import { MeetupDetailDto } from './dto/meetup-detail.dto';
 import { FindMeetupParam } from './dto/find-meetup.dto';
@@ -65,7 +64,7 @@ export class MeetupsController {
   ): Promise<MeetupIdDto> {
     const createMeetupDto: CreateMeetupDto = {
       ...createMeetupBody,
-      createUserId: user.uid,
+      createUserId: user.id,
     };
     return await this.meetupsService.create(createMeetupDto);
   }
@@ -76,14 +75,6 @@ export class MeetupsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async findAll(): Promise<MeetupDto[]> {
     return await this.meetupsService.findAll();
-  }
-
-  @Get('ranking')
-  @ApiOperation({ summary: '친해지길 바라 점수 및 랭킹 조회' })
-  @ApiOkResponse({ type: [UserRankingDto] })
-  @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async findUserRanking(): Promise<UserRankingDto[]> {
-    return await this.meetupsService.findUserRanking();
   }
 
   @Get(':id')
@@ -117,14 +108,15 @@ export class MeetupsController {
   ): Promise<void> {
     const removeMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
+      userRole: user.role as UserRole,
     };
     return await this.meetupsService.remove(removeMeetupDto);
   }
 
   @Post(':id/attendance')
   @UseGuards(JwtGuard, RoleGuard)
-  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트에 참석',
     description:
@@ -141,14 +133,14 @@ export class MeetupsController {
   ) {
     const registerMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
     };
     return await this.meetupsService.registerMeetup(registerMeetupDto);
   }
 
   @Delete(':id/attendance')
   @UseGuards(JwtGuard, RoleGuard)
-  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
   @ApiOperation({
     summary: '특정 이벤트 참석 취소',
     description:
@@ -165,7 +157,7 @@ export class MeetupsController {
   ): Promise<void> {
     const unregisterMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
     };
     return await this.meetupsService.unregisterMeetup(unregisterMeetupDto);
   }
@@ -195,7 +187,8 @@ export class MeetupsController {
     const matchMeetupDto: MatchMeetupDto = {
       teamNum,
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
+      userRole: user.role as UserRole,
     };
     return await this.meetupsService.createMatching(matchMeetupDto);
   }

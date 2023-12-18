@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
+import UserRole from 'src/user/enum/user.enum';
 
 export class MatchMeetupBody {
   @ApiPropertyOptional({
@@ -18,4 +19,5 @@ export class MatchMeetupBody {
 export class MatchMeetupDto extends MatchMeetupBody {
   meetupId: number;
   userId?: number;
+  userRole?: UserRole;
 }
