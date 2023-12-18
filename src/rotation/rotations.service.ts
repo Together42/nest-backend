@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  Logger,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
@@ -14,11 +9,7 @@ import { RotationEntity } from './entity/rotation.entity';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { UserService } from 'src/user/user.service';
 import { CustomRotationRepository } from './repository/rotations.repository';
-import {
-  getFourthWeekdaysOfMonth,
-  getNextYearAndMonth,
-  getTodayDate,
-} from './utils/date';
+import { getFourthWeekdaysOfMonth, getNextYearAndMonth, getTodayDate } from './utils/date';
 
 @Injectable()
 export class RotationsService {
@@ -87,15 +78,14 @@ export class RotationsService {
     const day = today.getDate();
 
     try {
-      const records: Partial<RotationEntity>[] =
-        await this.rotationRepository.find({
-          where: {
-            year: year,
-            month: month,
-            day: day,
-          },
-          select: ['userId', 'year', 'month', 'day'],
-        });
+      const records: Partial<RotationEntity>[] = await this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+          day: day,
+        },
+        select: ['userId', 'year', 'month', 'day'],
+      });
 
       return records;
     } catch (error: any) {
@@ -112,9 +102,7 @@ export class RotationsService {
    * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
    * 로그로 남기고 하나만 가져온다.
    */
-  async findRegistration(
-    userId: number,
-  ): Promise<Partial<RotationAttendeeEntity>> {
+  async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
     const { year, month } = getNextYearAndMonth();
 
     try {
@@ -147,6 +135,7 @@ export class RotationsService {
    * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
    * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
    * 올바르게 처리되었다면 요청이 처리된 attendee를 반환한다.
+   * [20231218 수정] - 4주차인지 확인하는 로직 삭제
    */
   async createRegistration(
     createRegistrationDto: CreateRegistrationDto,
@@ -156,11 +145,11 @@ export class RotationsService {
     const { year, month } = getNextYearAndMonth();
 
     /* 4주차인지 확인 */
-    if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
-      throw new BadRequestException(
-        'Invalid date: Today is not a fourth weekday of the month.',
-      );
-    }
+    // if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
+    //   throw new BadRequestException(
+    //     'Invalid date: Today is not a fourth weekday of the month.',
+    //   );
+    // }
 
     try {
       const user = await this.userService.findOneById(userId);
@@ -259,10 +248,7 @@ export class RotationsService {
    * 기본적으로는 모든 로테이션을 반환.
    * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
    */
-  async findAllRotation(
-    year?: number,
-    month?: number,
-  ): Promise<Partial<RotationEntity>[]> {
+  async findAllRotation(year?: number, month?: number): Promise<Partial<RotationEntity>[]> {
     try {
       let records: Promise<Partial<RotationEntity>[]>;
 
@@ -320,10 +306,12 @@ export class RotationsService {
             .createQueryBuilder()
             .update(RotationEntity)
             .set({ updateUserId: userId })
-            .where(
-              'userId = :userId AND year = :year AND month = :month AND day = :day',
-              { userId, year, month, day },
-            )
+            .where('userId = :userId AND year = :year AND month = :month AND day = :day', {
+              userId,
+              year,
+              month,
+              day,
+            })
             .execute();
         } else {
           const newRotation = this.rotationRepository.create({
@@ -360,9 +348,7 @@ export class RotationsService {
         throw new BadRequestException('Invalid date: day is not provided');
       }
 
-      let deleteQuery = this.rotationRepository
-        .createQueryBuilder('rotation')
-        .delete();
+      let deleteQuery = this.rotationRepository.createQueryBuilder('rotation').delete();
 
       if (month && year) {
         deleteQuery = deleteQuery.where(
@@ -415,13 +401,10 @@ export class RotationsService {
     const day: number = JSON.parse(JSON.stringify(attendDate))[0];
 
     try {
-      const findUser =
-        await this.userService.findOneByIntraId(updateUserintraId);
+      const findUser = await this.userService.findOneByIntraId(updateUserintraId);
 
       if (!findUser) {
-        throw new NotFoundException(
-          `User ${updateUserintraId} information not found`,
-        );
+        throw new NotFoundException(`User ${updateUserintraId} information not found`);
       }
 
       const updateUserId = findUser.id;
@@ -440,15 +423,15 @@ export class RotationsService {
           .createQueryBuilder()
           .update(RotationEntity)
           .set({ updateUserId: userId, day: updateDate })
-          .where(
-            'userId = :updateUserId AND year = :year AND month = :month AND day = :day',
-            { updateUserId, year, month, day },
-          )
+          .where('userId = :updateUserId AND year = :year AND month = :month AND day = :day', {
+            updateUserId,
+            year,
+            month,
+            day,
+          })
           .execute();
       } else {
-        throw new NotFoundException(
-          `User ${updateUserId} information not found`,
-        );
+        throw new NotFoundException(`User ${updateUserId} information not found`);
       }
 
       return `successfully update user ${updateUserId}'s information`;
