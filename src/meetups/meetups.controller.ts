@@ -64,7 +64,7 @@ export class MeetupsController {
   ): Promise<MeetupIdDto> {
     const createMeetupDto: CreateMeetupDto = {
       ...createMeetupBody,
-      createUserId: user.uid,
+      createUserId: user.id,
     };
     return await this.meetupsService.create(createMeetupDto);
   }
@@ -108,7 +108,7 @@ export class MeetupsController {
   ): Promise<void> {
     const removeMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
       userRole: user.role as UserRole,
     };
     return await this.meetupsService.remove(removeMeetupDto);
@@ -133,7 +133,7 @@ export class MeetupsController {
   ) {
     const registerMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
     };
     return await this.meetupsService.registerMeetup(registerMeetupDto);
   }
@@ -157,7 +157,7 @@ export class MeetupsController {
   ): Promise<void> {
     const unregisterMeetupDto: MeetupUserIdsDto = {
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
     };
     return await this.meetupsService.unregisterMeetup(unregisterMeetupDto);
   }
@@ -187,7 +187,7 @@ export class MeetupsController {
     const matchMeetupDto: MatchMeetupDto = {
       teamNum,
       meetupId: findMeetupParam.id,
-      userId: user.uid,
+      userId: user.id,
       userRole: user.role as UserRole,
     };
     return await this.meetupsService.createMatching(matchMeetupDto);
