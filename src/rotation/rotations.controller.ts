@@ -9,6 +9,7 @@ import {
   UsePipes,
   ValidationPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { RotationsService } from './rotations.service';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
@@ -19,12 +20,11 @@ import { GetUser } from 'src/decorator/user.decorator';
 import { FindRotationQueryDto } from './dto/find-rotation-query.dto';
 import { RemoveRotationQueryDto } from './dto/remove-rotation.dto';
 import { RotationEntity } from './entity/rotation.entity';
-
-/* TODO:
- * :id -> intraId로 변경
- * 반환 시 id 말고 intraId로 반환
- *
- */
+import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { UserEntity } from 'src/user/entity/user.entity';
+import { RoleGuard } from 'src/auth/guard/role.guard';
+import UserRole from 'src/user/enum/user.enum';
+import { Role } from 'src/decorator/role.decorator';
 
 @Controller('rotations')
 export class RotationsController {
@@ -42,38 +42,39 @@ export class RotationsController {
 
   /*
    * 본인 로테이션 신청 조회 (다음 달)
-   * Auth : own
+   * Auth : own, admin
    */
   @Get('/attendance')
-  async findOwnRegistration(
-    @GetUser() user: any,
-  ): Promise<Partial<RotationAttendeeEntity>> {
-    return await this.rotationsService.findRegistration(user.uid);
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @UseGuards(JwtGuard, RoleGuard)
+  async findOwnRegistration(@GetUser() user: UserEntity): Promise<Partial<RotationAttendeeEntity>> {
+    return await this.rotationsService.findRegistration(user.id);
   }
 
   /*
    * 본인 로테이션 신청 (다음 달)
-   * Auth : own
+   * Auth : own, admin
    */
   @Post('/attendance')
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @UseGuards(JwtGuard, RoleGuard)
   @UsePipes(ValidationPipe)
   async createOwnRegistration(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Body() createRegistrationDto: CreateRegistrationDto,
   ): Promise<RotationAttendeeEntity> {
-    return await this.rotationsService.createRegistration(
-      createRegistrationDto,
-      user.uid,
-    );
+    return await this.rotationsService.createRegistration(createRegistrationDto, user.id);
   }
 
   /*
    * 본인 로테이션 신청 취소 (다음 달)
-   * Auth : own
+   * Auth : own, admin
    */
   @Delete('/attendance')
-  async removeOwnRegistration(@GetUser() user: any): Promise<void> {
-    return await this.rotationsService.removeRegistration(user.uid);
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @UseGuards(JwtGuard, RoleGuard)
+  async removeOwnRegistration(@GetUser() user: UserEntity): Promise<void> {
+    return await this.rotationsService.removeRegistration(user.id);
   }
 
   /*
@@ -92,50 +93,49 @@ export class RotationsController {
 
   /*
    * 본인 로테이션 생성 (달력)
-   * Auth : own
+   * Auth : own, admin
    */
   @Post('/')
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @UseGuards(JwtGuard, RoleGuard)
   @UsePipes(ValidationPipe)
   createOwnRotation(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Body() createRotationDto: CreateRotationDto,
   ): Promise<string> {
-    return this.rotationsService.createOrUpdateRotation(
-      createRotationDto,
-      user.uid,
-    );
+    return this.rotationsService.createOrUpdateRotation(createRotationDto, user.id);
   }
 
   /*
    * 사서 로테이션 삭제 (달력)
-   * Auth : own
+   * Auth : own, admin
    */
   @Delete('/')
+  @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
+  @UseGuards(JwtGuard, RoleGuard)
   @UsePipes(ValidationPipe)
   removeOwnRotation(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Body()
     removeRotationQueryDto: RemoveRotationQueryDto,
   ): Promise<string> {
     const { day, month, year } = removeRotationQueryDto;
-    return this.rotationsService.removeRotation(user.uid, day, month, year);
+    return this.rotationsService.removeRotation(user.id, day, month, year);
   }
 
   /*
    * 사서 로테이션 수정 (달력)
-   * Auth : user
+   * Auth : all user, admin
    */
   @Patch('/:id')
+  @Role([UserRole.USER, UserRole.LIBRARIAN, UserRole.ADMIN])
+  @UseGuards(JwtGuard, RoleGuard)
   @UsePipes(ValidationPipe)
   updateUserRotation(
-    @GetUser() user: any,
+    @GetUser() user: UserEntity,
     @Param('id') intraId: string,
     @Body() updateRotationDto: UpdateRotationDto,
   ): Promise<string> {
-    return this.rotationsService.updateRotation(
-      updateRotationDto,
-      intraId,
-      user.uid,
-    );
+    return this.rotationsService.updateRotation(updateRotationDto, intraId, user.id);
   }
 }
