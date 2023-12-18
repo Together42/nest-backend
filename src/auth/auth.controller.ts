@@ -19,6 +19,7 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { SignUpUserDto } from 'src/user/dto/signup-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtGuard } from './guard/jwt.guard';
+import { GetUser } from 'src/decorator/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -101,10 +102,11 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtRefreshGuard)
-  async logout(@Req() req: Request, @Res() res: Response) {
+  @UseGuards(JwtGuard)
+  // @UseGuards(JwtRefreshGuard)
+  async logout(@Res() res: Response, @GetUser() user: UserEntity) {
     this.logger.debug(`logout`);
-    // await this.authService.deleteRefreshToken(user.id);
+    await this.authService.deleteRefreshToken(user.id);
     res.clearCookie('refresh_token');
     res.clearCookie('google_token');
     res.send({

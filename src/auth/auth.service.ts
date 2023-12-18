@@ -21,7 +21,7 @@ export class AuthService {
   }
 
   async generateToken(user: Partial<UserEntity>): Promise<string> {
-    const payload = { username: user.nickname, uid: user.id, role: user.role };
+    const payload = { username: user.nickname, id: user.id, role: user.role, imgaeUrl: user.profileImageUrl };
     return this.jwtService.signAsync(payload);
   }
 
