@@ -481,7 +481,7 @@ export class RotationsService {
       newRotation.userId = userId;
       newRotation.year = year;
       newRotation.month = month;
-      newRotation.attendLimit = [] as any; // JSON 배열로 인식이 안되서...
+      newRotation.attendLimit = JSON.parse(JSON.stringify([]));
 
       await this.attendeeRepository.save(newRotation);
       return newRotation;
