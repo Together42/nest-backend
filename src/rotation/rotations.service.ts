@@ -26,22 +26,36 @@ export class RotationsService {
 
   /*
    * 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
+   * [update 20231219] - 매 달 1일에 유저를 모두 DB에 담아놓는 작업으로 변경
    */
-  @Cron(`0 0 * * 1`, {
+  @Cron(`0 0 1 * *`, {
     name: 'initRotation',
     timeZone: 'Asia/Seoul',
   })
   async initRotation(): Promise<void> {
-    if (getFourthWeekdaysOfMonth().includes(getTodayDate())) {
-      try {
-        await this.customRotationRepository.initRotation();
-        this.logger.log('Init rotation finished');
-      } catch (error: any) {
-        this.logger.error(error);
-        throw error;
-      }
+    try {
+      await this.customRotationRepository.initRotation();
+      this.logger.log('Init rotation finished');
+    } catch (error: any) {
+      this.logger.error(error);
+      throw error;
     }
   }
+  // @Cron(`0 0 * * 1`, {
+  //   name: 'initRotation',
+  //   timeZone: 'Asia/Seoul',
+  // })
+  // async initRotation(): Promise<void> {
+  //   if (getFourthWeekdaysOfMonth().includes(getTodayDate())) {
+  //     try {
+  //       await this.customRotationRepository.initRotation();
+  //       this.logger.log('Init rotation finished');
+  //     } catch (error: any) {
+  //       this.logger.error(error);
+  //       throw error;
+  //     }
+  //   }
+  // }
 
   /*
    * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우,
