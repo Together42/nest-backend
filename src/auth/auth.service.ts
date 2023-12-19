@@ -6,6 +6,7 @@ import { UserEntity } from 'src/user/entity/user.entity';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Response } from 'express';
+import { RotationsService } from 'src/rotation/rotations.service';
 
 @Injectable()
 export class AuthService {
@@ -14,6 +15,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly userService: UserService,
+    private readonly rotationService: RotationsService,
   ) {}
 
   async findOneByEmail(email: string): Promise<UserEntity | null> {
@@ -21,7 +23,12 @@ export class AuthService {
   }
 
   async generateToken(user: Partial<UserEntity>): Promise<string> {
-    const payload = { username: user.nickname, id: user.id, role: user.role, imgaeUrl: user.profileImageUrl };
+    const payload = {
+      username: user.nickname,
+      id: user.id,
+      role: user.role,
+      imgaeUrl: user.profileImageUrl,
+    };
     return this.jwtService.signAsync(payload);
   }
 
@@ -33,16 +40,11 @@ export class AuthService {
     });
   }
 
-  async refreshAccessToken(
-    refreshTokenDto: RefreshTokenDto,
-  ): Promise<{ accessToken: string }> {
+  async refreshAccessToken(refreshTokenDto: RefreshTokenDto): Promise<{ accessToken: string }> {
     try {
-      const payload = await this.jwtService.verifyAsync(
-        refreshTokenDto.refreshToken,
-        {
-          secret: this.configService.get<string>('jwt.refreshSecret'),
-        },
-      );
+      const payload = await this.jwtService.verifyAsync(refreshTokenDto.refreshToken, {
+        secret: this.configService.get<string>('jwt.refreshSecret'),
+      });
       const userId: number = payload['uid'];
       const user: Partial<UserEntity> | null = await this.userService.findOneByUid(userId);
       if (user === null) {
@@ -58,6 +60,10 @@ export class AuthService {
 
   async createUser(user: CreateUserDto): Promise<Partial<UserEntity> | null> {
     return this.userService.createUser(user);
+  }
+
+  async createNewUserRegistration(userId: number): Promise<void> {
+    await this.rotationService.createNewRegistration(userId);
   }
 
   async setCookie(
