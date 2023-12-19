@@ -101,6 +101,8 @@ export class RotationsService {
    * 만약 기록이 없다면 빈 객체를 반환한다.
    * 두 개 이상의 기록이 있다면 어떤 오류가 발생한 상황.
    * 로그로 남기고 하나만 가져온다.
+   * [20231219 수정] - 만약 records가 빈 객체인 경우,
+   * attendLimit이 빈 배열인 객체를 반환한다.
    */
   async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
     const { year, month } = getNextYearAndMonth();
@@ -119,8 +121,20 @@ export class RotationsService {
         this.logger.warn(`Duplicated records found on ${userId}`);
       }
 
-      const record = await this.userService.findOneById(userId);
-      const modifiedRecord = { ...records[0], intraId: record.nickname };
+      const intraIdRecord = await this.userService.findOneById(userId);
+      const modifiedRecord = {};
+
+      if (records.length == 0) {
+        modifiedRecord['year'] = year;
+        modifiedRecord['month'] = month;
+        modifiedRecord['attendLimit'] = [];
+        modifiedRecord['intraId'] = intraIdRecord.nickname;
+      } else {
+        modifiedRecord['year'] = records[0].year;
+        modifiedRecord['month'] = records[0].month;
+        modifiedRecord['attendLimit'] = records[0].attendLimit;
+        modifiedRecord['intraId'] = intraIdRecord.nickname;
+      }
 
       return modifiedRecord;
     } catch (error) {
