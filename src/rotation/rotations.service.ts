@@ -109,7 +109,7 @@ export class RotationsService {
   }
 
   /*
-   * /rotations/attendee (GET)
+   * /rotations/attendance (GET)
    * 본인의 다음 달 로테이션 기록을 반환한다.
    * 본인의 로테이션 기록을 반환.
    * 만약 기록이 없다면 빈 객체를 반환한다.
@@ -158,7 +158,7 @@ export class RotationsService {
   }
 
   /*
-   * /rotations/attendee (POST)
+   * /rotations/attendance (POST)
    * user_id를 사용하여 user를 찾은 다음, 해당 user를 rotation_attendee 데이터베이스에서 찾는다.
    * 만약 데이터베이스에 존재하지 않는 user라면 저장, 존재하는 user라면 값을 덮어씌운다.
    * 만약 넷째 주 요청이 아니라면 400 에러를 반환한다.
@@ -216,7 +216,7 @@ export class RotationsService {
   }
 
   /*
-   * /rotations/attendee (DELETE)
+   * /rotations/attendance (DELETE)
    * 본인의 다음 달 로테이션 기록 삭제.
    * 반환값은 없다.
    */
@@ -464,6 +464,28 @@ export class RotationsService {
 
       return `successfully update user ${updateUserId}'s information`;
     } catch (error: any) {
+      this.logger.error(error);
+      throw error;
+    }
+  }
+
+  /*
+   * auth.service.ts에서 사용하는 서비스
+   * 새로운 유저가 생성되면, 해당 유저를 다음 달 로테이션 참석자에 추가한다.
+   */
+  async createNewRegistration(userId: number): Promise<RotationAttendeeEntity> {
+    const { year, month } = getNextYearAndMonth();
+
+    try {
+      const newRotation = new RotationAttendeeEntity();
+      newRotation.userId = userId;
+      newRotation.year = year;
+      newRotation.month = month;
+      newRotation.attendLimit = [] as any; // JSON 배열로 인식이 안되서...
+
+      await this.attendeeRepository.save(newRotation);
+      return newRotation;
+    } catch (error) {
       this.logger.error(error);
       throw error;
     }

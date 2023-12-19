@@ -10,6 +10,13 @@ import { UserModule } from 'src/user/user.module';
 import { UserService } from 'src/user/user.service';
 import { GoogleMiddleware } from '../middleware/google.middleware';
 import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
+import { RotationsService } from 'src/rotation/rotations.service';
+import { RotationsModule } from 'src/rotation/rotations.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { RotationEntity } from 'src/rotation/entity/rotation.entity';
+import { RotationAttendeeEntity } from 'src/rotation/entity/rotation-attendee.entity';
+import { UserEntity } from 'src/user/entity/user.entity';
+import { CustomRotationRepository } from 'src/rotation/repository/rotations.repository';
 
 @Module({
   imports: [
@@ -30,9 +37,17 @@ import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
       }),
     }),
     UserModule,
+    RotationsModule,
+    TypeOrmModule.forFeature([
+      RotationEntity,
+      CustomRotationRepository,
+      RotationAttendeeEntity,
+      UserEntity,
+    ]),
   ],
   controllers: [AuthController],
   providers: [
+    RotationsService,
     UserService,
     AuthService,
     GoogleStrategy,
