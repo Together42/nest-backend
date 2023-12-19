@@ -79,7 +79,6 @@ export class AuthController {
     };
     const newUser = await this.authService.createUser(userInfo);
     await this.authService.createNewUserRegistration(newUser.id);
-    console.log(newUser);
     const accessToken = await this.authService.generateToken(newUser);
     const refreshToken = await this.authService.generateRefreshToken(newUser);
     await this.authService.setCookie(res, newUser.id, null, refreshToken);
