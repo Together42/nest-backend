@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Injectable,
+  NotFoundException,
+  Logger,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
@@ -8,20 +13,22 @@ import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationEntity } from './entity/rotation.entity';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { UserService } from 'src/user/user.service';
-import { CustomRotationRepository } from './repository/rotations.repository';
+import { RotationRepository } from './repository/rotations.repository';
 import { getFourthWeekdaysOfMonth, getNextYearAndMonth, getTodayDate } from './utils/date';
+import { RotationAttendeeRepository } from './repository/rotation-attendees.repository';
+import { DayObject, RotationAttendeeInfo } from './utils/types';
+import { HolidayService } from 'src/holiday/holiday.service';
+import { createRotation } from './utils/rotation';
 
 @Injectable()
 export class RotationsService {
   private readonly logger = new Logger(RotationsService.name);
 
   constructor(
-    @InjectRepository(RotationEntity)
-    private rotationRepository: Repository<RotationEntity>,
-    private customRotationRepository: CustomRotationRepository,
-    @InjectRepository(RotationAttendeeEntity)
-    private attendeeRepository: Repository<RotationAttendeeEntity>,
-    private userService: UserService,
+    private rotationRepository: RotationRepository,
+    private rotationAttendeeRepository: RotationAttendeeRepository,
+    @Inject(forwardRef(() => UserService)) private userService: UserService,
+    private holidayService: HolidayService,
   ) {}
 
   /*
@@ -34,7 +41,21 @@ export class RotationsService {
   async initRotation(): Promise<void> {
     if (getFourthWeekdaysOfMonth().includes(getTodayDate())) {
       try {
-        await this.customRotationRepository.initRotation();
+        const users = await this.userService.getAllActiveUser();
+
+        for (const user of users) {
+          try {
+            const userId = user.id;
+            const createRegistrationDto: CreateRegistrationDto = {
+              attendLimit: {} as JSON,
+            };
+
+            // make new rotation
+            await this.createRegistration(createRegistrationDto, userId);
+          } catch (error: any) {
+            this.logger.error(`Error processing user ${user.id}: `, error);
+          }
+        }
         this.logger.log('Init rotation finished');
       } catch (error: any) {
         this.logger.error(error);
@@ -46,6 +67,7 @@ export class RotationsService {
   /*
    * 매주 금요일을 체크하여, 만약 4주차 금요일인 경우,
    * 23시 59분에 로테이션을 돌린다.
+   * 다음 달 로테이션 참석자를 바탕으로 로테이션 결과 반환
    */
   @Cron(`59 23 * * 5`, {
     name: 'setRotation',
@@ -55,7 +77,95 @@ export class RotationsService {
     if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) > 0) {
       try {
         this.logger.log('Setting rotation...');
-        await this.customRotationRepository.setRotation();
+
+        const { year, month } = getNextYearAndMonth();
+        const attendeeArray: Partial<RotationAttendeeEntity>[] = await this.getAllRegistration();
+        const monthArrayInfo: DayObject[][] = await this.getInitMonthArray(year, month);
+
+        if (!attendeeArray || attendeeArray.length === 0) {
+          this.logger.warn('No attendees participated in the rotation');
+          return;
+        }
+
+        const rotationAttendeeInfo: RotationAttendeeInfo[] = attendeeArray.map((attendee) => {
+          const parsedAttendLimit: number[] = Array.isArray(attendee.attendLimit)
+            ? JSON.parse(JSON.stringify(attendee.attendLimit))
+            : [];
+          return {
+            userId: attendee.userId,
+            year: attendee.year,
+            month: attendee.month,
+            attendLimit: parsedAttendLimit,
+            attended: 0,
+          };
+        });
+
+        // 만약 year & month에 해당하는 로테이션 정보가 이미 존재한다면,
+        // 해당 로테이션 정보를 삭제하고 다시 생성한다.
+        const hasInfo = await this.rotationRepository.count({
+          where: {
+            year: year,
+            month: month,
+          },
+        });
+
+        if (hasInfo) {
+          this.logger.log('Rotation info already exists. Deleting...');
+          await this.rotationRepository.delete({
+            year: year,
+            month: month,
+          });
+        }
+
+        const rotationResultArray: DayObject[] = createRotation(
+          rotationAttendeeInfo,
+          monthArrayInfo,
+        );
+
+        for (const item of rotationResultArray) {
+          const [userId1, userId2] = item.arr;
+
+          const attendeeOneExist = await this.rotationRepository.findOne({
+            where: {
+              userId: userId1,
+              year: year,
+              month: month,
+              day: item.day,
+            },
+          });
+
+          if (!attendeeOneExist) {
+            const rotation1 = new RotationEntity();
+            rotation1.userId = userId1;
+            rotation1.updateUserId = userId1;
+            rotation1.year = year;
+            rotation1.month = month;
+            rotation1.day = item.day;
+
+            await this.rotationRepository.save(rotation1);
+          }
+
+          const attendeeTwoExist = await this.rotationRepository.findOne({
+            where: {
+              userId: userId2,
+              year: year,
+              month: month,
+              day: item.day,
+            },
+          });
+
+          if (!attendeeTwoExist) {
+            const rotation2 = new RotationEntity();
+            rotation2.userId = userId2;
+            rotation2.updateUserId = userId2;
+            rotation2.year = year;
+            rotation2.month = month;
+            rotation2.day = item.day;
+
+            await this.rotationRepository.save(rotation2);
+          }
+        }
+
         this.logger.log('Successfully set rotation!');
       } catch (error: any) {
         this.logger.error(error);
@@ -106,7 +216,7 @@ export class RotationsService {
     const { year, month } = getNextYearAndMonth();
 
     try {
-      const records = await this.attendeeRepository.find({
+      const records = await this.rotationAttendeeRepository.find({
         where: {
           userId: userId,
           year: year,
@@ -159,7 +269,7 @@ export class RotationsService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
-      const attendeeExist = await this.attendeeRepository.findOne({
+      const attendeeExist = await this.rotationAttendeeRepository.findOne({
         where: {
           userId: user.id,
           year: year,
@@ -174,12 +284,12 @@ export class RotationsService {
         newRotation.month = month;
         newRotation.attendLimit = attendLimit;
 
-        await this.attendeeRepository.save(newRotation);
+        await this.rotationAttendeeRepository.save(newRotation);
         return newRotation;
       }
 
       attendeeExist.attendLimit = attendLimit; // update this month's attendee info
-      await this.attendeeRepository.save(attendeeExist);
+      await this.rotationAttendeeRepository.save(attendeeExist);
       return attendeeExist;
     } catch (error) {
       this.logger.error(error);
@@ -196,7 +306,7 @@ export class RotationsService {
     const { year, month } = getNextYearAndMonth();
 
     try {
-      const records = await this.attendeeRepository.find({
+      const records = await this.rotationAttendeeRepository.find({
         where: {
           userId: userId,
           year: year,
@@ -208,7 +318,7 @@ export class RotationsService {
         return;
       }
 
-      await this.attendeeRepository.delete(records.map((record) => record.id));
+      await this.rotationAttendeeRepository.delete(records.map((record) => record.id));
     } catch (error) {
       this.logger.error(error);
       throw error;
@@ -223,7 +333,7 @@ export class RotationsService {
     const { year, month } = getNextYearAndMonth();
 
     try {
-      const records = await this.attendeeRepository.find({
+      const records = await this.rotationAttendeeRepository.find({
         where: {
           year: year,
           month: month,
@@ -253,14 +363,14 @@ export class RotationsService {
       let records: Promise<Partial<RotationEntity>[]>;
 
       if (year && month) {
-        records = this.rotationRepository.find({
+        records = this.rotationAttendeeRepository.find({
           where: {
             year: year,
             month: month,
           },
         });
       } else {
-        records = this.rotationRepository.find();
+        records = this.rotationAttendeeRepository.find();
       }
 
       const modifiedRecords = await Promise.all(
@@ -439,5 +549,58 @@ export class RotationsService {
       this.logger.error(error);
       throw error;
     }
+  }
+
+  /*
+   * 다음 달 로테이션에 사용될 새로운 날짜 배열.
+   * 다음 달 로테이션 날짜(day)와, 해당 날짜에 배정될
+   * 유저 두 명의 아이디가 담길 배열(arr)로 구성된 이중 배열이 반환된다.
+   */
+  async getInitMonthArray(year: number, month: number): Promise<DayObject[][]> {
+    const daysOfMonth = new Date(year, month, 0).getDate();
+    const holidayArrayOfMonth: number[] = await this.holidayService.getHolidayByYearAndMonth(
+      year,
+      month,
+    );
+
+    const MonthArray: DayObject[][] = [];
+    let tmpWeekArray: DayObject[] = [];
+
+    for (let i = 1; i <= daysOfMonth; i++) {
+      if (new Date(year, month - 1, i).getDay() > 0 && new Date(year, month - 1, i).getDay() < 6) {
+        const day = new Date(year, month - 1, i).getDate();
+
+        if (!holidayArrayOfMonth.includes(day)) {
+          const tmpDayObject: DayObject = { day, arr: [0, 0] };
+
+          tmpWeekArray.push(tmpDayObject);
+
+          if (i === daysOfMonth) {
+            MonthArray.push(tmpWeekArray);
+          }
+        } else {
+          continue;
+        }
+      } else {
+        if (tmpWeekArray.length > 0) {
+          MonthArray.push(tmpWeekArray);
+          tmpWeekArray = [];
+        } else {
+          // already pushed tmpWeekArray
+        }
+      }
+    }
+    return MonthArray;
+  }
+
+  async findRotationAttendeeByUserId(userId: number) {
+    const { year, month } = getNextYearAndMonth();
+    return await this.rotationAttendeeRepository.findOne({
+      where: {
+        userId,
+        year,
+        month,
+      },
+    });
   }
 }

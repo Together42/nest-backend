@@ -1,12 +1,13 @@
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserEntity } from '../entity/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserRankingDto } from '../dto/user-ranking.dto';
 import { MeetupAttendeeEntity } from 'src/meetups/entity/meetup-attendee.entity';
 
+@Injectable()
 export class UserRepository extends Repository<UserEntity> {
   constructor(
     @InjectRepository(UserEntity)
@@ -133,5 +134,9 @@ export class UserRepository extends Repository<UserEntity> {
       .orderBy('totalPoint')
       .getRawMany();
     return userRanking;
+  }
+
+  async updateUserActivity(id: number, isActive: boolean) {
+    await this.update(id, { isActive });
   }
 }

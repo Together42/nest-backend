@@ -7,7 +7,6 @@ import { GoogleStrategy } from './strategy/google.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/user/user.module';
-import { UserService } from 'src/user/user.service';
 import { GoogleMiddleware } from '../middleware/google.middleware';
 import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
 
@@ -33,7 +32,6 @@ import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
   ],
   controllers: [AuthController],
   providers: [
-    UserService,
     AuthService,
     GoogleStrategy,
     JwtStrategy,
