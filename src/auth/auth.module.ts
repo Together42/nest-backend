@@ -6,7 +6,6 @@ import { PassportModule } from '@nestjs/passport';
 import { GoogleStrategy } from './strategy/google.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserModule } from 'src/user/user.module';
 import { GoogleMiddleware } from '../middleware/google.middleware';
 import { JwtRefreshStrategy } from './strategy/jwt-refresh.strategy';
 import { RotationsService } from 'src/rotation/rotations.service';
@@ -17,6 +16,8 @@ import { UserEntity } from 'src/user/entity/user.entity';
 import { RotationRepository } from 'src/rotation/repository/rotations.repository';
 import { RotationAttendeeRepository } from 'src/rotation/repository/rotation-attendees.repository';
 import { HolidayModule } from 'src/holiday/holiday.module';
+import { UserService } from 'src/user/user.service';
+import { UserRepository } from 'src/user/repository/user.repository';
 
 @Module({
   imports: [
@@ -36,16 +37,17 @@ import { HolidayModule } from 'src/holiday/holiday.module';
         },
       }),
     }),
-    UserModule,
     HolidayModule,
     TypeOrmModule.forFeature([RotationEntity, RotationAttendeeEntity, UserEntity]),
   ],
   controllers: [AuthController],
   providers: [
+    AuthService,
+    UserService,
+    UserRepository,
     RotationsService,
     RotationRepository,
     RotationAttendeeRepository,
-    AuthService,
     GoogleStrategy,
     JwtStrategy,
     JwtRefreshStrategy,
