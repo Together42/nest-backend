@@ -131,7 +131,7 @@ export class UserRepository extends Repository<UserEntity> {
       )
       .addSelect('COUNT(meetup_id)', 'totalPoint')
       .groupBy('user_id')
-      .orderBy('totalPoint')
+      .orderBy('totalPoint', 'DESC')
       .getRawMany();
     return userRanking;
   }
