@@ -34,7 +34,7 @@ export class UserEntity {
   @Column({ nullable: true })
   profileImageUrl: string;
 
-  @Column({ nullable: false, default: UserRole.USER })
+  @Column({ nullable: false, default: UserRole.LIBRARIAN })
   role: UserRole;
 
   @Column({ nullable: false, default: true })
