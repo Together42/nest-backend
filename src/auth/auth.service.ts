@@ -27,7 +27,7 @@ export class AuthService {
       username: user.nickname,
       id: user.id,
       role: user.role,
-      imgaeUrl: user.profileImageUrl,
+      imageUrl: user.profileImageUrl,
     };
     return this.jwtService.signAsync(payload);
   }
