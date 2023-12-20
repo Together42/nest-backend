@@ -1,15 +1,24 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, forwardRef } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserEntity } from './entity/user.entity';
 import { UserRepository } from './repository/user.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserRankingDto } from './dto/user-ranking.dto';
+import {
+  UpdateUserActivityByIdDto,
+  UpdateUserActivityByNameDto,
+} from './dto/update-user-activity.dto';
+import { ErrorMessage } from 'src/common/enum/error-message.enum';
+import { RotationsService } from '../rotation/rotations.service';
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    @Inject(forwardRef(() => RotationsService)) private readonly rotationsService: RotationsService,
+  ) {}
 
   async findOneByEmail(email: string): Promise<UserEntity | null> {
     this.logger.debug(`findOneByEmail [email: ${email}]`);
@@ -43,34 +52,22 @@ export class UserService {
     find refresh token from database with user id
     if refresh token is not expired, return refresh token
   */
-  async isRefreshTokenVaild(
-    refreshToken: string,
-    userUid: number,
-  ): Promise<UserEntity | null> {
+  async isRefreshTokenVaild(refreshToken: string, userUid: number): Promise<UserEntity | null> {
     const user: UserEntity | null = await this.findOneByUid(userUid);
     if (user === null || user.refreshToken === null) {
       return null;
     }
-    const isRefreshTokenValid: boolean = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken,
-    );
+    const isRefreshTokenValid: boolean = await bcrypt.compare(refreshToken, user.refreshToken);
     if (isRefreshTokenValid === false) {
       return null;
     }
     return user;
   }
 
-  async updateRefreshToken(
-    userUid: number,
-    refreshToken: string,
-  ): Promise<void> {
-    const hashedRefreshToken: string =
-      await this.hashedRefreshToken(refreshToken);
+  async updateRefreshToken(userUid: number, refreshToken: string): Promise<void> {
+    const hashedRefreshToken: string = await this.hashedRefreshToken(refreshToken);
     const currentDate: Date = new Date();
-    const refreshTokenExpiredAt: Date = new Date(
-      currentDate.getTime() + 1000 * 60 * 60 * 24 * 7,
-    );
+    const refreshTokenExpiredAt: Date = new Date(currentDate.getTime() + 1000 * 60 * 60 * 24 * 7);
     await this.userRepository.updateRefreshToken(
       userUid,
       hashedRefreshToken,
@@ -85,10 +82,7 @@ export class UserService {
   private async hashedRefreshToken(refreshToken: string): Promise<string> {
     const saltRounds = 10;
     try {
-      const hashedRefreshToken: string = await bcrypt.hash(
-        refreshToken,
-        saltRounds,
-      );
+      const hashedRefreshToken: string = await bcrypt.hash(refreshToken, saltRounds);
       return hashedRefreshToken;
     } catch (error) {
       this.logger.error(`hashedRefreshToken [error: ${error.message}]`);
@@ -108,5 +102,34 @@ export class UserService {
       };
     });
     return userRankingDto;
+  }
+
+  async updateUserActivity(
+    updateUserActiviyDto: UpdateUserActivityByIdDto | UpdateUserActivityByNameDto,
+  ) {
+    let user: UserEntity;
+    const { isActive } = updateUserActiviyDto;
+
+    if ('userId' in updateUserActiviyDto) {
+      user = await this.userRepository.findOneById(updateUserActiviyDto.userId);
+    } else if ('nickname' in updateUserActiviyDto) {
+      user = await this.userRepository.findOneByIntraId(updateUserActiviyDto.nickname);
+    }
+
+    if (!user) {
+      throw new NotFoundException(ErrorMessage.USER_NOT_FOUND);
+    }
+    await this.userRepository.updateUserActivity(user.id, isActive);
+
+    if (isActive) {
+      const rotationAttendee = await this.rotationsService.findRotationAttendeeByUserId(user.id);
+      if (!rotationAttendee) {
+        await this.rotationsService.createRegistration({ attendLimit: JSON.parse('[]') }, user.id);
+      }
+    } else {
+      await this.rotationsService.removeRegistration(user.id);
+    }
+
+    return 'hi';
   }
 }
