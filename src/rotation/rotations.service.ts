@@ -117,7 +117,6 @@ export class RotationsService {
 
         if (hasInfo.length > 0) {
           this.logger.log('Rotation info already exists. Deleting...');
-          console.log(hasInfo);
           await this.rotationRepository.softRemove(hasInfo);
         }
 
