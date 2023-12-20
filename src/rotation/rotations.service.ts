@@ -578,7 +578,7 @@ export class RotationsService {
       newRotation.month = month;
       newRotation.attendLimit = JSON.parse(JSON.stringify([]));
 
-      await this.rotationRepository.save(newRotation);
+      await this.rotationAttendeeRepository.save(newRotation);
       return newRotation;
     } catch (error) {
       this.logger.error(error);
