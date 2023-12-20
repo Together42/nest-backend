@@ -6,7 +6,6 @@ import {
   Param,
   Delete,
   Patch,
-  UsePipes,
   ValidationPipe,
   Query,
   UseGuards,
@@ -25,8 +24,10 @@ import { UserEntity } from 'src/user/entity/user.entity';
 import { RoleGuard } from 'src/auth/guard/role.guard';
 import UserRole from 'src/user/enum/user.enum';
 import { Role } from 'src/decorator/role.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('rotations')
+@ApiTags('rotations')
 export class RotationsController {
   constructor(private readonly rotationsService: RotationsService) {}
 
@@ -47,6 +48,7 @@ export class RotationsController {
   @Get('/attendance')
   @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth()
   async findOwnRegistration(@GetUser() user: UserEntity): Promise<Partial<RotationAttendeeEntity>> {
     return await this.rotationsService.findRegistration(user.id);
   }
@@ -58,7 +60,7 @@ export class RotationsController {
   @Post('/attendance')
   @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
-  @UsePipes(ValidationPipe)
+  @ApiBearerAuth()
   async createOwnRegistration(
     @GetUser() user: UserEntity,
     @Body() createRegistrationDto: CreateRegistrationDto,
@@ -73,6 +75,7 @@ export class RotationsController {
   @Delete('/attendance')
   @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
+  @ApiBearerAuth()
   async removeOwnRegistration(@GetUser() user: UserEntity): Promise<void> {
     return await this.rotationsService.removeRegistration(user.id);
   }
@@ -98,7 +101,7 @@ export class RotationsController {
   @Post('/')
   @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
-  @UsePipes(ValidationPipe)
+  @ApiBearerAuth()
   createOwnRotation(
     @GetUser() user: UserEntity,
     @Body() createRotationDto: CreateRotationDto,
@@ -113,7 +116,7 @@ export class RotationsController {
   @Delete('/')
   @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
-  @UsePipes(ValidationPipe)
+  @ApiBearerAuth()
   removeOwnRotation(
     @GetUser() user: UserEntity,
     @Body()
@@ -130,7 +133,7 @@ export class RotationsController {
   @Patch('/:id')
   @Role([UserRole.LIBRARIAN, UserRole.ADMIN])
   @UseGuards(JwtGuard, RoleGuard)
-  @UsePipes(ValidationPipe)
+  @ApiBearerAuth()
   updateUserRotation(
     @GetUser() user: UserEntity,
     @Param('id') intraId: string,

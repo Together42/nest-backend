@@ -28,12 +28,12 @@ export class UserController {
   private readonly logger = new Logger(UserController.name);
   constructor(private readonly userService: UserService) {}
 
-  @Get('test')
+  @Get('me')
   @UseGuards(JwtGuard, RoleGuard)
   @Role([UserRole.ADMIN])
   @ApiBearerAuth()
-  async jwtAuthTest(@GetUser() user) {
-    this.logger.debug(`jwtAuthTest [user: ${JSON.stringify(user)}]`);
+  async getMe(@GetUser() user: any) {
+    this.logger.debug(`getMe [user: ${JSON.stringify(user)}]`);
     return user;
   }
 

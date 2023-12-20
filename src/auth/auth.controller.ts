@@ -18,10 +18,10 @@ import { UserEntity } from 'src/user/entity/user.entity';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { SignUpUserDto } from 'src/user/dto/signup-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { JwtGuard } from './guard/jwt.guard';
-import { GetUser } from 'src/decorator/user.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiTags('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
@@ -103,11 +103,9 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtGuard)
-  // @UseGuards(JwtRefreshGuard)
-  async logout(@Res() res: Response, @GetUser() user: UserEntity) {
+  async logout(@Res() res: Response) {
     this.logger.debug(`logout`);
-    await this.authService.deleteRefreshToken(user.id);
+    // await this.authService.deleteRefreshToken(user.id);
     res.clearCookie('refresh_token');
     res.clearCookie('google_token');
     res.send({
