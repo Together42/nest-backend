@@ -1,0 +1,44 @@
+name: deploy prod server
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USERNAME }}
+          key: ${{ secrets.AWS_KEY }}
+          port: ${{ secrets.AWS_EC2_SSH_PORT }}
+          script: |
+            cd /home/ubuntu/together-backend
+            git checkout main
+            git pull origin main
+            echo "NODE_ENV=production
+            BACK_PORT=${{ secrets.BACKEND_HOST_PORT }}
+            BACKEND_IMAGE_NAME=${{ secrets.BACKEND_IMAGE_NAME }}
+            BACKEND_CONTAINER_NAME=${{ secrets.BACKEND_CONTAINER_NAME }}
+            BACKEND_CONTAINER_PORT=${{ secrets.BACKEND_CONTAINER_PORT }}
+            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+            GOOGLE_PROMPT=${{ secrets.GOOGLE_PROMPT }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            JWT_REFRESH_EXPIRES_IN=${{ secrets.JWT_REFRESH_EXPIRES_IN }}
+            SERVICE_KEY=${{ secrets.OPENAPI_HOLIDAY_SERVICE_KEY }}
+            SLACK_BOT_USER_OAUTH_ACCESS_TOKEN=${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
+            SLACK_CHANNEL_JIPHYEONJEON=${{ secrets.SLACK_CHANNEL_JIPHYEONJEON }}
+            FRONT_URL=${{ secrets.TOGETHER_HOME_URL }}
+            TOGETHER_HOME_URL=${{ secrets.TOGETHER_HOME_URL }}" > .env.prod
+            docker-compose --env-file .env.prod up -d --build backend

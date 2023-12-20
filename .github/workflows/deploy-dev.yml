@@ -1,0 +1,44 @@
+name: deploy dev server
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USERNAME }}
+          key: ${{ secrets.AWS_KEY }}
+          port: ${{ secrets.AWS_EC2_SSH_PORT }}
+          script: |
+            cd /home/ubuntu/together-backend
+            git checkout dev
+            git pull origin dev
+            echo "NODE_ENV=development
+            BACK_PORT=${{ secrets.BACKEND_HOST_PORT_DEV }}
+            BACKEND_CONTAINER_NAME=${{ secrets.BACKEND_CONTAINER_NAME_DEV }}
+            BACKEND_IMAGE_NAME=${{ secrets.BACKEND_IMAGE_NAME_DEV }}
+            BACKEND_CONTAINER_PORT=${{ secrets.BACKEND_CONTAINER_PORT }}
+            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
+            MYSQL_PORT=${{ secrets.MYSQL_PORT }}
+            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE_DEV }}
+            MYSQL_USER=${{ secrets.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI_DEV }}
+            GOOGLE_PROMPT=${{ secrets.GOOGLE_PROMPT }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            JWT_REFRESH_EXPIRES_IN=${{ secrets.JWT_REFRESH_EXPIRES_IN }}
+            SERVICE_KEY=${{ secrets.OPENAPI_HOLIDAY_SERVICE_KEY }}
+            SLACK_BOT_USER_OAUTH_ACCESS_TOKEN=${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN_DEV }}
+            SLACK_CHANNEL_JIPHYEONJEON=${{ secrets.SLACK_CHANNEL_JIPHYEONJEON_DEV }}
+            FRONT_URL=${{ secrets.FRONT_URL_DEV }}
+            TOGETHER_HOME_URL=${{ secrets.TOGETHER_HOME_URL }}" > .env.dev
+            docker-compose --env-file .env.dev up -d --build backend
