@@ -376,14 +376,14 @@ export class RotationsService {
       let records: Promise<Partial<RotationEntity>[]>;
 
       if (year && month) {
-        records = this.rotationAttendeeRepository.find({
+        records = this.rotationRepository.find({
           where: {
             year: year,
             month: month,
           },
         });
       } else {
-        records = this.rotationAttendeeRepository.find();
+        records = this.rotationRepository.find();
       }
 
       const modifiedRecords = await Promise.all(
