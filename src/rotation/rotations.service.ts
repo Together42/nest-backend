@@ -20,6 +20,13 @@ import { DayObject, RotationAttendeeInfo } from './utils/types';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
 
+function getRotationCronTime() {
+  if (process.env.NODE_ENV === 'production') {
+    return '59 23 * * 5';
+  }
+  return '0 0 * * 5';
+}
+
 @Injectable()
 export class RotationsService {
   private readonly logger = new Logger(RotationsService.name);
@@ -68,7 +75,7 @@ export class RotationsService {
    * 23시 59분에 로테이션을 돌린다.
    * 다음 달 로테이션 참석자를 바탕으로 로테이션 결과 반환
    */
-  @Cron(`59 23 * * 5`, {
+  @Cron(`${getRotationCronTime()}`, {
     name: 'setRotation',
     timeZone: 'Asia/Seoul',
   })
@@ -101,19 +108,16 @@ export class RotationsService {
 
         // 만약 year & month에 해당하는 로테이션 정보가 이미 존재한다면,
         // 해당 로테이션 정보를 삭제하고 다시 생성한다.
-        const hasInfo = await this.rotationRepository.count({
+        const hasInfo = await this.rotationRepository.find({
           where: {
             year: year,
             month: month,
           },
         });
 
-        if (hasInfo) {
+        if (hasInfo.length > 0) {
           this.logger.log('Rotation info already exists. Deleting...');
-          await this.rotationRepository.delete({
-            year: year,
-            month: month,
-          });
+          await this.rotationRepository.softRemove(hasInfo);
         }
 
         const rotationResultArray: DayObject[] = createRotation(
