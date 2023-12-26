@@ -335,7 +335,7 @@ export class RotationsService {
         return;
       }
 
-      await this.rotationAttendeeRepository.delete(records.map((record) => record.id));
+      await this.rotationAttendeeRepository.softDelete(records.map((record) => record.id));
     } catch (error) {
       this.logger.error(error);
       throw error;

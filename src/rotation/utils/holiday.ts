@@ -1,11 +1,6 @@
 import { HttpException, HttpStatus, Logger } from '@nestjs/common';
 import axios, { AxiosResponse } from 'axios';
-import { ConfigService } from '@nestjs/config';
-
-interface HolidayItem {
-  locdate?: string;
-  dateName?: string;
-}
+import { getNextYearAndMonth } from './date';
 
 interface HolidayResponse {
   response?: {
@@ -13,6 +8,7 @@ interface HolidayResponse {
       items?: {
         item?: HolidayItem[];
       };
+      totalCount?: number;
     };
   };
 }
@@ -24,49 +20,71 @@ interface HolidayInfo {
   info: string;
 }
 
+interface HolidayItem {
+  locdate?: string;
+  dateName?: string;
+}
+
 function mySleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function getHolidayArray(): Promise<HolidayInfo[]> {
-  const MAX_RETRIES = 3;
-  const RETRY_INTERVAL_MS = 2000;
+  const MAX_RETRIES = 5;
+  const RETRY_INTERVAL_MS = 4242;
   const logger = new Logger(getHolidayArray.name);
-  const configService = new ConfigService();
 
-  const SERVICE_KEY: string = configService.get('openApi.serviceKey');
+  const SERVICE_KEY: string = process.env.SERVICE_KEY || '';
   const OPENAPI_URL: string =
     'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo';
-  const SOL_YEAR: number = new Date().getFullYear() + 1;
+  const { year, month } = getNextYearAndMonth();
+  const SOL_YEAR: number = year;
+  const SOL_MONTH: string = month.toString().padStart(2, '0');
   const ROW_NUM: number = 100;
 
-  const requestUrl: string = `${OPENAPI_URL}?solYear=${SOL_YEAR}&ServiceKey=${SERVICE_KEY}&_type=json&numOfRows=${ROW_NUM}`;
+  const requestUrl: string = `${OPENAPI_URL}?solYear=${SOL_YEAR}&solMonth=${SOL_MONTH}&ServiceKey=${SERVICE_KEY}&_type=json&numOfRows=${ROW_NUM}`;
 
   let retries: number = 0;
   while (retries < MAX_RETRIES) {
     try {
-      const response: AxiosResponse<HolidayResponse> =
-        await axios.get(requestUrl);
+      const response: AxiosResponse<HolidayResponse> = await axios.get(requestUrl);
 
-      const items: HolidayItem[] | undefined =
-        response?.data?.response?.body?.items?.item;
-
-      if (!Array.isArray(items)) {
-        const itemType = typeof items;
-
+      if (response.data === undefined) {
         throw new HttpException(
-          `Invalid data: items is not an array: ${itemType}`,
-          HttpStatus.BAD_REQUEST,
+          `Invalid data: response is undefined`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
+      }
+
+      const data: HolidayResponse | undefined = response.data;
+
+      if (data === undefined) {
+        throw new HttpException(
+          `Invalid data: data is undefined`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      if (data.response.body.totalCount === 0) {
+        return null;
       }
 
       const holidayArray: HolidayInfo[] = [];
 
-      for (const item of items) {
+      if (data.response.body.totalCount === 1) {
+        const item: any = data.response.body.items.item; // Type is hard
+
+        if (item === undefined) {
+          throw new HttpException(
+            `Invalid data: data must not be an array`,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
+        }
+
         if (!item?.locdate) {
           throw new HttpException(
             'Invalid data: data must contain a date element',
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
 
@@ -76,7 +94,7 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
         if (!locdateString.match(regEx)) {
           throw new HttpException(
             `Invalid data: wrong date format: ${locdateString}`,
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
 
@@ -86,10 +104,48 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
           day: +locdateString.slice(6, 8),
           info: item.dateName || 'null',
         };
+
         holidayArray.push(holidayInfo);
+        return holidayArray;
       }
 
-      return holidayArray;
+      if (data.response.body.totalCount >= 2) {
+        const items: HolidayItem[] = data.response.body.items.item;
+
+        for (const item of items) {
+          if (!item?.locdate) {
+            throw new HttpException(
+              'Invalid data: data must contain a date element',
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+          }
+
+          const locdateString: string = item.locdate.toString();
+          const regEx = /^\d{4}\d{2}\d{2}$/;
+
+          if (!locdateString.match(regEx)) {
+            throw new HttpException(
+              `Invalid data: wrong date format: ${locdateString}`,
+              HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+          }
+
+          const holidayInfo: HolidayInfo = {
+            year: +locdateString.slice(0, 4),
+            month: +locdateString.slice(4, 6),
+            day: +locdateString.slice(6, 8),
+            info: item.dateName || 'null',
+          };
+          holidayArray.push(holidayInfo);
+        }
+
+        return holidayArray;
+      } else {
+        throw new HttpException(
+          `Invalid data: data must be an array or an object`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
     } catch (error: any) {
       retries++;
       logger.error(`Error occurred: ${error}. Retrying... (${retries})`);

@@ -24,10 +24,10 @@ export class HolidayService {
     private myHolidayRepository: HolidayRepository,
   ) {}
 
-  /* 12월 25일 4시 42분에 실행
-   * 왜 갑자기 month가 0부터 11까지로 된거지?
+  /*
+   * 매 월 15일 자정에 공휴일 정보를 가져와서 DB에 저장.
    */
-  @Cron('42 4 25 11 *', {
+  @Cron('0 0 15 * *', {
     name: 'saveHolidayInfo',
     timeZone: 'Asia/Seoul',
   })
@@ -36,6 +36,10 @@ export class HolidayService {
       this.logger.log('Fetching holiday info...');
 
       const holidayArray: HolidayInfo[] = await getHolidayArray();
+
+      if (holidayArray === null) {
+        return;
+      }
 
       for (const holidayInfo of holidayArray) {
         const { year, month, day, info } = holidayInfo;
@@ -67,15 +71,9 @@ export class HolidayService {
     }
   }
 
-  async getHolidayByYearAndMonth(
-    year: number,
-    month: number,
-  ): Promise<number[]> {
+  async getHolidayByYearAndMonth(year: number, month: number): Promise<number[]> {
     try {
-      return await this.myHolidayRepository.findHolidayByYearAndMonth(
-        year,
-        month,
-      );
+      return await this.myHolidayRepository.findHolidayByYearAndMonth(year, month);
     } catch (error: any) {
       this.logger.error(error);
       throw error;
