@@ -50,13 +50,19 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
       const response: AxiosResponse<HolidayResponse> = await axios.get(requestUrl);
 
       if (response.data === undefined) {
-        throw new HttpException(`Invalid data: response is undefined`, HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          `Invalid data: response is undefined`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
       const data: HolidayResponse | undefined = response.data;
 
       if (data === undefined) {
-        throw new HttpException(`Invalid data: items is undefined`, HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          `Invalid data: data is undefined`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
 
       if (data.response.body.totalCount === 0) {
@@ -69,13 +75,16 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
         const item: any = data.response.body.items.item; // Type is hard
 
         if (item === undefined) {
-          throw new HttpException(`Invalid data: data must not be an array`, HttpStatus.NOT_FOUND);
+          throw new HttpException(
+            `Invalid data: data must not be an array`,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
         }
 
         if (!item?.locdate) {
           throw new HttpException(
             'Invalid data: data must contain a date element',
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
 
@@ -85,7 +94,7 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
         if (!locdateString.match(regEx)) {
           throw new HttpException(
             `Invalid data: wrong date format: ${locdateString}`,
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.INTERNAL_SERVER_ERROR,
           );
         }
 
@@ -100,14 +109,14 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
         return holidayArray;
       }
 
-      if (data.response.body.totalCount > 2) {
+      if (data.response.body.totalCount >= 2) {
         const items: HolidayItem[] = data.response.body.items.item;
 
         for (const item of items) {
           if (!item?.locdate) {
             throw new HttpException(
               'Invalid data: data must contain a date element',
-              HttpStatus.BAD_REQUEST,
+              HttpStatus.INTERNAL_SERVER_ERROR,
             );
           }
 
@@ -117,7 +126,7 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
           if (!locdateString.match(regEx)) {
             throw new HttpException(
               `Invalid data: wrong date format: ${locdateString}`,
-              HttpStatus.BAD_REQUEST,
+              HttpStatus.INTERNAL_SERVER_ERROR,
             );
           }
 
@@ -134,7 +143,7 @@ export async function getHolidayArray(): Promise<HolidayInfo[]> {
       } else {
         throw new HttpException(
           `Invalid data: data must be an array or an object`,
-          HttpStatus.NOT_FOUND,
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
       }
     } catch (error: any) {
