@@ -130,6 +130,6 @@ export class UserService {
       await this.rotationsService.removeRegistration(user.id);
     }
 
-    return 'hi';
+    return;
   }
 }
