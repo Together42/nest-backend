@@ -44,7 +44,7 @@ export const meetupCreatedMessage = ({
         )}\n${description}\n이벤트가 생성되었습니다. 서둘러 참석해주세요!`,
       }),
       Blocks.Section({
-        text: process.env.TOGETHER_HOME_URL,
+        text: process.env.FRONT_URL,
       }),
     )
     .buildToObject();
