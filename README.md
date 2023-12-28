@@ -40,7 +40,7 @@
 ## 실행 방법
 ### 1. git clone
 ```sh
-git clone https://github.com/Together42/backend.git
+git clone https://github.com/Together42/nest-backend.git
 ```
 ### 2. 백엔드 루트 폴더에 `.env` 생성
 ```
