@@ -101,13 +101,6 @@ yarn install && yarn start:dev
 
 <br>
 
-## Contributors
-- [gychoi](https://github.com/sideseal)
-- [jwoo](https://github.com/Jiwon-Woo)
-- [seowokim](https://github.com/seo-wo)
-
-<br>
-
 ## License
 
 Nest is [MIT licensed](LICENSE).
