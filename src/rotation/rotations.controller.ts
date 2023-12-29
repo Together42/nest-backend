@@ -29,18 +29,15 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import {
   BadRequestExceptionBody,
-  ForbiddenExceptionBody,
   InternalServerExceptionBody,
   NotFoundExceptionBody,
 } from 'src/common/dto/error-response.dto';
