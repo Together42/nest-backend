@@ -229,7 +229,7 @@ export class RotationsController {
   @ApiOperation({
     summary: '사서 로테이션 수정',
     description:
-      '사서 로테이션 수정을 위한 API. 사서 등급인 유저 본인과 관리자만 사용 가능합니다. 달력에 등록된 사서의 일정을 수정할 수 있습니다. 변경하고자 하는 유저의 intraId를 parameter로 제공해야 합니다. 또한 변경하고자 하는 해당 유저의 일정을 body에 제공해야 합니다.',
+      '사서 로테이션 수정을 위한 API. 사서 등급인 유저 본인과 관리자만 사용 가능합니다. 달력에 등록된 사서의 일정을 수정할 수 있습니다. 변경하고자 하는 유저의 intraId를 parameter로 제공해야 합니다. 또한 변경하고자 하는 유저의 기존 일정과, 변경된 유저의 일정이 body에 제공되어야 합니다.',
   })
   @ApiBearerAuth()
   @ApiCreatedResponse({
