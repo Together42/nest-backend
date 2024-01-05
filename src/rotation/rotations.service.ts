@@ -54,7 +54,7 @@ export class RotationsService {
         try {
           const userId = user.id;
           const createRegistrationDto: CreateRegistrationDto = {
-            attendLimit: {} as JSON,
+            attendLimit: JSON.parse(JSON.stringify([])),
           };
 
           // make new rotation
