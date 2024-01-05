@@ -1,8 +1,4 @@
-import {
-  HttpExceptionBody,
-  HttpExceptionBodyMessage,
-  HttpStatus,
-} from '@nestjs/common';
+import { HttpExceptionBody, HttpExceptionBodyMessage, HttpStatus } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { STATUS_CODES } from 'http';
 
@@ -52,12 +48,23 @@ export class InternalServerExceptionBody extends ServerExceptionBody {
   statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
 }
 
+export class UnauthorizedExceptionBody extends ClientExceptionBody {
+  @ApiProperty({
+    type: 'string',
+    example: STATUS_CODES[HttpStatus.UNAUTHORIZED],
+  })
+  error = STATUS_CODES[HttpStatus.UNAUTHORIZED]!;
+
+  @ApiProperty({ type: Number, example: HttpStatus.UNAUTHORIZED })
+  statusCode = HttpStatus.UNAUTHORIZED;
+}
+
 export class NotFoundExceptionBody extends ClientExceptionBody {
   @ApiProperty({
     type: 'string',
     example: STATUS_CODES[HttpStatus.NOT_FOUND],
   })
-  error = STATUS_CODES[HttpStatus.FORBIDDEN]!;
+  error = STATUS_CODES[HttpStatus.NOT_FOUND]!;
 
   @ApiProperty({ type: Number, example: HttpStatus.NOT_FOUND })
   statusCode = HttpStatus.NOT_FOUND;

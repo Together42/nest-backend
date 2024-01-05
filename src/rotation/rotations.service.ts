@@ -54,7 +54,7 @@ export class RotationsService {
         try {
           const userId = user.id;
           const createRegistrationDto: CreateRegistrationDto = {
-            attendLimit: {} as JSON,
+            attendLimit: JSON.parse(JSON.stringify([])),
           };
 
           // make new rotation
@@ -197,10 +197,17 @@ export class RotationsService {
           month: month,
           day: day,
         },
-        select: ['userId', 'year', 'month', 'day'],
+        relations: ['user'],
+        select: {
+          id: true,
+          user: {
+            nickname: true,
+            slackMemberId: true,
+          },
+        },
       });
 
-      return records;
+      return records.map((record) => record.user);
     } catch (error: any) {
       this.logger.error(error);
       throw error;
