@@ -19,6 +19,9 @@ import { RotationAttendeeRepository } from './repository/rotation-attendees.repo
 import { DayObject, RotationAttendeeInfo } from './utils/types';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
+import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
+import { FindRegistrationDto } from './dto/find-registration.dto';
+import { FindAllRotationDto } from './dto/find-all-rotation.dto';
 
 function getRotationCronTime() {
   if (process.env.NODE_ENV === 'production') {
@@ -184,7 +187,7 @@ export class RotationsService {
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
    * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
    */
-  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+  async findTodayRotation(): Promise<FindTodayRotationDto[]> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
@@ -207,7 +210,10 @@ export class RotationsService {
         },
       });
 
-      return records.map((record) => record.user);
+      return records.map((record) => ({
+        nickname: record.user.nickname,
+        slackMemberId: record.user.slackMemberId,
+      }));
     } catch (error: any) {
       this.logger.error(error);
       throw error;
@@ -224,7 +230,7 @@ export class RotationsService {
    * [20231219 수정] - 만약 records가 빈 객체인 경우,
    * attendLimit이 빈 배열인 객체를 반환한다.
    */
-  async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
+  async findRegistration(userId: number): Promise<FindRegistrationDto> {
     const { year, month } = getNextYearAndMonth();
 
     try {
@@ -242,18 +248,22 @@ export class RotationsService {
       }
 
       const intraIdRecord = await this.userService.findOneById(userId);
-      const modifiedRecord = {};
+      let modifiedRecord: FindRegistrationDto;
 
       if (records.length == 0) {
-        modifiedRecord['year'] = year;
-        modifiedRecord['month'] = month;
-        modifiedRecord['attendLimit'] = [];
-        modifiedRecord['intraId'] = intraIdRecord.nickname;
+        modifiedRecord = {
+          year: year,
+          month: month,
+          attendLimit: JSON.parse(JSON.stringify([])),
+          intraId: intraIdRecord.nickname,
+        };
       } else {
-        modifiedRecord['year'] = records[0].year;
-        modifiedRecord['month'] = records[0].month;
-        modifiedRecord['attendLimit'] = records[0].attendLimit;
-        modifiedRecord['intraId'] = intraIdRecord.nickname;
+        modifiedRecord = {
+          year: records[0].year,
+          month: records[0].month,
+          attendLimit: records[0].attendLimit,
+          intraId: intraIdRecord.nickname,
+        };
       }
 
       return modifiedRecord;
@@ -382,23 +392,23 @@ export class RotationsService {
    * 기본적으로는 모든 로테이션을 반환.
    * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
    */
-  async findAllRotation(year?: number, month?: number): Promise<Partial<RotationEntity>[]> {
+  async findAllRotation(year?: number, month?: number): Promise<FindAllRotationDto[]> {
     try {
-      let records: Promise<Partial<RotationEntity>[]>;
+      let records: RotationEntity[];
 
       if (year && month) {
-        records = this.rotationRepository.find({
+        records = await this.rotationRepository.find({
           where: {
             year: year,
             month: month,
           },
         });
       } else {
-        records = this.rotationRepository.find();
+        records = await this.rotationRepository.find();
       }
 
       const modifiedRecords = await Promise.all(
-        (await records).map(async (record) => {
+        (records).map(async (record) => {
           const userRecord = await this.userService.findOneById(record.userId);
           return { ...record, intraId: userRecord.nickname };
         }),
