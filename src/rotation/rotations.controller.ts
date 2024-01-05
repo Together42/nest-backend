@@ -41,6 +41,9 @@ import {
   InternalServerExceptionBody,
   NotFoundExceptionBody,
 } from 'src/common/dto/error-response.dto';
+import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
+import { FindRegistrationDto } from './dto/find-registration.dto';
+import { FindAllRotationDto } from './dto/find-all-rotation.dto';
 
 @Controller('rotations')
 @ApiTags('rotations')
@@ -59,10 +62,10 @@ export class RotationsController {
     description: '당일 사서 조회를 위한 API. 구글 시트에서 사용 예정. 누구나 사용할 수 있습니다.',
   })
   @ApiOkResponse({
-    type: [RotationEntity],
+    type: [FindTodayRotationDto],
   })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+  findTodayRotation(): Promise<FindTodayRotationDto[]> {
     return this.rotationsService.findTodayRotation();
   }
 
@@ -84,7 +87,7 @@ export class RotationsController {
   })
   @ApiUnauthorizedResponse({ type: UnauthorizedException })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async findOwnRegistration(@GetUser() user: UserEntity): Promise<Partial<RotationAttendeeEntity>> {
+  async findOwnRegistration(@GetUser() user: UserEntity): Promise<FindRegistrationDto> {
     return await this.rotationsService.findRegistration(user.id);
   }
 
@@ -156,7 +159,7 @@ export class RotationsController {
   findAllRotation(
     @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
-  ): Promise<Partial<RotationEntity>[]> {
+  ): Promise<FindAllRotationDto[]> {
     const { month, year } = findRotationQueryDto;
 
     return this.rotationsService.findAllRotation(year, month);
