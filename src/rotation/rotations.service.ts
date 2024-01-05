@@ -379,6 +379,11 @@ export class RotationsService {
     try {
       let records: Promise<Partial<RotationEntity>[]>;
 
+      if (month < 1 || month > 12)
+      {
+        throw new BadRequestException(`Invalid month: ${month}`);
+      }
+
       if (year && month) {
         records = this.rotationRepository.find({
           where: {
