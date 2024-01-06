@@ -8,7 +8,8 @@
 
 ## Description
 친해지길 바라 백엔드를 리팩토링합니다.
-- DB 스키마 및 REST API 재설계
+- [REST API 재설계](https://github.com/Together42/nest-backend/wiki/API-%EB%B3%80%EA%B2%BD-%EC%82%AC%ED%95%AD)
+- [DB 스키마 재설계](https://github.com/Together42/nest-backend/wiki/DB-%EB%B3%80%EA%B2%BD-%EC%82%AC%ED%95%AD)
 - JavaScript/Express -> TypeScript/NestJS
 - Raw Query -> TypeORM
 
