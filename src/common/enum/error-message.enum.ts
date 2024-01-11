@@ -8,3 +8,5 @@ export enum ErrorMessage {
 
   USER_NOT_FOUND = '존재하지 않는 유저입니다.'
 }
+
+export type KeyOfErrorMessage = keyof typeof ErrorMessage;
