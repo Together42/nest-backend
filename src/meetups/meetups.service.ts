@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  HttpException,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MeetupEntity } from './entity/meetup.entity';
 import { DataSource, IsNull, Repository } from 'typeorm';
@@ -15,8 +8,7 @@ import { MatchMeetupDto } from './dto/match-meetup.dto';
 import { FindMeetupDto } from './dto/find-meetup.dto';
 import { MeetupDetailDto } from './dto/meetup-detail.dto';
 import { MeetupDto } from './dto/meetup.dto';
-import { ErrorMessage } from 'src/common/enum/error-message.enum';
-import { isHttpException, shuffleArray } from 'src/common/utils';
+import { shuffleArray } from 'src/common/utils';
 import { MeetupUserIdsDto } from './dto/meetup-user-ids.dto';
 import { EventBus } from '@nestjs/cqrs';
 import { MeetupCreatedEvent } from './event/meetup-created.event';
@@ -24,6 +16,8 @@ import { MeetupMatchedEvent } from './event/meetup-matched.event';
 import { MeetupUnregisteredEvent } from './event/meetup-unregistered.event';
 import { MeetupRegisteredEvent } from './event/meetup-registered.event';
 import { NotFoundMeetupDto } from './dto/not-found-meetup.dto';
+import { ServiceException } from 'src/common/exception/service.exception';
+import { UnknownException } from 'src/common/exception/unknown.exception';
 
 @Injectable()
 export class MeetupsService {
@@ -44,8 +38,7 @@ export class MeetupsService {
     await queryRunner.startTransaction();
     try {
       const meetup = this.meetupRepository.create(createMeetupDto);
-      const { id, createUserId, title, description } =
-        await queryRunner.manager.save(meetup);
+      const { id, createUserId, title, description } = await queryRunner.manager.save(meetup);
       if (createUserId) {
         const firstAttendee = this.meetupAttendeeRepository.create({
           meetupId: id,
@@ -60,11 +53,11 @@ export class MeetupsService {
       await queryRunner.commitTransaction();
       return { meetupId: id };
     } catch (e) {
-      this.logger.error('[create]', e);
       await queryRunner.rollbackTransaction();
-      if (isHttpException(e))
-        throw new HttpException(e.getResponse(), e.getStatus());
-      else throw new Error();
+      if (e instanceof HttpException || e instanceof ServiceException) {
+        throw e;
+      }
+      throw new UnknownException();
     } finally {
       await queryRunner.release();
     }
@@ -101,20 +94,14 @@ export class MeetupsService {
   /**
    * 유저가 이벤트 참여자 중 하나인지 판별
    */
-  private isMeetupAttendee(
-    meetupAttendees: MeetupAttendeeEntity[],
-    targetUserId: number,
-  ): boolean {
+  private isMeetupAttendee(meetupAttendees: MeetupAttendeeEntity[], targetUserId: number): boolean {
     return meetupAttendees.some((attendee) => attendee.userId === targetUserId);
   }
 
   /**
    * 유저가 이벤트 참여자 중 하나인지 판별하고 정보 가져오기
    */
-  private findMeetupAttendee(
-    meetupAttendees: MeetupAttendeeEntity[],
-    targetUserId: number,
-  ) {
+  private findMeetupAttendee(meetupAttendees: MeetupAttendeeEntity[], targetUserId: number) {
     return meetupAttendees.find((attendee) => attendee.userId === targetUserId);
   }
 
@@ -125,10 +112,10 @@ export class MeetupsService {
       relations: ['attendees'],
     });
     if (!meetup) {
-      throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND);
+      throw new ServiceException('MEETUP_NOT_FOUND', 404);
     }
     if (!(userRole === 'admin' || this.isMeetupOwner(meetup, userId))) {
-      throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
+      throw new ServiceException('NO_PERMISSION', 403);
     }
     await this.meetupRepository.update(meetup.id, {
       deleteUserId: userId,
@@ -148,12 +135,10 @@ export class MeetupsService {
         relations: ['attendees'],
       });
       if (!meetup) {
-        throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND_OR_CLOSED);
+        throw new ServiceException('MEETUP_NOT_FOUND_OR_CLOSED', 404);
       }
       if (this.isMeetupAttendee(meetup.attendees, userId)) {
-        throw new BadRequestException(
-          ErrorMessage.MEETUP_REGISTRATION_ALREADY_EXIST,
-        );
+        throw new ServiceException('MEETUP_REGISTRATION_ALREADY_EXIST', 400);
       }
       const attendance = this.meetupAttendeeRepository.create(meetupUserIdsDto);
       await queryRunner.manager.save(attendance);
@@ -168,12 +153,11 @@ export class MeetupsService {
 
       await queryRunner.commitTransaction();
     } catch (e) {
-      this.logger.error('[registerMeetup]', e);
       await queryRunner.rollbackTransaction();
-      if (isHttpException(e)) {
-        throw new HttpException(e.getResponse(), e.getStatus());
+      if (e instanceof HttpException || e instanceof ServiceException) {
+        throw e;
       }
-      throw new Error();
+      throw new UnknownException();
     } finally {
       await queryRunner.release();
     }
@@ -191,11 +175,11 @@ export class MeetupsService {
         relations: ['attendees'],
       });
       if (!meetup) {
-        throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND_OR_CLOSED);
+        throw new ServiceException('MEETUP_NOT_FOUND_OR_CLOSED', 404);
       }
       const meetupAttendee = this.findMeetupAttendee(meetup.attendees, userId);
       if (!meetupAttendee) {
-        throw new NotFoundException(ErrorMessage.MEETUP_REGISTRATION_NOT_FOUND);
+        throw new ServiceException('MEETUP_REGISTRATION_NOT_FOUND', 404);
       }
       await this.meetupAttendeeRepository.softDelete(meetupAttendee.id);
 
@@ -209,12 +193,11 @@ export class MeetupsService {
 
       await queryRunner.commitTransaction();
     } catch (e) {
-      this.logger.error('[unregisterMeetup]', e);
       await queryRunner.rollbackTransaction();
-      if (isHttpException(e)) {
-        throw new HttpException(e.getResponse(), e.getStatus());
+      if (e instanceof HttpException || e instanceof ServiceException) {
+        throw e;
       }
-      throw new Error();
+      throw new UnknownException();
     } finally {
       await queryRunner.release();
     }
@@ -223,10 +206,7 @@ export class MeetupsService {
   /**
    * 이벤트 매칭시 신청자 팀 배정
    */
-  private assignAttendeesTeam(
-    attendees: MeetupAttendeeEntity[],
-    teamNum: number,
-  ) {
+  private assignAttendeesTeam(attendees: MeetupAttendeeEntity[], teamNum: number) {
     shuffleArray(attendees);
     attendees.forEach((attendee, index) => {
       attendee.teamId = (index % teamNum) + 1;
@@ -246,7 +226,7 @@ export class MeetupsService {
       });
 
       if (!meetup) {
-        throw new NotFoundException(ErrorMessage.MEETUP_NOT_FOUND_OR_CLOSED);
+        throw new ServiceException('MEETUP_NOT_FOUND_OR_CLOSED', 404);
       }
       if (
         userId &&
@@ -256,10 +236,10 @@ export class MeetupsService {
           this.isMeetupAttendee(meetup.attendees, userId)
         )
       ) {
-        throw new ForbiddenException(ErrorMessage.NO_PERMISSION);
+        throw new ServiceException('NO_PERMISSION', 403);
       }
       if (meetup.attendees.length > 0 && teamNum > meetup.attendees.length) {
-        throw new BadRequestException(ErrorMessage.TOO_MANY_MEETUP_TEAM_NUMBER);
+        throw new ServiceException('TOO_MANY_MEETUP_TEAM_NUMBER', 400);
       }
 
       // 참석자 배열 랜덤으로 섞고, 팀 배정
@@ -276,19 +256,16 @@ export class MeetupsService {
 
       // 이벤트 매칭시 참여자가 2명 이상일 때만 슬랙봇으로 이벤트 정보 전송
       if (meetup.attendees.length >= 2) {
-        this.eventBus.publish(
-          new MeetupMatchedEvent(MeetupDetailDto.from(meetup)),
-        );
+        this.eventBus.publish(new MeetupMatchedEvent(MeetupDetailDto.from(meetup)));
       }
 
       await queryRunner.commitTransaction();
     } catch (e) {
-      this.logger.error('[createMatching]', e);
       await queryRunner.rollbackTransaction();
-      if (isHttpException(e)) {
-        throw new HttpException(e.getResponse(), e.getStatus());
+      if (e instanceof HttpException || e instanceof ServiceException) {
+        throw e;
       }
-      throw new Error();
+      throw new UnknownException();
     } finally {
       await queryRunner.release();
     }
