@@ -41,6 +41,7 @@ import {
   InternalServerExceptionBody,
   NotFoundExceptionBody,
 } from 'src/common/dto/error-response.dto';
+import { MonthValidationPipe } from './pipe/month-validation.pipe';
 
 @Controller('rotations')
 @ApiTags('rotations')
@@ -155,7 +156,7 @@ export class RotationsController {
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   findAllRotation(
     @Query('year') year: number,
-    @Query('month') month: number
+    @Query('month', new MonthValidationPipe()) month: number,
   ): Promise<Partial<RotationEntity>[]> {
     return this.rotationsService.findAllRotation(year, month);
   }
