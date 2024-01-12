@@ -38,6 +38,11 @@
 
 <br>
 
+## 서비스 아키텍처
+![아키텍처](https://github.com/Together42/nest-backend/assets/74581396/761238a0-6b7e-4307-b24e-06d675d801c2)
+
+<br>
+
 ## 실행 방법
 ### 1. git clone
 ```sh
@@ -99,6 +104,11 @@ yarn install && yarn start:dev
 
 ## ERD
 ![together-ERD](https://github.com/Together42/nest-backend/assets/74581396/88d077a5-526b-4750-8358-7145bd1a80b6)
+
+<br>
+
+## API 명세
+[Swagger Docs](https://dev.together.42jip.net/swagger)
 
 <br>
 
