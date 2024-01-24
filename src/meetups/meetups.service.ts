@@ -57,7 +57,7 @@ export class MeetupsService {
       if (e instanceof HttpException || e instanceof ServiceException) {
         throw e;
       }
-      throw new UnknownException();
+      throw new UnknownException(e);
     } finally {
       await queryRunner.release();
     }
@@ -157,7 +157,7 @@ export class MeetupsService {
       if (e instanceof HttpException || e instanceof ServiceException) {
         throw e;
       }
-      throw new UnknownException();
+      throw new UnknownException(e);
     } finally {
       await queryRunner.release();
     }
@@ -197,7 +197,7 @@ export class MeetupsService {
       if (e instanceof HttpException || e instanceof ServiceException) {
         throw e;
       }
-      throw new UnknownException();
+      throw new UnknownException(e);
     } finally {
       await queryRunner.release();
     }
@@ -265,7 +265,7 @@ export class MeetupsService {
       if (e instanceof HttpException || e instanceof ServiceException) {
         throw e;
       }
-      throw new UnknownException();
+      throw new UnknownException(e);
     } finally {
       await queryRunner.release();
     }

@@ -39,7 +39,7 @@ export class LogInterceptor implements NestInterceptor {
             channel: this.configService.get('slack.jiphyeonjeonChannel'),
           }).buildToObject(),
         );
-        throw new UnknownException();
+        throw new UnknownException(err);
       }),
       //   tap((observable) => {
       //     const end = new Date();
