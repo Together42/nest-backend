@@ -11,25 +11,18 @@ export class HolidayRepository extends Repository<RotationHolidayEntity> {
     super(RotationHolidayEntity, dataSource.createEntityManager());
   }
 
-  async findHolidayByYearAndMonth(
-    year: number,
-    month: number,
-  ): Promise<number[]> {
-    try {
-      const records = await this.find({
-        where: {
-          year: year,
-          month: month,
-        },
-      });
+  async findHolidayByYearAndMonth(year: number, month: number): Promise<number[]> {
+    const records = await this.find({
+      where: {
+        year: year,
+        month: month,
+      },
+    });
 
-      if (records.length === 0) {
-        return [];
-      }
-
-      return records.map((record) => record.day);
-    } catch (error: any) {
-      throw new Error(`Error occurred in findHolidayByYearAndMonth: ${error}`);
+    if (records.length === 0) {
+      return [];
     }
+
+    return records.map((record) => record.day);
   }
 }

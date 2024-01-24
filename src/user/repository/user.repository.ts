@@ -34,18 +34,13 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getAllActiveUser(): Promise<UserEntity[]> {
-    try {
-      const records = await this.find({
-        where: {
-          isActive: true,
-        },
-      });
+    const records = await this.find({
+      where: {
+        isActive: true,
+      },
+    });
 
-      return records;
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
-    }
+    return records;
   }
 
   async findOneByEmail(email: string): Promise<UserEntity | null> {
@@ -57,41 +52,31 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async findOneById(id: number): Promise<UserEntity | undefined> {
-    try {
-      const record = await this.find({
-        where: {
-          id: id,
-        },
-      });
+    const record = await this.find({
+      where: {
+        id: id,
+      },
+    });
 
-      if (record.length > 1) {
-        this.logger.warn(`Duplicated records found on ${id}`);
-      }
-
-      return record[0];
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    if (record.length > 1) {
+      this.logger.warn(`Duplicated records found on ${id}`);
     }
+
+    return record[0];
   }
 
   async findOneByIntraId(intraId: string): Promise<UserEntity | undefined> {
-    try {
-      const record = await this.find({
-        where: {
-          nickname: intraId,
-        },
-      });
+    const record = await this.find({
+      where: {
+        nickname: intraId,
+      },
+    });
 
-      if (record.length > 1) {
-        this.logger.warn(`Duplicated records found on ${intraId}`);
-      }
-
-      return record[0];
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    if (record.length > 1) {
+      this.logger.warn(`Duplicated records found on ${intraId}`);
     }
+
+    return record[0];
   }
 
   async updateRefreshToken(

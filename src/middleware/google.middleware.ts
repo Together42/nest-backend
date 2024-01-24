@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Injectable, NestMiddleware, Logger, InternalServerErrorException } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import axios from 'axios';
 
@@ -28,7 +28,7 @@ export class GoogleMiddleware implements NestMiddleware {
         );
         const userInfo = response.data;
         if (!userInfo) {
-          throw new Error('Invalid token');
+          throw new InternalServerErrorException('Invalid Google Token');
         }
         req['user'] = userInfo;
         next();

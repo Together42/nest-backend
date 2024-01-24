@@ -19,7 +19,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     try {
       done(null, payload);
     } catch (error) {
-      this.logger.error(`validate [error: ${error.message}]`);
       throw new UnauthorizedException('Unauthorized', '401');
     }
   }
