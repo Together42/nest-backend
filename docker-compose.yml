@@ -68,7 +68,7 @@ services:
     logging:
       driver: awslogs
       options:
-        awslogs-group: ${AWS_CLOUDWATCH_LOG_GROUP_DEV}
+        awslogs-group: ${AWS_CLOUDWATCH_LOG_GROUP}
         awslogs-region: ${AWS_CLOUDWATCH_REGION}
         awslogs-stream: ${AWS_CLOUDWATCH_LOG_STREAM_BACKEND}
   test_db:
