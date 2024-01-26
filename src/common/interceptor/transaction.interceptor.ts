@@ -11,7 +11,6 @@ import {
   concatMap,
 } from 'rxjs';
 import { QueryRunner, DataSource } from 'typeorm';
-// import { Request } from 'express';
 
 @Injectable()
 export class TransactionInterceptor implements NestInterceptor {
@@ -28,16 +27,13 @@ export class TransactionInterceptor implements NestInterceptor {
     return next.handle().pipe(
       concatMap(async (data) => {
         await queryRunner.commitTransaction();
-        console.log('data', data);
         return data;
       }),
       catchError(async (error) => {
-        console.log('error', error);
         await queryRunner.rollbackTransaction();
         throw error;
       }),
       finalize(async () => {
-        console.log('finalize');
         await queryRunner.release();
       }),
     );
