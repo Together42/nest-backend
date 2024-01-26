@@ -41,6 +41,10 @@ import {
   InternalServerExceptionBody,
   NotFoundExceptionBody,
 } from 'src/common/dto/error-response.dto';
+import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
+import { FindRegistrationDto } from './dto/find-registration.dto';
+import { FindAllRotationDto } from './dto/find-all-rotation.dto';
+import { MonthValidationPipe } from './pipe/month-validation.pipe';
 
 @Controller('rotations')
 @ApiTags('rotations')
@@ -59,10 +63,10 @@ export class RotationsController {
     description: '당일 사서 조회를 위한 API. 구글 시트에서 사용 예정. 누구나 사용할 수 있습니다.',
   })
   @ApiOkResponse({
-    type: [RotationEntity],
+    type: [FindTodayRotationDto],
   })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+  findTodayRotation(): Promise<FindTodayRotationDto[]> {
     return this.rotationsService.findTodayRotation();
   }
 
@@ -84,7 +88,7 @@ export class RotationsController {
   })
   @ApiUnauthorizedResponse({ type: UnauthorizedException })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
-  async findOwnRegistration(@GetUser() user: UserEntity): Promise<Partial<RotationAttendeeEntity>> {
+  async findOwnRegistration(@GetUser() user: UserEntity): Promise<FindRegistrationDto> {
     return await this.rotationsService.findRegistration(user.id);
   }
 
@@ -146,7 +150,7 @@ export class RotationsController {
   @ApiOperation({
     summary: '사서 로테이션 조회',
     description:
-      '사서 로테이션 조회를 위한 API. 누구나 사용할 수 있습니다. 기본적으로는 DB 내 모든 로테이션 정보를 반환하지만, body에 year와 month를 제공하면 해당 연도와 월의 로테이션 정보만 반환합니다. 연도와 월은 body에 함께 제공되어야 합니다.',
+      '사서 로테이션 조회를 위한 API. 누구나 사용할 수 있습니다. 기본적으로는 DB 내 모든 로테이션 정보를 반환하지만, url parameter에 year와 month를 제공하면(/rotations?year=2024&month=1) 해당 연도와 월의 로테이션 정보만 반환합니다. 연도와 월은 body에 함께 제공되어야 합니다.',
   })
   @ApiOkResponse({
     type: [RotationEntity],
@@ -156,9 +160,8 @@ export class RotationsController {
   findAllRotation(
     @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
-  ): Promise<Partial<RotationEntity>[]> {
-    const { month, year } = findRotationQueryDto;
-
+  ): Promise<FindAllRotationDto[]> {
+    const { month, year } = findRotationQueryDto
     return this.rotationsService.findAllRotation(year, month);
   }
 

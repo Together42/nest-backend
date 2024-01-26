@@ -19,6 +19,8 @@ import { RotationAttendeeRepository } from './repository/rotation-attendees.repo
 import { DayObject, RotationAttendeeInfo } from './utils/types';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
+import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
+import { FindRegistrationDto } from './dto/find-registration.dto';
 
 function getRotationCronTime() {
   if (process.env.NODE_ENV === 'production') {
@@ -171,7 +173,7 @@ export class RotationsService {
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
    * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
    */
-  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+  async findTodayRotation(): Promise<FindTodayRotationDto[]> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
@@ -206,7 +208,7 @@ export class RotationsService {
    * [20231219 수정] - 만약 records가 빈 객체인 경우,
    * attendLimit이 빈 배열인 객체를 반환한다.
    */
-  async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
+  async findRegistration(userId: number): Promise<FindRegistrationDto> {
     const { year, month } = getNextYearAndMonth();
 
     const records = await this.rotationAttendeeRepository.find({
