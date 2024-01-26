@@ -12,6 +12,10 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import configuration from './config/configuration';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { ServiceExceptionFilter } from './common/exception-filter/service.exception-filter';
+import { LogInterceptor } from './common/interceptor/log.interceptor';
+import { UnknownExceptionFilter } from './common/exception-filter/unknown.exception-filter';
 
 @Module({
   imports: [
@@ -57,6 +61,11 @@ import configuration from './config/configuration';
     BatchModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_FILTER, useClass: UnknownExceptionFilter },
+    { provide: APP_FILTER, useClass: ServiceExceptionFilter },
+    { provide: APP_INTERCEPTOR, useClass: LogInterceptor },
+  ],
 })
 export class AppModule {}
