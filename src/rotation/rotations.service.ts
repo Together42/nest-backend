@@ -125,8 +125,7 @@ export class RotationsService {
   })
   async setRotation(): Promise<void> {
     if (getFourthWeekdaysOfMonth().indexOf(getTodayDay()) > 0) {
-      try {
-        this.logger.log('Setting rotation...');
+      this.logger.log('Setting rotation...');
 
       const { year, month } = getNextYearAndMonth();
       const attendeeArray: Partial<RotationAttendeeEntity>[] = await this.getAllRegistration();
