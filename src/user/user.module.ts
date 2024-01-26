@@ -10,11 +10,13 @@ import { RotationAttendeeEntity } from 'src/rotation/entity/rotation-attendee.en
 import { RotationRepository } from 'src/rotation/repository/rotations.repository';
 import { RotationAttendeeRepository } from 'src/rotation/repository/rotation-attendees.repository';
 import { HolidayModule } from 'src/holiday/holiday.module';
+import { SlackModule } from 'src/slack/slack.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity, RotationEntity, RotationAttendeeEntity]),
     HolidayModule,
+    SlackModule,
   ],
   controllers: [UserController],
   providers: [
