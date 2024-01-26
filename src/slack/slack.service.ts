@@ -9,7 +9,7 @@ export class SlackService {
 
   async sendDirectMessage(slackId: string, message: string): Promise<void> {
     if (slackId.length === 0 || slackId === undefined || slackId === null) {
-      this.logger.warn('Slack ID is not defined');
+      this.logger.warn('Slack ID is not defined or empty.');
       return;
     }
 

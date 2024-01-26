@@ -69,15 +69,22 @@ export class RotationsService {
 
     if (tomorrowLibrarian.length === 0) {
       return;
+    } else if (tomorrowLibrarian.length === 1) {
+      const tomorrowLibrarianOne = tomorrowLibrarian[0].user;
+
+      const message = `[알림] 내일은 ${tomorrowLibrarianOne.nickname}님이 사서입니다!`;
+
+      await this.slackService.sendDirectMessage(tomorrowLibrarianOne.slackMemberId, message);
+      return;
+    } else {
+      const tomorrowLibrarianOne = tomorrowLibrarian[0].user;
+      const tomorrowLibrarianTwo = tomorrowLibrarian[1].user;
+
+      const message = `[알림] 내일은 ${tomorrowLibrarianOne.nickname}님과 ${tomorrowLibrarianTwo.nickname}님이 사서입니다!`;
+
+      await this.slackService.sendDirectMessage(tomorrowLibrarianOne.slackMemberId, message);
+      await this.slackService.sendDirectMessage(tomorrowLibrarianTwo.slackMemberId, message);
     }
-
-    const tomorrowLibrarianOne = tomorrowLibrarian[0].user;
-    const tomorrowLibrarianTwo = tomorrowLibrarian[1].user;
-
-    const message = `[알림] 내일은 ${tomorrowLibrarianOne.nickname}님과 ${tomorrowLibrarianTwo.nickname}님이 사서입니다!`;
-
-    await this.slackService.sendDirectMessage(tomorrowLibrarianOne.slackMemberId, message);
-    await this.slackService.sendDirectMessage(tomorrowLibrarianTwo.slackMemberId, message);
   }
 
   /*
