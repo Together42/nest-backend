@@ -48,7 +48,6 @@ export class UserController {
   @ApiUnauthorizedResponse({ type: UnauthorizedExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   async getMe(@GetUser() user: UserInfoDto): Promise<UserInfoDto> {
-    this.logger.debug(`getMe [user: ${JSON.stringify(user)}]`);
     return user;
   }
 

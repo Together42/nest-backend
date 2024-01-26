@@ -8,7 +8,8 @@
 
 ## Description
 친해지길 바라 백엔드를 리팩토링합니다.
-- DB 스키마 및 REST API 재설계
+- [REST API 재설계](https://github.com/Together42/nest-backend/wiki/API-%EB%B3%80%EA%B2%BD-%EC%82%AC%ED%95%AD)
+- [DB 스키마 재설계](https://github.com/Together42/nest-backend/wiki/DB-%EB%B3%80%EA%B2%BD-%EC%82%AC%ED%95%AD)
 - JavaScript/Express -> TypeScript/NestJS
 - Raw Query -> TypeORM
 
@@ -34,6 +35,11 @@
     <img src="https://img.shields.io/badge/Amazon EC2-FF9900?logo=Amazon EC2&logoColor=white">
     <img src="https://img.shields.io/badge/Amazon RDS-527FFF?logo=Amazon RDS&logoColor=white">
 </p>
+
+<br>
+
+## 서비스 아키텍처
+![아키텍처](https://github.com/Together42/nest-backend/assets/74581396/761238a0-6b7e-4307-b24e-06d675d801c2)
 
 <br>
 
@@ -98,6 +104,11 @@ yarn install && yarn start:dev
 
 ## ERD
 ![together-ERD](https://github.com/Together42/nest-backend/assets/74581396/88d077a5-526b-4750-8358-7145bd1a80b6)
+
+<br>
+
+## API 명세
+[Swagger Docs](https://dev.together.42jip.net/swagger)
 
 <br>
 

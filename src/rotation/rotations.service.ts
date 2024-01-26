@@ -25,6 +25,9 @@ import { DayObject, RotationAttendeeInfo } from './utils/types';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
 import { SlackService } from 'src/slack/slack.service';
+import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
+import { FindRegistrationDto } from './dto/find-registration.dto';
+import { FindAllRotationDto } from './dto/find-all-rotation.dto';
 
 function getRotationCronTime() {
   if (process.env.NODE_ENV === 'production') {
@@ -86,27 +89,22 @@ export class RotationsService {
     timeZone: 'Asia/Seoul',
   })
   async initRotation(): Promise<void> {
-    try {
-      const users = await this.userService.getAllActiveUser();
+    const users = await this.userService.getAllActiveUser();
 
-      for (const user of users) {
-        try {
-          const userId = user.id;
-          const createRegistrationDto: CreateRegistrationDto = {
-            attendLimit: JSON.parse(JSON.stringify([])),
-          };
+    for (const user of users) {
+      try {
+        const userId = user.id;
+        const createRegistrationDto: CreateRegistrationDto = {
+          attendLimit: JSON.parse(JSON.stringify([])),
+        };
 
-          // make new rotation
-          await this.createRegistration(createRegistrationDto, userId);
-        } catch (error: any) {
-          this.logger.error(`Error processing user ${user.id}: `, error);
-        }
+        // make new rotation
+        await this.createRegistration(createRegistrationDto, userId);
+      } catch (error: any) {
+        this.logger.error(`Error processing user ${user.id}: `, error);
       }
-      this.logger.log('Init rotation finished');
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
     }
+    this.logger.log('Init rotation finished');
   }
 
   /*
@@ -123,96 +121,89 @@ export class RotationsService {
       try {
         this.logger.log('Setting rotation...');
 
-        const { year, month } = getNextYearAndMonth();
-        const attendeeArray: Partial<RotationAttendeeEntity>[] = await this.getAllRegistration();
-        const monthArrayInfo: DayObject[][] = await this.getInitMonthArray(year, month);
+      const { year, month } = getNextYearAndMonth();
+      const attendeeArray: Partial<RotationAttendeeEntity>[] = await this.getAllRegistration();
+      const monthArrayInfo: DayObject[][] = await this.getInitMonthArray(year, month);
 
-        if (!attendeeArray || attendeeArray.length === 0) {
-          this.logger.warn('No attendees participated in the rotation');
-          return;
-        }
+      if (!attendeeArray || attendeeArray.length === 0) {
+        this.logger.warn('No attendees participated in the rotation');
+        return;
+      }
 
-        const rotationAttendeeInfo: RotationAttendeeInfo[] = attendeeArray.map((attendee) => {
-          const parsedAttendLimit: number[] = Array.isArray(attendee.attendLimit)
-            ? JSON.parse(JSON.stringify(attendee.attendLimit))
-            : [];
-          return {
-            userId: attendee.userId,
-            year: attendee.year,
-            month: attendee.month,
-            attendLimit: parsedAttendLimit,
-            attended: 0,
-          };
-        });
+      const rotationAttendeeInfo: RotationAttendeeInfo[] = attendeeArray.map((attendee) => {
+        const parsedAttendLimit: number[] = Array.isArray(attendee.attendLimit)
+          ? JSON.parse(JSON.stringify(attendee.attendLimit))
+          : [];
+        return {
+          userId: attendee.userId,
+          year: attendee.year,
+          month: attendee.month,
+          attendLimit: parsedAttendLimit,
+          attended: 0,
+        };
+      });
 
-        // 만약 year & month에 해당하는 로테이션 정보가 이미 존재한다면,
-        // 해당 로테이션 정보를 삭제하고 다시 생성한다.
-        const hasInfo = await this.rotationRepository.find({
+      // 만약 year & month에 해당하는 로테이션 정보가 이미 존재한다면,
+      // 해당 로테이션 정보를 삭제하고 다시 생성한다.
+      const hasInfo = await this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
+
+      if (hasInfo.length > 0) {
+        this.logger.log('Rotation info already exists. Deleting...');
+        await this.rotationRepository.softRemove(hasInfo);
+      }
+
+      const rotationResultArray: DayObject[] = createRotation(rotationAttendeeInfo, monthArrayInfo);
+
+      for (const item of rotationResultArray) {
+        const [userId1, userId2] = item.arr;
+
+        const attendeeOneExist = await this.rotationRepository.findOne({
           where: {
+            userId: userId1,
             year: year,
             month: month,
+            day: item.day,
           },
         });
 
-        if (hasInfo.length > 0) {
-          this.logger.log('Rotation info already exists. Deleting...');
-          await this.rotationRepository.softRemove(hasInfo);
+        if (!attendeeOneExist) {
+          const rotation1 = new RotationEntity();
+          rotation1.userId = userId1;
+          rotation1.updateUserId = userId1;
+          rotation1.year = year;
+          rotation1.month = month;
+          rotation1.day = item.day;
+
+          await this.rotationRepository.save(rotation1);
         }
 
-        const rotationResultArray: DayObject[] = createRotation(
-          rotationAttendeeInfo,
-          monthArrayInfo,
-        );
+        const attendeeTwoExist = await this.rotationRepository.findOne({
+          where: {
+            userId: userId2,
+            year: year,
+            month: month,
+            day: item.day,
+          },
+        });
 
-        for (const item of rotationResultArray) {
-          const [userId1, userId2] = item.arr;
+        if (!attendeeTwoExist) {
+          const rotation2 = new RotationEntity();
+          rotation2.userId = userId2;
+          rotation2.updateUserId = userId2;
+          rotation2.year = year;
+          rotation2.month = month;
+          rotation2.day = item.day;
 
-          const attendeeOneExist = await this.rotationRepository.findOne({
-            where: {
-              userId: userId1,
-              year: year,
-              month: month,
-              day: item.day,
-            },
-          });
-
-          if (!attendeeOneExist) {
-            const rotation1 = new RotationEntity();
-            rotation1.userId = userId1;
-            rotation1.updateUserId = userId1;
-            rotation1.year = year;
-            rotation1.month = month;
-            rotation1.day = item.day;
-
-            await this.rotationRepository.save(rotation1);
-          }
-
-          const attendeeTwoExist = await this.rotationRepository.findOne({
-            where: {
-              userId: userId2,
-              year: year,
-              month: month,
-              day: item.day,
-            },
-          });
-
-          if (!attendeeTwoExist) {
-            const rotation2 = new RotationEntity();
-            rotation2.userId = userId2;
-            rotation2.updateUserId = userId2;
-            rotation2.year = year;
-            rotation2.month = month;
-            rotation2.day = item.day;
-
-            await this.rotationRepository.save(rotation2);
-          }
+          await this.rotationRepository.save(rotation2);
         }
-
-        this.logger.log('Successfully set rotation!');
-      } catch (error: any) {
-        this.logger.error(error);
-        throw error;
       }
+
+      this.logger.log('Successfully set rotation!');
     } else {
       // skipped...
     }
@@ -223,34 +214,29 @@ export class RotationsService {
    * 구글 API에서 당일 사서를 가져오는데 사용되는 서비스
    * 당일 사서이기 때문에, 만약 데이터가 두 개 이상 나온다면 오류 로그를 찍는다.
    */
-  async findTodayRotation(): Promise<Partial<RotationEntity>[]> {
+  async findTodayRotation(): Promise<FindTodayRotationDto[]> {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
     const day = today.getDate();
 
-    try {
-      const records: Partial<RotationEntity>[] = await this.rotationRepository.find({
-        where: {
-          year: year,
-          month: month,
-          day: day,
+    const records: Partial<RotationEntity>[] = await this.rotationRepository.find({
+      where: {
+        year: year,
+        month: month,
+        day: day,
+      },
+      relations: ['user'],
+      select: {
+        id: true,
+        user: {
+          nickname: true,
+          slackMemberId: true,
         },
-        relations: ['user'],
-        select: {
-          id: true,
-          user: {
-            nickname: true,
-            slackMemberId: true,
-          },
-        },
-      });
+      },
+    });
 
-      return records.map((record) => record.user);
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
-    }
+    return records.map((record) => record.user);
   }
 
   /*
@@ -263,43 +249,43 @@ export class RotationsService {
    * [20231219 수정] - 만약 records가 빈 객체인 경우,
    * attendLimit이 빈 배열인 객체를 반환한다.
    */
-  async findRegistration(userId: number): Promise<Partial<RotationAttendeeEntity>> {
+  async findRegistration(userId: number): Promise<FindRegistrationDto> {
     const { year, month } = getNextYearAndMonth();
 
-    try {
-      const records = await this.rotationAttendeeRepository.find({
-        where: {
-          userId: userId,
-          year: year,
-          month: month,
-        },
-        select: ['userId', 'year', 'month', 'attendLimit'],
-      });
+    const records = await this.rotationAttendeeRepository.find({
+      where: {
+        userId: userId,
+        year: year,
+        month: month,
+      },
+      select: ['userId', 'year', 'month', 'attendLimit'],
+    });
 
-      if (records.length > 1) {
-        this.logger.warn(`Duplicated records found on ${userId}`);
-      }
-
-      const intraIdRecord = await this.userService.findOneById(userId);
-      const modifiedRecord = {};
-
-      if (records.length == 0) {
-        modifiedRecord['year'] = year;
-        modifiedRecord['month'] = month;
-        modifiedRecord['attendLimit'] = [];
-        modifiedRecord['intraId'] = intraIdRecord.nickname;
-      } else {
-        modifiedRecord['year'] = records[0].year;
-        modifiedRecord['month'] = records[0].month;
-        modifiedRecord['attendLimit'] = records[0].attendLimit;
-        modifiedRecord['intraId'] = intraIdRecord.nickname;
-      }
-
-      return modifiedRecord;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    if (records.length > 1) {
+      this.logger.warn(`Duplicated records found on ${userId}`);
     }
+
+    const intraIdRecord = await this.userService.findOneById(userId);
+
+    let modifiedRecord: FindRegistrationDto;
+
+    if (records.length == 0) {
+      modifiedRecord = {
+        year: year,
+        month: month,
+        attendLimit: JSON.parse(JSON.stringify([])),
+        intraId: intraIdRecord.nickname,
+      };
+    } else {
+      modifiedRecord = {
+        year: records[0].year,
+        month: records[0].month,
+        attendLimit: records[0].attendLimit,
+        intraId: intraIdRecord.nickname,
+      };
+    }
+
+    return modifiedRecord;
   }
 
   /*
@@ -324,40 +310,34 @@ export class RotationsService {
     //   );
     // }
 
-    try {
-      const user = await this.userService.findOneById(userId);
+    const user = await this.userService.findOneById(userId);
 
-      if (!user) {
-        this.logger.error(`User with ID ${userId} not found`);
-        throw new NotFoundException(`User with ID ${userId} not found`);
-      }
-
-      const attendeeExist = await this.rotationAttendeeRepository.findOne({
-        where: {
-          userId: user.id,
-          year: year,
-          month: month,
-        },
-      });
-
-      if (!attendeeExist) {
-        const newRotation = new RotationAttendeeEntity();
-        newRotation.userId = userId;
-        newRotation.year = year;
-        newRotation.month = month;
-        newRotation.attendLimit = attendLimit;
-
-        await this.rotationAttendeeRepository.save(newRotation);
-        return newRotation;
-      }
-
-      attendeeExist.attendLimit = attendLimit; // update this month's attendee info
-      await this.rotationAttendeeRepository.save(attendeeExist);
-      return attendeeExist;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
     }
+
+    const attendeeExist = await this.rotationAttendeeRepository.findOne({
+      where: {
+        userId: user.id,
+        year: year,
+        month: month,
+      },
+    });
+
+    if (!attendeeExist) {
+      const newRotation = new RotationAttendeeEntity();
+      newRotation.userId = userId;
+      newRotation.year = year;
+      newRotation.month = month;
+      newRotation.attendLimit = attendLimit;
+
+      await this.rotationAttendeeRepository.save(newRotation);
+      return newRotation;
+    }
+
+    attendeeExist.attendLimit = attendLimit; // update this month's attendee info
+    await this.rotationAttendeeRepository.save(attendeeExist);
+    return attendeeExist;
   }
 
   /*
@@ -368,24 +348,19 @@ export class RotationsService {
   async removeRegistration(userId: number): Promise<void> {
     const { year, month } = getNextYearAndMonth();
 
-    try {
-      const records = await this.rotationAttendeeRepository.find({
-        where: {
-          userId: userId,
-          year: year,
-          month: month,
-        },
-      });
+    const records = await this.rotationAttendeeRepository.find({
+      where: {
+        userId: userId,
+        year: year,
+        month: month,
+      },
+    });
 
-      if (!records || records.length === 0) {
-        return;
-      }
-
-      await this.rotationAttendeeRepository.softDelete(records.map((record) => record.id));
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    if (!records || records.length === 0) {
+      return;
     }
+
+    await this.rotationAttendeeRepository.softDelete(records.map((record) => record.id));
   }
 
   /*
@@ -395,24 +370,19 @@ export class RotationsService {
   async getAllRegistration(): Promise<Partial<RotationAttendeeEntity>[]> {
     const { year, month } = getNextYearAndMonth();
 
-    try {
-      const records = await this.rotationAttendeeRepository.find({
-        where: {
-          year: year,
-          month: month,
-        },
-        select: ['userId', 'year', 'month', 'attendLimit'],
-      });
+    const records = await this.rotationAttendeeRepository.find({
+      where: {
+        year: year,
+        month: month,
+      },
+      select: ['userId', 'year', 'month', 'attendLimit'],
+    });
 
-      if (!records || records.length === 0) {
-        return [];
-      }
-
-      return records;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
+    if (!records || records.length === 0) {
+      return [];
     }
+
+    return records;
   }
 
   /*
@@ -421,33 +391,28 @@ export class RotationsService {
    * 기본적으로는 모든 로테이션을 반환.
    * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
    */
-  async findAllRotation(year?: number, month?: number): Promise<Partial<RotationEntity>[]> {
-    try {
-      let records: Promise<Partial<RotationEntity>[]>;
+  async findAllRotation(year?: number, month?: number): Promise<FindAllRotationDto[]> {
+    let records: Promise<RotationEntity[]>;
 
-      if (year && month) {
-        records = this.rotationRepository.find({
-          where: {
-            year: year,
-            month: month,
-          },
-        });
-      } else {
-        records = this.rotationRepository.find();
-      }
-
-      const modifiedRecords = await Promise.all(
-        (await records).map(async (record) => {
-          const userRecord = await this.userService.findOneById(record.userId);
-          return { ...record, intraId: userRecord.nickname };
-        }),
-      );
-
-      return modifiedRecords;
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
+    if (year && month) {
+      records = this.rotationRepository.find({
+        where: {
+          year: year,
+          month: month,
+        },
+      });
+    } else {
+      records = this.rotationRepository.find();
     }
+
+    const modifiedRecords = await Promise.all(
+      (await records).map(async (record) => {
+        const userRecord = await this.userService.findOneById(record.userId);
+        return { ...record, intraId: userRecord.nickname };
+      }),
+    );
+
+    return modifiedRecords;
   }
 
   /*
@@ -461,46 +426,41 @@ export class RotationsService {
   ): Promise<string> {
     const { attendDate, year, month } = createRotationDto;
 
-    try {
-      const parsedData: number[] = JSON.parse(JSON.stringify(attendDate));
+    const parsedData: number[] = JSON.parse(JSON.stringify(attendDate));
 
-      for (const day of parsedData) {
-        const recordExist = await this.rotationRepository.findOne({
-          where: {
-            userId: userId,
-            year: year,
-            month: month,
-            day: day,
-          },
-        });
+    for (const day of parsedData) {
+      const recordExist = await this.rotationRepository.findOne({
+        where: {
+          userId: userId,
+          year: year,
+          month: month,
+          day: day,
+        },
+      });
 
-        if (recordExist) {
-          await this.rotationRepository
-            .createQueryBuilder()
-            .update(RotationEntity)
-            .set({ updateUserId: userId })
-            .where('userId = :userId AND year = :year AND month = :month AND day = :day', {
-              userId,
-              year,
-              month,
-              day,
-            })
-            .execute();
-        } else {
-          const newRotation = this.rotationRepository.create({
+      if (recordExist) {
+        await this.rotationRepository
+          .createQueryBuilder()
+          .update(RotationEntity)
+          .set({ updateUserId: userId })
+          .where('userId = :userId AND year = :year AND month = :month AND day = :day', {
             userId,
-            updateUserId: userId,
             year,
             month,
             day,
-          });
-          await this.rotationRepository.save(newRotation);
-        }
-        return `successfully create user ${userId}'s information`;
+          })
+          .execute();
+      } else {
+        const newRotation = this.rotationRepository.create({
+          userId,
+          updateUserId: userId,
+          year,
+          month,
+          day,
+        });
+        await this.rotationRepository.save(newRotation);
       }
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
+      return `successfully create user ${userId}'s information`;
     }
   }
 
@@ -516,47 +476,42 @@ export class RotationsService {
     month?: number,
     year?: number,
   ): Promise<string> {
-    try {
-      if (!day) {
-        throw new BadRequestException('Invalid date: day is not provided');
-      }
-
-      let deleteQuery = this.rotationRepository.createQueryBuilder('rotation').delete();
-
-      if (month && year) {
-        deleteQuery = deleteQuery.where(
-          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
-          {
-            userId,
-            year,
-            month,
-            day,
-          },
-        );
-      } else {
-        const { year, month } = getNextYearAndMonth();
-        deleteQuery = deleteQuery.where(
-          'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
-          {
-            userId,
-            year,
-            month,
-            day,
-          },
-        );
-      }
-
-      const deleteResult = await deleteQuery.execute();
-
-      if (deleteResult.affected === 0) {
-        throw new NotFoundException(`userId ${userId} rotation not found`);
-      }
-
-      return `${userId} rotation at ${month}/${year} has been successfully deleted`;
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
+    if (!day) {
+      throw new BadRequestException('Invalid date: day is not provided');
     }
+
+    let deleteQuery = this.rotationRepository.createQueryBuilder('rotation').delete();
+
+    if (month && year) {
+      deleteQuery = deleteQuery.where(
+        'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
+        {
+          userId,
+          year,
+          month,
+          day,
+        },
+      );
+    } else {
+      const { year, month } = getNextYearAndMonth();
+      deleteQuery = deleteQuery.where(
+        'rotation.user_id = :userId AND rotation.year = :year AND rotation.month = :month AND rotation.day = :day',
+        {
+          userId,
+          year,
+          month,
+          day,
+        },
+      );
+    }
+
+    const deleteResult = await deleteQuery.execute();
+
+    if (deleteResult.affected === 0) {
+      throw new NotFoundException(`userId ${userId} rotation not found`);
+    }
+
+    return `${userId} rotation at ${month}/${year} has been successfully deleted`;
   }
 
   /*
@@ -573,45 +528,40 @@ export class RotationsService {
     const { attendDate, updateDate, year, month } = updateRotationDto;
     const day: number = JSON.parse(JSON.stringify(attendDate))[0];
 
-    try {
-      const findUser = await this.userService.findOneByIntraId(updateUserintraId);
+    const findUser = await this.userService.findOneByIntraId(updateUserintraId);
 
-      if (!findUser) {
-        throw new NotFoundException(`User ${updateUserintraId} information not found`);
-      }
-
-      const updateUserId = findUser.id;
-
-      const recordExist = await this.rotationRepository.findOne({
-        where: {
-          userId: updateUserId,
-          year: year,
-          month: month,
-          day: day,
-        },
-      });
-
-      if (recordExist) {
-        await this.rotationRepository
-          .createQueryBuilder()
-          .update(RotationEntity)
-          .set({ updateUserId: userId, day: updateDate })
-          .where('userId = :updateUserId AND year = :year AND month = :month AND day = :day', {
-            updateUserId,
-            year,
-            month,
-            day,
-          })
-          .execute();
-      } else {
-        throw new NotFoundException(`User ${updateUserId} information not found`);
-      }
-
-      return `successfully update user ${updateUserId}'s information`;
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
+    if (!findUser) {
+      throw new NotFoundException(`User ${updateUserintraId} information not found`);
     }
+
+    const updateUserId = findUser.id;
+
+    const recordExist = await this.rotationRepository.findOne({
+      where: {
+        userId: updateUserId,
+        year: year,
+        month: month,
+        day: day,
+      },
+    });
+
+    if (recordExist) {
+      await this.rotationRepository
+        .createQueryBuilder()
+        .update(RotationEntity)
+        .set({ updateUserId: userId, day: updateDate })
+        .where('userId = :updateUserId AND year = :year AND month = :month AND day = :day', {
+          updateUserId,
+          year,
+          month,
+          day,
+        })
+        .execute();
+    } else {
+      throw new NotFoundException(`User ${updateUserId} information not found`);
+    }
+
+    return `successfully update user ${updateUserId}'s information`;
   }
 
   /*
@@ -621,19 +571,14 @@ export class RotationsService {
   async createNewRegistration(userId: number): Promise<RotationAttendeeEntity> {
     const { year, month } = getNextYearAndMonth();
 
-    try {
-      const newRotation = new RotationAttendeeEntity();
-      newRotation.userId = userId;
-      newRotation.year = year;
-      newRotation.month = month;
-      newRotation.attendLimit = JSON.parse(JSON.stringify([]));
+    const newRotation = new RotationAttendeeEntity();
+    newRotation.userId = userId;
+    newRotation.year = year;
+    newRotation.month = month;
+    newRotation.attendLimit = JSON.parse(JSON.stringify([]));
 
-      await this.rotationAttendeeRepository.save(newRotation);
-      return newRotation;
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
-    }
+    await this.rotationAttendeeRepository.save(newRotation);
+    return newRotation;
   }
 
   /*

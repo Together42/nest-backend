@@ -32,51 +32,41 @@ export class HolidayService {
     timeZone: 'Asia/Seoul',
   })
   async saveHolidayInfo(): Promise<void> {
-    try {
-      this.logger.log('Fetching holiday info...');
+    this.logger.log('Fetching holiday info...');
 
-      const holidayArray: HolidayInfo[] = await getHolidayArray();
+    const holidayArray: HolidayInfo[] = await getHolidayArray();
 
-      if (holidayArray === null) {
-        return;
-      }
-
-      for (const holidayInfo of holidayArray) {
-        const { year, month, day, info } = holidayInfo;
-
-        const recordExist = await this.holidayRepository.findOne({
-          where: {
-            year,
-            month,
-            day,
-          },
-        });
-
-        if (recordExist) {
-          continue;
-        }
-
-        const newHoliday = new RotationHolidayEntity();
-        newHoliday.year = year;
-        newHoliday.month = month;
-        newHoliday.day = day;
-        newHoliday.info = info;
-
-        await this.holidayRepository.save(newHoliday);
-      }
-      this.logger.log('Successfully stored holiday info!');
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
+    if (holidayArray === null) {
+      return;
     }
+
+    for (const holidayInfo of holidayArray) {
+      const { year, month, day, info } = holidayInfo;
+
+      const recordExist = await this.holidayRepository.findOne({
+        where: {
+          year,
+          month,
+          day,
+        },
+      });
+
+      if (recordExist) {
+        continue;
+      }
+
+      const newHoliday = new RotationHolidayEntity();
+      newHoliday.year = year;
+      newHoliday.month = month;
+      newHoliday.day = day;
+      newHoliday.info = info;
+
+      await this.holidayRepository.save(newHoliday);
+    }
+    this.logger.log('Successfully stored holiday info!');
   }
 
   async getHolidayByYearAndMonth(year: number, month: number): Promise<number[]> {
-    try {
-      return await this.myHolidayRepository.findHolidayByYearAndMonth(year, month);
-    } catch (error: any) {
-      this.logger.error(error);
-      throw error;
-    }
+    return await this.myHolidayRepository.findHolidayByYearAndMonth(year, month);
   }
 }

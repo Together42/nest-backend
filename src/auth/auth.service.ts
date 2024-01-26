@@ -53,7 +53,6 @@ export class AuthService {
       const accessToken: string = await this.generateToken(user);
       return { accessToken };
     } catch (error) {
-      this.logger.error(`refreshAccessToken [error: ${error.message}]`);
       throw new UnauthorizedException('Unauthorized', '401');
     }
   }

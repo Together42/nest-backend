@@ -35,10 +35,12 @@ export class BatchService {
         try {
           await this.meetupsService.createMatching({ meetupId, teamNum: 1 });
         } catch (e) {
-          this.logger.error('[createWeeklyMeeting]', e);
+          this.logger.error(`[createWeeklyMeeting] meetupId: ${meetupId}`);
+          this.logger.error(e);
         }
       },
     });
+    this.logger.debug(`[createWeeklyMeeting] matchWeeklyMeeting: `, cronJob);
     this.schedulerReistry.addCronJob('matchWeeklyMeeting', cronJob);
     cronJob.start();
   }
@@ -60,10 +62,12 @@ export class BatchService {
         try {
           await this.meetupsService.createMatching({ meetupId, teamNum: 1 });
         } catch (e) {
-          this.logger.error('[createWeeklyDinner]', e);
+          this.logger.error(`[createWeeklyDinner] meetupId: ${meetupId}`);
+          this.logger.error(e);
         }
       },
     });
+    this.logger.debug(`[createWeeklyDinner] matchWeeklyDinner: `, cronJob);
     this.schedulerReistry.addCronJob('matchWeeklyDinner', cronJob);
     cronJob.start();
   }
