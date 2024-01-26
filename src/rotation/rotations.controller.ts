@@ -44,6 +44,7 @@ import {
 import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
 import { FindRegistrationDto } from './dto/find-registration.dto';
 import { FindAllRotationDto } from './dto/find-all-rotation.dto';
+import { MonthValidationPipe } from './pipe/month-validation.pipe';
 
 @Controller('rotations')
 @ApiTags('rotations')
@@ -149,7 +150,7 @@ export class RotationsController {
   @ApiOperation({
     summary: '사서 로테이션 조회',
     description:
-      '사서 로테이션 조회를 위한 API. 누구나 사용할 수 있습니다. 기본적으로는 DB 내 모든 로테이션 정보를 반환하지만, body에 year와 month를 제공하면 해당 연도와 월의 로테이션 정보만 반환합니다. 연도와 월은 body에 함께 제공되어야 합니다.',
+      '사서 로테이션 조회를 위한 API. 누구나 사용할 수 있습니다. 기본적으로는 DB 내 모든 로테이션 정보를 반환하지만, url parameter에 year와 month를 제공하면(/rotations?year=2024&month=1) 해당 연도와 월의 로테이션 정보만 반환합니다. 연도와 월은 body에 함께 제공되어야 합니다.',
   })
   @ApiOkResponse({
     type: [RotationEntity],
@@ -160,8 +161,7 @@ export class RotationsController {
     @Query(ValidationPipe)
     findRotationQueryDto: FindRotationQueryDto,
   ): Promise<FindAllRotationDto[]> {
-    const { month, year } = findRotationQueryDto;
-
+    const { month, year } = findRotationQueryDto
     return this.rotationsService.findAllRotation(year, month);
   }
 
