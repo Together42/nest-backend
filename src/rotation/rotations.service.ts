@@ -14,11 +14,17 @@ import { RotationEntity } from './entity/rotation.entity';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { UserService } from 'src/user/user.service';
 import { RotationRepository } from './repository/rotations.repository';
-import { getFourthWeekdaysOfMonth, getNextYearAndMonth, getTodayDate } from './utils/date';
+import {
+  getFourthWeekdaysOfMonth,
+  getNextYearAndMonth,
+  getTodayDay,
+  getTomorrowDate,
+} from './utils/date';
 import { RotationAttendeeRepository } from './repository/rotation-attendees.repository';
 import { DayObject, RotationAttendeeInfo } from './utils/types';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
+import { SlackService } from 'src/slack/slack.service';
 
 function getRotationCronTime() {
   if (process.env.NODE_ENV === 'production') {
@@ -36,7 +42,40 @@ export class RotationsService {
     private rotationAttendeeRepository: RotationAttendeeRepository,
     @Inject(forwardRef(() => UserService)) private userService: UserService,
     private holidayService: HolidayService,
+    private slackService: SlackService,
   ) {}
+
+  @Cron('0 0 * * *', {
+    name: 'checkTomorrowLibrarian',
+    timeZone: 'Asia/Seoul',
+  })
+  async checkTomorrowLibrarian(): Promise<void> {
+    const tomorrow = getTomorrowDate();
+    const tomorrowYear = tomorrow.getFullYear();
+    const tomorrowMonth = tomorrow.getMonth() + 1;
+    const tomorrowDay = tomorrow.getDate();
+
+    const tomorrowLibrarian = await this.rotationRepository.find({
+      where: {
+        year: tomorrowYear,
+        month: tomorrowMonth,
+        day: tomorrowDay,
+      },
+      relations: ['user'],
+    });
+
+    if (tomorrowLibrarian.length === 0) {
+      return;
+    }
+
+    const tomorrowLibrarianOne = tomorrowLibrarian[0].user;
+    const tomorrowLibrarianTwo = tomorrowLibrarian[1].user;
+
+    const message = `[알림] 내일은 ${tomorrowLibrarianOne.nickname}님과 ${tomorrowLibrarianTwo.nickname}님이 사서입니다!`;
+
+    await this.slackService.sendDirectMessage(tomorrowLibrarianOne.slackMemberId, message);
+    await this.slackService.sendDirectMessage(tomorrowLibrarianTwo.slackMemberId, message);
+  }
 
   /*
    * 4주차 월요일에 유저를 모두 DB에 담아놓는 작업 필요
@@ -80,7 +119,7 @@ export class RotationsService {
     timeZone: 'Asia/Seoul',
   })
   async setRotation(): Promise<void> {
-    if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) > 0) {
+    if (getFourthWeekdaysOfMonth().indexOf(getTodayDay()) > 0) {
       try {
         this.logger.log('Setting rotation...');
 
@@ -279,7 +318,7 @@ export class RotationsService {
     const { year, month } = getNextYearAndMonth();
 
     /* 4주차인지 확인 */
-    // if (getFourthWeekdaysOfMonth().indexOf(getTodayDate()) < 0) {
+    // if (getFourthWeekdaysOfMonth().indexOfDay()) < 0) {
     //   throw new BadRequestException(
     //     'Invalid date: Today is not a fourth weekday of the month.',
     //   );
