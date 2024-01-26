@@ -6,7 +6,6 @@ import {
   Param,
   Delete,
   Patch,
-  ValidationPipe,
   Query,
   UseGuards,
   UnauthorizedException,
@@ -17,7 +16,6 @@ import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
 import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { GetUser } from 'src/decorator/user.decorator';
-import { FindRotationQueryDto } from './dto/find-rotation-query.dto';
 import { RemoveRotationQueryDto } from './dto/remove-rotation.dto';
 import { RotationEntity } from './entity/rotation.entity';
 import { JwtGuard } from 'src/auth/guard/jwt.guard';
@@ -43,8 +41,8 @@ import {
 } from 'src/common/dto/error-response.dto';
 import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
 import { FindRegistrationDto } from './dto/find-registration.dto';
-import { FindAllRotationDto } from './dto/find-all-rotation.dto';
 import { MonthValidationPipe } from './pipe/month-validation.pipe';
+import { FindAllRotationDto } from './dto/find-all-rotation.dto';
 
 @Controller('rotations')
 @ApiTags('rotations')
@@ -158,10 +156,9 @@ export class RotationsController {
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   findAllRotation(
-    @Query(ValidationPipe)
-    findRotationQueryDto: FindRotationQueryDto,
+    @Query('year') year: number,
+    @Query('month', new MonthValidationPipe()) month: number,
   ): Promise<FindAllRotationDto[]> {
-    const { month, year } = findRotationQueryDto
     return this.rotationsService.findAllRotation(year, month);
   }
 

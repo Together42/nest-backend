@@ -21,6 +21,7 @@ import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
 import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
 import { FindRegistrationDto } from './dto/find-registration.dto';
+import { FindAllRotationDto } from './dto/find-all-rotation.dto';
 
 function getRotationCronTime() {
   if (process.env.NODE_ENV === 'production') {
@@ -225,18 +226,23 @@ export class RotationsService {
     }
 
     const intraIdRecord = await this.userService.findOneById(userId);
-    const modifiedRecord = {};
+
+    let modifiedRecord: FindRegistrationDto;
 
     if (records.length == 0) {
-      modifiedRecord['year'] = year;
-      modifiedRecord['month'] = month;
-      modifiedRecord['attendLimit'] = [];
-      modifiedRecord['intraId'] = intraIdRecord.nickname;
+      modifiedRecord = {
+        year: year,
+        month: month,
+        attendLimit: JSON.parse(JSON.stringify([])),
+        intraId: intraIdRecord.nickname,
+      };
     } else {
-      modifiedRecord['year'] = records[0].year;
-      modifiedRecord['month'] = records[0].month;
-      modifiedRecord['attendLimit'] = records[0].attendLimit;
-      modifiedRecord['intraId'] = intraIdRecord.nickname;
+      modifiedRecord = {
+        year: records[0].year,
+        month: records[0].month,
+        attendLimit: records[0].attendLimit,
+        intraId: intraIdRecord.nickname,
+      };
     }
 
     return modifiedRecord;
@@ -345,8 +351,8 @@ export class RotationsService {
    * 기본적으로는 모든 로테이션을 반환.
    * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
    */
-  async findAllRotation(year?: number, month?: number): Promise<Partial<RotationEntity>[]> {
-    let records: Promise<Partial<RotationEntity>[]>;
+  async findAllRotation(year?: number, month?: number): Promise<FindAllRotationDto[]> {
+    let records: Promise<RotationEntity[]>;
 
     if (year && month) {
       records = this.rotationRepository.find({
