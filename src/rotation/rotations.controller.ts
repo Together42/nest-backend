@@ -43,6 +43,7 @@ import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
 import { FindRegistrationDto } from './dto/find-registration.dto';
 import { MonthValidationPipe } from './pipe/month-validation.pipe';
 import { FindAllRotationDto } from './dto/find-all-rotation.dto';
+import { YearValidationPipe } from './pipe/year-validation.pipe';
 
 @Controller('rotations')
 @ApiTags('rotations')
@@ -156,7 +157,7 @@ export class RotationsController {
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   findAllRotation(
-    @Query('year') year: number,
+    @Query('year', new YearValidationPipe()) year: number,
     @Query('month', new MonthValidationPipe()) month: number,
   ): Promise<FindAllRotationDto[]> {
     return this.rotationsService.findAllRotation(year, month);
