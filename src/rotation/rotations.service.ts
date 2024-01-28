@@ -354,15 +354,24 @@ export class RotationsService {
   async findAllRotation(year?: number, month?: number): Promise<FindAllRotationDto[]> {
     let records: Promise<RotationEntity[]>;
 
-    if (year && month) {
+    if (!year && !month) {
+      records = this.rotationRepository.find();
+    } else {
+      const currentDate = new Date();
+      if (!year) {
+        year = currentDate.getFullYear();
+      } else if (!month) {
+        month = currentDate.getMonth() + 1;
+      } else {
+        /* both inputs are exists */
+      }
+
       records = this.rotationRepository.find({
         where: {
           year: year,
           month: month,
         },
       });
-    } else {
-      records = this.rotationRepository.find();
     }
 
     const modifiedRecords = await Promise.all(

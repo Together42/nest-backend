@@ -157,8 +157,8 @@ export class RotationsController {
   @ApiBadRequestResponse({ type: BadRequestExceptionBody })
   @ApiInternalServerErrorResponse({ type: InternalServerExceptionBody })
   findAllRotation(
-    @Query('year', new YearValidationPipe()) year: number,
-    @Query('month', new MonthValidationPipe()) month: number,
+    @Query('year', new YearValidationPipe()) year: any,
+    @Query('month', new MonthValidationPipe()) month: any,
   ): Promise<FindAllRotationDto[]> {
     return this.rotationsService.findAllRotation(year, month);
   }
