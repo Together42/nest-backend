@@ -53,7 +53,6 @@ export class RotationsController {
    * 당일 사서 조회 (달력)
    * 구글 시트를 위한 API
    * Auth : None
-   * 먼가 잘 안되는 것 같기도...
    */
   @Get('/today')
   @ApiOperation({

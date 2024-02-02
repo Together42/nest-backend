@@ -11,7 +11,11 @@ export function getNextYearAndMonth(): { year: number; month: number } {
   return { year, month };
 }
 
-export function getTodayDate(): number {
+export function getTomorrowDate(): Date {
+  return new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
+}
+
+export function getTodayDay(): number {
   return new Date().getDate();
 }
 
@@ -33,8 +37,7 @@ const getFourthWeekPeriod = (date = new Date()): number[] => {
     dateOfThursdayOnFirstWeek = 1 + DAY_IN_WEEK + DAY_OF_THURSDAY - firstDay;
   }
 
-  const dateOfThursdayOfFourthWeek =
-    dateOfThursdayOnFirstWeek + 3 * DAY_IN_WEEK;
+  const dateOfThursdayOfFourthWeek = dateOfThursdayOnFirstWeek + 3 * DAY_IN_WEEK;
   const dateOfMondayOnFourthWeek = dateOfThursdayOfFourthWeek - 3;
   const dateOfSundayOnFourthWeek = dateOfThursdayOfFourthWeek + 3;
 
@@ -43,8 +46,7 @@ const getFourthWeekPeriod = (date = new Date()): number[] => {
 
 export const getFourthWeekdaysOfMonth = (date = new Date()): number[] => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] =
-    getFourthWeekPeriod(date);
+  const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] = getFourthWeekPeriod(date);
   const fourthWeekdays: number[] = [];
 
   for (let i = 0; i < 5; i++) {
@@ -55,10 +57,15 @@ export const getFourthWeekdaysOfMonth = (date = new Date()): number[] => {
   return fourthWeekdays;
 };
 
+export const getFourthMondayOfMonth = (date = new Date()): number => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dateOfMondayOnFourthWeek] = getFourthWeekPeriod(date);
+  return dateOfMondayOnFourthWeek;
+};
+
 export const getFourthFridayOfMonth = (date = new Date()): number => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] =
-    getFourthWeekPeriod(date);
+  const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] = getFourthWeekPeriod(date);
   const dateOfFridayOnFourthWeek = dateOfSundayOnFourthWeek - 2;
 
   return dateOfFridayOnFourthWeek;
