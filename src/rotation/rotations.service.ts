@@ -123,7 +123,7 @@ export class RotationsService {
    * 매월 26일, 집현전 슬랙 채널에 메세지를 보내는 cron job
    */
   @Cron('42 15 26 * *', {
-    name: 'sendMessageRotationDeadlineFirst',
+    name: 'sendMessageRotationDeadlineLast',
     timeZone: 'Asia/Seoul',
   })
   async sendMessageRotationDeadlineLast(): Promise<void> {
@@ -142,7 +142,7 @@ export class RotationsService {
    * 매월 27일 사서 로테이션 설정이 완료된 후, 집현전 슬랙 채널에 메세지를 보내는 cron job
    */
   @Cron('42 15 27 * *', {
-    name: 'sendMessageRotationDeadlineFirst',
+    name: 'sendMessageRotationFinished',
     timeZone: 'Asia/Seoul',
   })
   async sendMessageRotationFinished(): Promise<void> {
