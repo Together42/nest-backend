@@ -30,12 +30,6 @@ services:
       SLACK_CHANNEL_JIPHYEONJEON: ${SLACK_CHANNEL_JIPHYEONJEON}
       FRONT_URL: ${FRONT_URL}
     tty: true
-    logging:
-      driver: awslogs
-      options:
-        awslogs-group: ${AWS_CLOUDWATCH_LOG_GROUP}
-        awslogs-region: ${AWS_CLOUDWATCH_REGION}
-        awslogs-stream: ${AWS_CLOUDWATCH_LOG_STREAM_BACKEND}
   backend_dev:
     build: .
     restart: always
@@ -65,12 +59,6 @@ services:
       SLACK_CHANNEL_JIPHYEONJEON: ${SLACK_CHANNEL_JIPHYEONJEON}
       FRONT_URL: ${FRONT_URL}
     tty: true
-    logging:
-      driver: awslogs
-      options:
-        awslogs-group: ${AWS_CLOUDWATCH_LOG_GROUP}
-        awslogs-region: ${AWS_CLOUDWATCH_REGION}
-        awslogs-stream: ${AWS_CLOUDWATCH_LOG_STREAM_BACKEND}
   test_db:
     image: mysql:latest
     restart: always
