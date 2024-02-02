@@ -18,7 +18,6 @@ import { RotationAttendeeRepository } from 'src/rotation/repository/rotation-att
 import { HolidayModule } from 'src/holiday/holiday.module';
 import { UserService } from 'src/user/user.service';
 import { UserRepository } from 'src/user/repository/user.repository';
-import { SlackModule } from 'src/slack/slack.module';
 
 @Module({
   imports: [
@@ -39,7 +38,6 @@ import { SlackModule } from 'src/slack/slack.module';
       }),
     }),
     HolidayModule,
-    SlackModule,
     TypeOrmModule.forFeature([RotationEntity, RotationAttendeeEntity, UserEntity]),
   ],
   controllers: [AuthController],

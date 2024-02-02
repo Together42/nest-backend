@@ -7,6 +7,7 @@ import {
   forwardRef,
 } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
 import { CreateRegistrationDto } from './dto/create-registration.dto';
 import { CreateRotationDto } from './dto/create-rotation.dto';
 import { UpdateRotationDto } from './dto/update-rotation.dto';
@@ -24,7 +25,8 @@ import { RotationAttendeeRepository } from './repository/rotation-attendees.repo
 import { DayObject, RotationAttendeeInfo } from './utils/types';
 import { HolidayService } from 'src/holiday/holiday.service';
 import { createRotation } from './utils/rotation';
-import { SlackService } from 'src/slack/slack.service';
+import { SlackService } from 'nestjs-slack';
+import { Message } from 'slack-block-builder';
 import { FindTodayRotationDto } from './dto/find-today-rotation.dto';
 import { FindRegistrationDto } from './dto/find-registration.dto';
 import { FindAllRotationDto } from './dto/find-all-rotation.dto';
@@ -46,9 +48,13 @@ export class RotationsService {
     @Inject(forwardRef(() => UserService)) private userService: UserService,
     private holidayService: HolidayService,
     private slackService: SlackService,
+    private configService: ConfigService,
   ) {}
 
-  @Cron('0 0 * * *', {
+  /*
+   * 매일 0시 0분에 내일 사서에게 메세지를 전송하는 cron job
+   */
+  @Cron('* * * * * *', {
     name: 'checkTomorrowLibrarian',
     timeZone: 'Asia/Seoul',
   })
@@ -69,21 +75,26 @@ export class RotationsService {
 
     if (tomorrowLibrarian.length === 0) {
       return;
-    } else if (tomorrowLibrarian.length === 1) {
-      const tomorrowLibrarianOne = tomorrowLibrarian[0].user;
+    }
 
-      const message = `[알림] 내일은 ${tomorrowLibrarianOne.nickname}님이 사서입니다!`;
+    for (const item of tomorrowLibrarian) {
+      if (!item.user) {
+        this.logger.warn('Failed to get tomorrow librarian information. User not found.');
+        return;
+      }
 
-      await this.slackService.sendDirectMessage(tomorrowLibrarianOne.slackMemberId, message);
-      return;
-    } else {
-      const tomorrowLibrarianOne = tomorrowLibrarian[0].user;
-      const tomorrowLibrarianTwo = tomorrowLibrarian[1].user;
+      const message = `[알림] 안녕하세요 ${item.user.nickname}님! 내일 사서 업무가 있습니다.`;
 
-      const message = `[알림] 내일은 ${tomorrowLibrarianOne.nickname}님과 ${tomorrowLibrarianTwo.nickname}님이 사서입니다!`;
-
-      await this.slackService.sendDirectMessage(tomorrowLibrarianOne.slackMemberId, message);
-      await this.slackService.sendDirectMessage(tomorrowLibrarianTwo.slackMemberId, message);
+      try {
+        await this.slackService.postMessage(
+          Message({
+            text: message,
+            channel: item.user.slackMemberId,
+          }).buildToObject(),
+        );
+      } catch (error) {
+        this.logger.error(`Error sending message to ${item.user.nickname}: ` + error);
+      }
     }
   }
 
