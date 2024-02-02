@@ -54,9 +54,9 @@ export class RotationsService {
   ) {}
 
   /*
-   * 매일 0시 0분에 내일 사서에게 메세지를 전송하는 cron job
+   * 매일 9시 42분에 내일 사서에게 메세지를 전송하는 cron job
    */
-  @Cron('0 0 * * *', {
+  @Cron('42 9 * * *', {
     name: 'sendMessageTomorrowLibrarian',
     timeZone: 'Asia/Seoul',
   })
@@ -195,7 +195,6 @@ export class RotationsService {
     timeZone: 'Asia/Seoul',
   })
   async setRotation(): Promise<void> {
-    // if (getFourthWeekdaysOfMonth().indexOf(getTodayDay()) > 0) {
     this.logger.log('Setting rotation...');
 
     const { year, month } = getNextYearAndMonth();
@@ -281,9 +280,6 @@ export class RotationsService {
     }
 
     this.logger.log('Successfully set rotation!');
-    // } else {
-    //   // skipped...
-    // }
   }
 
   /*
