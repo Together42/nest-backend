@@ -58,7 +58,7 @@ export class RotationsService {
     name: 'checkTomorrowLibrarian',
     timeZone: 'Asia/Seoul',
   })
-  async checkTomorrowLibrarian(): Promise<void> {
+  async sendMessageTomorrowLibrarian(): Promise<void> {
     const tomorrow = getTomorrowDate();
     const tomorrowYear = tomorrow.getFullYear();
     const tomorrowMonth = tomorrow.getMonth() + 1;
