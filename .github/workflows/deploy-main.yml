@@ -39,5 +39,8 @@ jobs:
             SERVICE_KEY=${{ secrets.OPENAPI_HOLIDAY_SERVICE_KEY }}
             SLACK_BOT_USER_OAUTH_ACCESS_TOKEN=${{ secrets.SLACK_BOT_USER_OAUTH_ACCESS_TOKEN }}
             SLACK_CHANNEL_JIPHYEONJEON=${{ secrets.SLACK_CHANNEL_JIPHYEONJEON }}
+            AWS_CLOUDWATCH_LOG_GROUP=${{ secrets.AWS_CLOUDWATCH_LOG_GROUP }}
+            AWS_CLOUDWATCH_REGION=${{ secrets.AWS_CLOUDWATCH_REGION }}
+            AWS_CLOUDWATCH_LOG_STREAM_BACKEND=${{ secrets.AWS_CLOUDWATCH_LOG_STREAM_BACKEND }}
             FRONT_URL=${{ secrets.FRONT_URL }}" > .env.prod
             docker-compose --env-file .env.prod up -d --build backend

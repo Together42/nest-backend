@@ -1,6 +1,7 @@
 import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtService } from '@nestjs/jwt';
+import { UnknownException } from 'src/common/exception/unknown.exception';
 
 @Injectable()
 export class JwtGuard extends AuthGuard('jwt') {
@@ -35,7 +36,7 @@ export class JwtGuard extends AuthGuard('jwt') {
       token could be expired or invaild
       return exception to client and let client to refresh token
       */
-      throw error;
+      throw new UnknownException(error);
     }
     this.logger.debug(`canActivate [result: ${result}]`);
     return result;

@@ -21,22 +21,18 @@ export class UserService {
   ) {}
 
   async findOneByEmail(email: string): Promise<UserEntity | null> {
-    this.logger.debug(`findOneByEmail [email: ${email}]`);
     return this.userRepository.findOneByEmail(email);
   }
 
   async findOneByUid(id: number): Promise<UserEntity | null> {
-    this.logger.debug(`findOneByUid [id: ${id}]`);
     return this.userRepository.findOneById(id);
   }
 
   async findOneById(id: number): Promise<UserEntity | null> {
-    this.logger.debug(`findOneById [id: ${id}]`);
     return await this.userRepository.findOneById(id);
   }
 
   async findOneByIntraId(intraId: string): Promise<UserEntity | null> {
-    this.logger.debug(`findOneByIntraId [intraId: ${intraId}]`);
     return await this.userRepository.findOneByIntraId(intraId);
   }
 
@@ -81,13 +77,8 @@ export class UserService {
 
   private async hashedRefreshToken(refreshToken: string): Promise<string> {
     const saltRounds = 10;
-    try {
-      const hashedRefreshToken: string = await bcrypt.hash(refreshToken, saltRounds);
-      return hashedRefreshToken;
-    } catch (error) {
-      this.logger.error(`hashedRefreshToken [error: ${error.message}]`);
-      throw error;
-    }
+    const hashedRefreshToken: string = await bcrypt.hash(refreshToken, saltRounds);
+    return hashedRefreshToken;
   }
 
   async getUserRanking() {

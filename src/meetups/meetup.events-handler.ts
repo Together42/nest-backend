@@ -14,6 +14,7 @@ import { MeetupRegisteredEvent } from './event/meetup-registered.event';
 import { MeetupUnregisteredEvent } from './event/meetup-unregistered.event';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { UnknownException } from 'src/common/exception/unknown.exception';
 
 @EventsHandler(MeetupEvent)
 export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
@@ -62,7 +63,7 @@ export class MeetupEventsHandler implements IEventHandler<MeetupEvent> {
 
       await this.slackService.postMessage(message!);
     } catch (e) {
-      this.logger.error('[handle]', e);
+      throw new UnknownException(e);
     }
   }
 }
