@@ -16,6 +16,8 @@ import { RotationAttendeeEntity } from './entity/rotation-attendee.entity';
 import { UserService } from 'src/user/user.service';
 import { RotationRepository } from './repository/rotations.repository';
 import {
+  getFourthFridayOfMonth,
+  getFourthMondayOfMonth,
   getFourthWeekdaysOfMonth,
   getNextYearAndMonth,
   getTodayDay,
@@ -54,8 +56,8 @@ export class RotationsService {
   /*
    * 매일 0시 0분에 내일 사서에게 메세지를 전송하는 cron job
    */
-  @Cron('* * * * * *', {
-    name: 'checkTomorrowLibrarian',
+  @Cron('0 0 * * *', {
+    name: 'sendMessageTomorrowLibrarian',
     timeZone: 'Asia/Seoul',
   })
   async sendMessageTomorrowLibrarian(): Promise<void> {
@@ -96,6 +98,34 @@ export class RotationsService {
         this.logger.error(`Error sending message to ${item.user.nickname}: ` + error);
       }
     }
+  }
+
+  /*
+   * 매일 0시 0분마다, 현재 날짜가 이번 달 4째주 월요일/금요일인지 확인하여, 집현전 슬랙 채널에 메세지를 보내는 cron job
+   */
+  @Cron('0 0 * * *', {
+    name: 'sendMessageRotationDeadline',
+    timeZone: 'Asia/Seoul',
+  })
+  async sendMessageRotationDeadline(): Promise<void> {
+    let message: string;
+    const today = new Date().getDate();
+    if (today === getFourthMondayOfMonth()) {
+      message =
+        '[알림] 로테이션 신청 기간이 시작되었습니다. 이번 주 금요일까지 신청해주세요!\n[신청하러 가기]: https://together.42jip.net/';
+    } else if (today === getFourthFridayOfMonth()) {
+      message =
+        '[알림] 로테이션 신청 기간이 내일 마감됩니다. 오늘까지 신청해주세요!\n[신청하러 가기]: https://together.42jip.net/';
+    } else {
+      return;
+    }
+
+    await this.slackService.postMessage(
+      Message({
+        text: message,
+        channel: this.configService.get('slack.jiphyeonjeonChannel'),
+      }).buildToObject(),
+    );
   }
 
   /*

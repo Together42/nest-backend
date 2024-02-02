@@ -57,6 +57,12 @@ export const getFourthWeekdaysOfMonth = (date = new Date()): number[] => {
   return fourthWeekdays;
 };
 
+export const getFourthMondayOfMonth = (date = new Date()): number => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dateOfMondayOnFourthWeek] = getFourthWeekPeriod(date);
+  return dateOfMondayOnFourthWeek;
+};
+
 export const getFourthFridayOfMonth = (date = new Date()): number => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dateOfMondayOnFourthWeek, dateOfSundayOnFourthWeek] = getFourthWeekPeriod(date);
