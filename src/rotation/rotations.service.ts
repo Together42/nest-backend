@@ -352,34 +352,23 @@ export class RotationsService {
    * 만약 parameter로 month와 year가 들어오면, 해당 스코프에 맞는 레코드를 반환.
    */
   async findAllRotation(year?: number, month?: number): Promise<FindAllRotationDto[]> {
-    let records: Promise<RotationEntity[]>;
-
-    if (!year && !month) {
-      records = this.rotationRepository.find();
-    } else {
-      const currentDate = new Date();
-      if (!year) {
-        year = currentDate.getFullYear();
-      } else if (!month) {
-        month = currentDate.getMonth() + 1;
-      } else {
-        /* both inputs are exists */
-      }
-
-      records = this.rotationRepository.find({
-        where: {
-          year: year,
-          month: month,
+    const records = await this.rotationRepository.find({
+      where: {
+        year,
+        month,
+      },
+      relations: ['user'],
+      select: {
+        user: {
+          nickname: true,
         },
-      });
-    }
+      },
+    });
 
-    const modifiedRecords = await Promise.all(
-      (await records).map(async (record) => {
-        const userRecord = await this.userService.findOneById(record.userId);
-        return { ...record, intraId: userRecord.nickname };
-      }),
-    );
+    const modifiedRecords = records.map((records) => {
+      const { user, ...other } = records;
+      return { ...other, intraId: user.nickname };
+    });
 
     return modifiedRecords;
   }
