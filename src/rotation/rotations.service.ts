@@ -672,7 +672,8 @@ export class RotationsService {
         const day = new Date(year, month - 1, i).getDate();
 
         if (!holidayArrayOfMonth.includes(day)) {
-          const tmpDayObject: DayObject = { day, arr: [0, 0] };
+//          const tmpDayObject: DayObject = { day, arr: [0, 0] };
+          const tmpDayObject: DayObject = { day, arr: [0] };
 
           tmpWeekArray.push(tmpDayObject);
 

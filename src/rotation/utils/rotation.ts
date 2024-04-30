@@ -113,74 +113,74 @@ export function createRotation(
         monthArrayInfo[i][j].arr[arrIndex++] = participant1.userId;
       }
 
-      shuffle(rotationAttendeeInfo);
-      sortByArray(rotationAttendeeInfo);
-
-      let participant2 = undefined;
-      for (let k = 0; k < rotationAttendeeInfo.length; k++) {
-        if (
-          rotationAttendeeInfo[k].attended < participation &&
-          !rotationAttendeeInfo[k].attendLimit.includes(
-            monthArrayInfo[i][j].day,
-          ) &&
-          !monthArrayInfo[i][j].arr.includes(rotationAttendeeInfo[k].userId)
-        ) {
-          participant2 = rotationAttendeeInfo[k];
-          participant2.attended += 1;
-          break;
-        }
-      }
-      if (canDuplicate && participant2 === undefined) {
-        for (let k = 0; k < rotationAttendeeInfo.length; k++) {
-          if (
-            rotationAttendeeInfo[k].attended < participation + 1 &&
-            !rotationAttendeeInfo[k].attendLimit.includes(
-              monthArrayInfo[i][j].day,
-            ) &&
-            !monthArrayInfo[i][j].arr.includes(rotationAttendeeInfo[k].userId)
-          ) {
-            participant2 = rotationAttendeeInfo[k];
-            participant2.attended += 1;
-            break;
-          }
-        }
-      }
-      if (participant2 === undefined) {
-        participation += 1;
-        if (j > 0) {
-          j -= 1;
-        } else {
-          j = -1;
-        }
-        if (participant1 && isLooped === false) {
-          if (isLoopedAgain === true) {
-            participation -= 1;
-            isLoopedAgain = false;
-            continue;
-          }
-          const index = rotationAttendeeInfo.findIndex(
-            (obj) => obj.userId === participant1.userId,
-          );
-          continueIndex = index;
-          checkContinue = true;
-          isLooped = true;
-          isLoopedAgain = true;
-          participant1.attended -= 1;
-          monthArrayInfo[i][j + 1].arr[0] = 0;
-        } else if (isLooped) {
-          participation -= 1;
-          isLooped = false;
-          isLoopedAgain = false;
-          j += 1;
-        }
-        continue;
-      } else {
-        continueIndex = 0;
-        checkContinue = false;
-        isLooped = false;
-        isLoopedAgain = false;
-        monthArrayInfo[i][j].arr[arrIndex--] = participant2.userId;
-      }
+//      shuffle(rotationAttendeeInfo);
+//      sortByArray(rotationAttendeeInfo);
+//
+//      let participant2 = undefined;
+//      for (let k = 0; k < rotationAttendeeInfo.length; k++) {
+//        if (
+//          rotationAttendeeInfo[k].attended < participation &&
+//          !rotationAttendeeInfo[k].attendLimit.includes(
+//            monthArrayInfo[i][j].day,
+//          ) &&
+//          !monthArrayInfo[i][j].arr.includes(rotationAttendeeInfo[k].userId)
+//        ) {
+//          participant2 = rotationAttendeeInfo[k];
+//          participant2.attended += 1;
+//          break;
+//        }
+//      }
+//      if (canDuplicate && participant2 === undefined) {
+//        for (let k = 0; k < rotationAttendeeInfo.length; k++) {
+//          if (
+//            rotationAttendeeInfo[k].attended < participation + 1 &&
+//            !rotationAttendeeInfo[k].attendLimit.includes(
+//              monthArrayInfo[i][j].day,
+//            ) &&
+//            !monthArrayInfo[i][j].arr.includes(rotationAttendeeInfo[k].userId)
+//          ) {
+//            participant2 = rotationAttendeeInfo[k];
+//            participant2.attended += 1;
+//            break;
+//          }
+//        }
+//      }
+//      if (participant2 === undefined) {
+//        participation += 1;
+//        if (j > 0) {
+//          j -= 1;
+//        } else {
+//          j = -1;
+//        }
+//        if (participant1 && isLooped === false) {
+//          if (isLoopedAgain === true) {
+//            participation -= 1;
+//            isLoopedAgain = false;
+//            continue;
+//          }
+//          const index = rotationAttendeeInfo.findIndex(
+//            (obj) => obj.userId === participant1.userId,
+//          );
+//          continueIndex = index;
+//          checkContinue = true;
+//          isLooped = true;
+//          isLoopedAgain = true;
+//          participant1.attended -= 1;
+//          monthArrayInfo[i][j + 1].arr[0] = 0;
+//        } else if (isLooped) {
+//          participation -= 1;
+//          isLooped = false;
+//          isLoopedAgain = false;
+//          j += 1;
+//        }
+//        continue;
+//      } else {
+//        continueIndex = 0;
+//        checkContinue = false;
+//        isLooped = false;
+//        isLoopedAgain = false;
+//        monthArrayInfo[i][j].arr[arrIndex--] = participant2.userId;
+//      }
     }
   }
 
