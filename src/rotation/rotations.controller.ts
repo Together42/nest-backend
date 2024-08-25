@@ -50,6 +50,9 @@ export class RotationsController {
   constructor(private readonly rotationsService: RotationsService) {}
 
   /*
+   * Hello
+   */
+  /*
    * 당일 사서 조회 (달력)
    * 구글 시트를 위한 API
    * Auth : None
