@@ -668,11 +668,12 @@ export class RotationsService {
     let tmpWeekArray: DayObject[] = [];
 
     for (let i = 1; i <= daysOfMonth; i++) {
-      if (new Date(year, month - 1, i).getDay() > 0 && new Date(year, month - 1, i).getDay() < 6) {
+      const dayOfWeek = new Date(year, month - 1, i).getDay();
+
+      if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) {
         const day = new Date(year, month - 1, i).getDate();
 
         if (!holidayArrayOfMonth.includes(day)) {
-//          const tmpDayObject: DayObject = { day, arr: [0, 0] };
           const tmpDayObject: DayObject = { day, arr: [0] };
 
           tmpWeekArray.push(tmpDayObject);
@@ -680,15 +681,11 @@ export class RotationsService {
           if (i === daysOfMonth) {
             MonthArray.push(tmpWeekArray);
           }
-        } else {
-          continue;
         }
-      } else {
+      } else if (dayOfWeek === 6 || i === daysOfMonth) {
         if (tmpWeekArray.length > 0) {
           MonthArray.push(tmpWeekArray);
           tmpWeekArray = [];
-        } else {
-          // already pushed tmpWeekArray
         }
       }
     }
